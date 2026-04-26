@@ -1,0 +1,50 @@
+[
+  {
+    "name": "TEST: Prosty zapis wyników",
+    "category": "Wiedza",
+    "suite_name": "Test zapisu",
+    "description": "Bardzo prosty benchmark testowy z pytaniami do sprawdzenia zapisu wyników, w tym jednym celowo niezaliczalnym zadaniem.",
+    "prompt_template": "Benchmark z prostymi pytaniami testowymi.",
+    "score_type": "boolean",
+    "expected_answer": null,
+    "pass_condition": null,
+    "evaluation_checklist": [],
+    "attempts": 1,
+    "output_type": "text",
+    "tasks": [
+      {
+        "name": "Dodawanie 2 + 2",
+        "prompt_template": "Ile to jest 2 + 2? Odpowiedz tylko jedną liczbą.",
+        "score_type": "boolean",
+        "expected_answer": null,
+        "pass_condition": "Poprawna odpowiedź to 4.",
+        "evaluation_checklist": ["Odpowiedź zawiera liczbę 4."],
+        "attempts": 1,
+        "order_index": 0,
+        "output_type": "text"
+      },
+      {
+        "name": "Stolica Polski",
+        "prompt_template": "Jaka jest stolica Polski? Odpowiedz jednym słowem.",
+        "score_type": "boolean",
+        "expected_answer": null,
+        "pass_condition": "Poprawna odpowiedź to Warszawa.",
+        "evaluation_checklist": ["Odpowiedź zawiera Warszawa."],
+        "attempts": 1,
+        "order_index": 1,
+        "output_type": "text"
+      },
+      {
+        "name": "Celowy fail — niemożliwy warunek",
+        "prompt_template": "To jest test porażki benchmarku. Odpowiedz wyłącznie słowem: OK",
+        "score_type": "boolean",
+        "expected_answer": null,
+        "pass_condition": "Poprawna odpowiedź to __BENCHFORGE_IMPOSSIBLE_PASS_TOKEN_9F3A7C__.",
+        "evaluation_checklist": ["To zadanie ma celowo niemożliwy warunek, żeby sprawdzić obsługę Niezaliczone."],
+        "attempts": 1,
+        "order_index": 2,
+        "output_type": "text"
+      }
+    ]
+  }
+]

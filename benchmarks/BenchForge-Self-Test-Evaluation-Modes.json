@@ -1,0 +1,188 @@
+[
+  {
+    "name": "SELFTEST: Auto — proste odpowiedzi",
+    "category": "Logika",
+    "suite_name": "BenchForge Self Test",
+    "description": "Krótki benchmark do sprawdzenia automatycznej oceny prostych odpowiedzi tekstowych.",
+    "prompt_template": "SELFTEST auto — użyj zadań.",
+    "score_type": "boolean",
+    "expected_answer": null,
+    "pass_condition": null,
+    "evaluation_checklist": [],
+    "evaluation_rubric": [],
+    "attempts": 1,
+    "output_type": "text",
+    "tasks": [
+      {
+        "name": "2 + 2",
+        "prompt_template": "Ile to jest 2 + 2? Odpowiedz samą liczbą.",
+        "score_type": "boolean",
+        "expected_answer": null,
+        "pass_condition": "Poprawna odpowiedź to 4.",
+        "evaluation_checklist": ["Odpowiedź zawiera liczbę 4."],
+        "evaluation_rubric": [],
+        "attempts": 1,
+        "order_index": 0,
+        "output_type": "text"
+      },
+      {
+        "name": "Stolica Polski",
+        "prompt_template": "Jaka jest stolica Polski? Odpowiedz jednym słowem.",
+        "score_type": "boolean",
+        "expected_answer": null,
+        "pass_condition": "Poprawna odpowiedź to Warszawa.",
+        "evaluation_checklist": ["Odpowiedź zawiera słowo Warszawa."],
+        "evaluation_rubric": [],
+        "attempts": 1,
+        "order_index": 1,
+        "output_type": "text"
+      }
+    ]
+  },
+  {
+    "name": "SELFTEST: Sandbox — Python",
+    "category": "Kod",
+    "suite_name": "BenchForge Self Test",
+    "description": "Benchmark do sprawdzenia sandboxa Python: model ma napisać funkcje, a BenchForge uruchomi testy.",
+    "prompt_template": "SELFTEST Python sandbox — użyj zadań.",
+    "score_type": "numeric",
+    "expected_answer": null,
+    "pass_condition": null,
+    "evaluation_checklist": [],
+    "evaluation_rubric": [],
+    "attempts": 1,
+    "output_type": "text",
+    "tasks": [
+      {
+        "name": "Python add(a, b)",
+        "prompt_template": "Napisz w Pythonie funkcję add(a, b), która zwraca sumę dwóch liczb. Zwróć tylko kod albo krótki opis i kod.",
+        "score_type": "numeric",
+        "expected_answer": null,
+        "pass_condition": "{\"mode\":\"code_presence\",\"required\":[\"def add\",\"return\"],\"sandbox\":{\"language\":\"python\",\"entry_point\":\"add\",\"tests\":[\"assert add(2, 2) == 4\",\"assert add(-1, 1) == 0\",\"assert add(10, 5) == 15\"]}}",
+        "evaluation_checklist": ["Czy istnieje funkcja add?", "Czy przechodzi testy sandboxa?"],
+        "evaluation_rubric": [],
+        "attempts": 1,
+        "order_index": 0,
+        "output_type": "text"
+      },
+      {
+        "name": "Python unique_sorted(items)",
+        "prompt_template": "Napisz w Pythonie funkcję unique_sorted(items), która usuwa duplikaty i zwraca posortowaną listę.",
+        "score_type": "numeric",
+        "expected_answer": null,
+        "pass_condition": "{\"mode\":\"code_presence\",\"required\":[\"def unique_sorted\"],\"sandbox\":{\"language\":\"python\",\"entry_point\":\"unique_sorted\",\"tests\":[\"assert unique_sorted([3, 1, 3, 2]) == [1, 2, 3]\",\"assert unique_sorted([]) == []\",\"assert unique_sorted([5, 5, 5]) == [5]\"]}}",
+        "evaluation_checklist": ["Czy usuwa duplikaty?", "Czy sortuje wynik?", "Czy obsługuje pustą listę?"],
+        "evaluation_rubric": [],
+        "attempts": 1,
+        "order_index": 1,
+        "output_type": "text"
+      }
+    ]
+  },
+  {
+    "name": "SELFTEST: Sandbox — JavaScript / TypeScript-lite",
+    "category": "Kod",
+    "suite_name": "BenchForge Self Test",
+    "description": "Benchmark do sprawdzenia sandboxa Node oraz prostego TypeScript-lite.",
+    "prompt_template": "SELFTEST JS/TS sandbox — użyj zadań.",
+    "score_type": "numeric",
+    "expected_answer": null,
+    "pass_condition": null,
+    "evaluation_checklist": [],
+    "evaluation_rubric": [],
+    "attempts": 1,
+    "output_type": "text",
+    "tasks": [
+      {
+        "name": "JavaScript double(n)",
+        "prompt_template": "Napisz w JavaScript funkcję double(n), która zwraca n * 2.",
+        "score_type": "numeric",
+        "expected_answer": null,
+        "pass_condition": "{\"mode\":\"code_presence\",\"required\":[\"double\"],\"sandbox\":{\"language\":\"javascript\",\"entry_point\":\"double\",\"tests\":[\"double(3) === 6\",\"double(0) === 0\",\"double(-2) === -4\"]}}",
+        "evaluation_checklist": ["Czy funkcja ma nazwę double?", "Czy przechodzi testy Node?"],
+        "evaluation_rubric": [],
+        "attempts": 1,
+        "order_index": 0,
+        "output_type": "text"
+      },
+      {
+        "name": "TypeScript greet(name)",
+        "prompt_template": "Napisz w TypeScript funkcję greet(name: string): string, która zwraca `Hello, {name}!`.",
+        "score_type": "numeric",
+        "expected_answer": null,
+        "pass_condition": "{\"mode\":\"code_presence\",\"required\":[\"greet\",\"string\"],\"sandbox\":{\"language\":\"typescript\",\"entry_point\":\"greet\",\"tests\":[\"greet('Ala') === 'Hello, Ala!'\",\"greet('BenchForge') === 'Hello, BenchForge!'\"]}}",
+        "evaluation_checklist": ["Czy zachowana jest sygnatura TypeScript?", "Czy TypeScript-lite przechodzi testy po uproszczonej konwersji?"],
+        "evaluation_rubric": [],
+        "attempts": 1,
+        "order_index": 1,
+        "output_type": "text"
+      }
+    ]
+  },
+  {
+    "name": "SELFTEST: Manual rubric — HTML",
+    "category": "Kreatywność",
+    "suite_name": "BenchForge Self Test",
+    "description": "Benchmark do ręcznej oceny generacji HTML za pomocą rubryki punktowej zapisanej w zadaniu.",
+    "prompt_template": "SELFTEST manual rubric — użyj zadań.",
+    "score_type": "numeric",
+    "expected_answer": null,
+    "pass_condition": null,
+    "evaluation_checklist": [],
+    "evaluation_rubric": [],
+    "attempts": 1,
+    "output_type": "html",
+    "tasks": [
+      {
+        "name": "HTML landing page",
+        "prompt_template": "Wygeneruj pojedynczy plik HTML dla landing page aplikacji BenchForge. Ma mieć ciemny motyw, nagłówek, 3 karty funkcji i przycisk CTA. Zwróć tylko HTML.",
+        "score_type": "numeric",
+        "expected_answer": null,
+        "pass_condition": "Oceń ręcznie według rubryki punktowej.",
+        "evaluation_checklist": ["Renderuje się poprawnie", "Ma ciemny motyw", "Ma 3 karty funkcji", "Ma CTA"],
+        "evaluation_rubric": [
+          { "id": "renders", "label": "Renderuje się poprawnie", "points": 25, "type": "checkbox" },
+          { "id": "prompt", "label": "Spełnia wymagania promptu", "points": 35, "type": "scale" },
+          { "id": "visual", "label": "Estetyka / układ", "points": 25, "type": "scale" },
+          { "id": "clean", "label": "Kod jest czytelny i samodzielny", "points": 15, "type": "scale" }
+        ],
+        "attempts": 1,
+        "order_index": 0,
+        "output_type": "html"
+      }
+    ]
+  },
+  {
+    "name": "SELFTEST: Manual rubric — Python style",
+    "category": "Kod",
+    "suite_name": "BenchForge Self Test",
+    "description": "Benchmark do ręcznej oceny jakości kodu Python, gdy nie chcesz oceniać tylko 0/1 po testach.",
+    "prompt_template": "SELFTEST manual Python rubric — użyj zadań.",
+    "score_type": "numeric",
+    "expected_answer": null,
+    "pass_condition": null,
+    "evaluation_checklist": [],
+    "evaluation_rubric": [],
+    "attempts": 1,
+    "output_type": "markdown",
+    "tasks": [
+      {
+        "name": "Python readable solution",
+        "prompt_template": "Napisz w Pythonie funkcję normalize_names(names), która usuwa puste elementy, przycina spacje i zwraca imiona w Title Case. Dodaj krótki opis.",
+        "score_type": "numeric",
+        "expected_answer": null,
+        "pass_condition": "Oceń ręcznie według rubryki punktowej.",
+        "evaluation_checklist": ["Poprawność logiki", "Edge cases", "Czytelność", "Opis"],
+        "evaluation_rubric": [
+          { "id": "correctness", "label": "Poprawność logiki", "points": 40, "type": "scale" },
+          { "id": "edge_cases", "label": "Obsługa pustych elementów i spacji", "points": 25, "type": "scale" },
+          { "id": "readability", "label": "Czytelność kodu", "points": 20, "type": "scale" },
+          { "id": "explanation", "label": "Krótki opis rozwiązania", "points": 15, "type": "checkbox" }
+        ],
+        "attempts": 1,
+        "order_index": 0,
+        "output_type": "markdown"
+      }
+    ]
+  }
+]

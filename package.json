@@ -1,0 +1,43 @@
+{
+  "name": "benchforge-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "description": "BenchForge desktop app powered by Electron, React, TypeScript and Vite.",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "install:frontend": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "desktop": "electron .",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder",
+    "pack": "npm run build && electron-builder --dir"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "electron": "^35.1.4",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.benchforge.desktop",
+    "productName": "BenchForge",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "BenchForge-Setup-${version}.${ext}"
+    }
+  }
+}
