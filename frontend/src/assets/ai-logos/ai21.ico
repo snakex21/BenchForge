@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="shortcut icon" type="image/png" href="/fa/favicon.png" />
+    <title>Agents Playground Financial Analyst</title>
+    <script src="/fa/env_vars_v0.1.52.js"></script>
+    <script type="module" crossorigin src="/fa/assets/index-hEP-a82e.js"></script>
+    <link rel="stylesheet" crossorigin href="/fa/assets/index-CeX_vdDt.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

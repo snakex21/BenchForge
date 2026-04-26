@@ -1,0 +1,27 @@
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+frontend/dist/
+BenchForge.exe
+release/
+dist-electron/
+
+# Go build artifacts
+*.exe
+go.work
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Data files (optional - remove if you want to track in git)
+data/

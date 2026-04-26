@@ -1,0 +1,11 @@
+const Database = require('better-sqlite3')
+const path = require('path')
+const os = require('os')
+
+const dbPath = path.join(os.homedir(), 'AppData', 'Roaming', 'benchforge-desktop', 'benchforge.db')
+const db = new Database(dbPath)
+db.exec('DROP TABLE IF EXISTS benchmarks_legacy;')
+db.exec('DROP TABLE IF EXISTS benchmarks_new;')
+console.log('Cleanup done')
+db.close()
+process.exit(0)
