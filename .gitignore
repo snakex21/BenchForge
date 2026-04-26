@@ -25,3 +25,11 @@ Thumbs.db
 
 # Data files (optional - remove if you want to track in git)
 data/
+
+# Local BenchForge data/exports/artifacts
+artifacts/
+*.db
+*.sqlite
+*.sqlite3
+benchmarks/benchforge-results-*.json
+benchmarks/benchforge-backup-*.json
