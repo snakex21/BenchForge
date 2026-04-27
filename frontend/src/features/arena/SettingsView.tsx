@@ -38,6 +38,11 @@ export const SettingsView: React.FC = () => {
   const [sandboxUseDocker, setSandboxUseDocker] = useState(false)
   const [judgeModelId, setJudgeModelId] = useState<number | ''>('')
   const [dataPath, setDataPath] = useState<string | null>(null)
+  const [updateInfo, setUpdateInfo] = useState<Awaited<ReturnType<NonNullable<typeof window.benchforge>['checkForUpdates']>> | null>(null)
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null)
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false)
+  const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false)
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false)
 
   const themes = [
     { id: 'dark', name: 'Dark', colors: ['#0f1117', '#6366f1', '#e2e8f0'] },
@@ -198,6 +203,51 @@ export const SettingsView: React.FC = () => {
     await window.db?.savePreference?.('judge_model_id', value === '' ? null : value)
   }
 
+  const checkUpdates = async () => {
+    setIsCheckingUpdates(true)
+    setUpdateStatus(t('settings.updatesChecking'))
+    try {
+      const result = await window.benchforge?.checkForUpdates?.()
+      setUpdateInfo(result || null)
+      setUpdateStatus(result?.noRelease ? t('settings.updatesNoRelease') : result?.updateAvailable ? t('settings.updatesAvailable', { version: result.latestVersion }) : t('settings.updatesNone'))
+    } catch (error) {
+      setUpdateStatus(error instanceof Error ? error.message : String(error))
+    } finally {
+      setIsCheckingUpdates(false)
+    }
+  }
+
+  const downloadUpdate = async (kind: 'zip' | 'portable' | 'setup' = 'zip') => {
+    setIsDownloadingUpdate(true)
+    setUpdateStatus(t('settings.updatesDownloading'))
+    try {
+      const result = await window.benchforge?.downloadUpdate?.({ kind })
+      if (!result || result.canceled) {
+        setUpdateStatus(t('common.cancel'))
+        return
+      }
+      setUpdateStatus(t('settings.updatesDownloaded', { file: result.filePath || result.assetName || '' }) + (result.checksumVerified ? ` ${t('settings.updatesChecksumOk')}` : ''))
+    } catch (error) {
+      setUpdateStatus(error instanceof Error ? error.message : String(error))
+    } finally {
+      setIsDownloadingUpdate(false)
+    }
+  }
+
+  const installPortableUpdate = async () => {
+    const confirmed = confirm(t('settings.updatesInstallConfirm'))
+    if (!confirmed) return
+    setIsApplyingUpdate(true)
+    setUpdateStatus(t('settings.updatesInstalling'))
+    try {
+      await window.benchforge?.applyPortableUpdate?.()
+      setUpdateStatus(t('settings.updatesInstallStarted'))
+    } catch (error) {
+      setUpdateStatus(error instanceof Error ? error.message : String(error))
+      setIsApplyingUpdate(false)
+    }
+  }
+
   return (
     <div className="w-full space-y-6">
       <h2 className="text-xl font-bold text-slate-100">{t('settings.title')}</h2>
@@ -322,6 +372,24 @@ export const SettingsView: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" onClick={() => void window.benchforge?.openDataPath?.()}>{t('settings.openDataFolder')}</Button>
           </div>
+        </div>
+      </Card>
+
+      <Card title={t('settings.updates')}>
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500">{t('settings.updatesDescription')}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" onClick={() => void checkUpdates()} disabled={isCheckingUpdates}>{isCheckingUpdates ? t('settings.updatesChecking') : t('settings.updatesCheck')}</Button>
+            {updateInfo?.htmlUrl && <Button variant="ghost" size="sm" onClick={() => void window.benchforge?.openExternal?.(updateInfo.htmlUrl)}>{t('settings.updatesOpenRelease')}</Button>}
+            {updateInfo?.recommended?.zip && updateInfo.updateAvailable && <Button variant="secondary" size="sm" onClick={() => void installPortableUpdate()} disabled={isApplyingUpdate || isDownloadingUpdate}>{isApplyingUpdate ? t('settings.updatesInstalling') : t('settings.updatesInstallPortable')}</Button>}
+            {updateInfo?.recommended?.zip && <Button variant="secondary" size="sm" onClick={() => void downloadUpdate('zip')} disabled={isDownloadingUpdate}>{t('settings.updatesDownloadZip')}</Button>}
+            {updateInfo?.recommended?.portable && <Button variant="ghost" size="sm" onClick={() => void downloadUpdate('portable')} disabled={isDownloadingUpdate}>{t('settings.updatesDownloadPortable')}</Button>}
+          </div>
+          {updateInfo && <div className="rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2"><span className="text-slate-400">{t('settings.updatesCurrent')}:</span><strong className="text-slate-200">{updateInfo.currentVersion}</strong><span className="text-slate-400">{t('settings.updatesLatest')}:</span><strong className={updateInfo.updateAvailable ? 'text-emerald-300' : 'text-slate-200'}>{updateInfo.latestVersion}</strong></div>
+            {updateInfo.body && <details className="mt-3"><summary className="cursor-pointer text-xs text-slate-400">{t('settings.updatesChangelog')}</summary><pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-black/30 p-3 text-xs text-slate-300">{updateInfo.body}</pre></details>}
+          </div>}
+          {updateStatus && <p className="text-xs text-slate-500">{updateStatus}</p>}
         </div>
       </Card>
 
