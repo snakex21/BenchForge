@@ -49,6 +49,7 @@ const { listBenchmarkPacks, downloadBenchmarkPack } = require('./benchmarkLibrar
 const { scanBenchmarkBeacon, discoverBenchmarkBeacons } = require('./benchmarkRadar.cjs')
 const { listTools, runTool } = require('./toolRuntime.cjs')
 const { listMcpTools, callMcpTool } = require('./mcpRuntime.cjs')
+const { getSecretStoreStatus } = require('./secretStore.cjs')
 
 const rendererUrl = process.env.ELECTRON_RENDERER_URL || process.env.VITE_DEV_SERVER_URL || ''
 const isDev = Boolean(rendererUrl)
@@ -70,11 +71,20 @@ async function getHealthCheck() {
   const repoSandboxRoots = getPreference('repo_sandbox_roots') || []
   const judgeModelId = getPreference('judge_model_id')
   const githubToken = getGithubTokenPreference()
+  const secretStore = getSecretStoreStatus()
   const dockerCheck = environment.checks.find((check) => check.label === 'Docker')
   const sandboxUseDocker = Boolean(getPreference('sandbox_use_docker'))
 
   const checks = [
     ...environment.checks.map((check) => ({ ...check, group: 'environment' })),
+    {
+      label: 'Secret Store',
+      group: 'security',
+      ok: secretStore.ok,
+      required: false,
+      version: secretStore.backend,
+      error: secretStore.ok ? null : 'Electron safeStorage unavailable; secrets use insecure fallback encoding.',
+    },
     {
       label: 'API keys',
       group: 'models',
