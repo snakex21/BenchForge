@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
-const { app } = require('electron')
+const { resolveDataPath } = require('./paths.cjs')
 
 const MAX_OUTPUT_BYTES = 256 * 1024
 const DEFAULT_TIMEOUT_MS = 120_000
@@ -18,7 +18,7 @@ function createWorkdir(spec) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const id = `${safeName(spec.repo || spec.instance_id || 'repo')}-${stamp}-${Math.random().toString(36).slice(2, 8)}`
   const relativePath = toPosix(path.join('artifacts', 'repo-sandbox', id))
-  const absolutePath = path.join(app.getPath('userData'), relativePath)
+  const absolutePath = resolveDataPath(relativePath)
   fs.mkdirSync(absolutePath, { recursive: true })
   return { relativePath, absolutePath }
 }

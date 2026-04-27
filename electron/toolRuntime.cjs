@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
-const { app } = require('electron')
+const { getDataPath, resolveDataPath } = require('./paths.cjs')
 const { callMcpTool, listMcpTools } = require('./mcpRuntime.cjs')
 
 const DEFAULT_TIMEOUT_MS = 10_000
@@ -24,7 +24,7 @@ function toPosix(value) {
 }
 
 function getUserDataPath() {
-  return app.getPath('userData')
+  return getDataPath()
 }
 
 function artifactsRelativePath(...parts) {
@@ -32,11 +32,7 @@ function artifactsRelativePath(...parts) {
 }
 
 function resolveUserDataPath(relativePath) {
-  const userData = path.resolve(getUserDataPath())
-  const absolute = path.resolve(userData, relativePath)
-  const relative = path.relative(userData, absolute)
-  if (relative.startsWith('..') || path.isAbsolute(relative)) return null
-  return absolute
+  return resolveDataPath(relativePath)
 }
 
 function ensureDir(dirPath) {

@@ -50,6 +50,7 @@ const { scanBenchmarkBeacon, discoverBenchmarkBeacons } = require('./benchmarkRa
 const { listTools, runTool } = require('./toolRuntime.cjs')
 const { listMcpTools, callMcpTool } = require('./mcpRuntime.cjs')
 const { getSecretStoreStatus } = require('./secretStore.cjs')
+const { getDataPath } = require('./paths.cjs')
 
 const rendererUrl = process.env.ELECTRON_RENDERER_URL || process.env.VITE_DEV_SERVER_URL || ''
 const isDev = Boolean(rendererUrl)
@@ -245,7 +246,14 @@ ipcMain.handle('app:get-meta', () => ({
   name: app.getName(),
   version: app.getVersion(),
   platform: process.platform,
+  dataPath: getDataPath(),
 }))
+
+ipcMain.handle('app:get-data-path', () => getDataPath())
+ipcMain.handle('app:open-data-path', async () => {
+  const error = await shell.openPath(getDataPath())
+  return { ok: !error, error: error || null }
+})
 
 ipcMain.handle('files:save-json', async (_, payload) => {
   const { canceled, filePath } = await dialog.showSaveDialog({
