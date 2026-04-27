@@ -83,6 +83,7 @@ interface BenchForgeDbApi {
   runBenchmarkStreaming: (payload: { modelId: number; benchmarkId: number; sessionId?: number; taskIds?: number[] }) => Promise<{ started: boolean; error?: string | null }>
   abortBenchmark: () => Promise<{ ok: boolean }>
   submitManualStreaming: (payload: { modelId: number; benchmarkId: number; taskId?: number | null; runSessionId?: number | null; response: string; score: string; attemptNumber?: number; tokensUsed?: number | null; durationMs?: number | null; thinkingNotes?: string | null }) => Promise<{ ok: boolean; resultId: number | null; error?: string | null }>
+  submitManualBatch: (payload: { modelId: number; benchmarkId: number; runSessionId?: number | null; entries: Array<{ taskId?: number | null; response: string; score?: string | null }>; finish?: boolean }) => Promise<{ ok: boolean; sessionId?: number; completedTaskIds?: number[]; aggregate?: { resultId: number; score: string } | null; results: Array<{ ok: boolean; taskId?: number | null; resultId?: number | null; score?: string | null; response?: string | null; error?: string | null }>; error?: string | null }>
   onStreamEvent: (callback: (eventName: 'task:chunk' | 'task:thinking-chunk' | 'task:done' | 'task:error' | 'task:retry' | 'task:tool-call' | 'task:needs-maze-verify' | 'benchmark:done' | 'benchmark:aborted', data: Record<string, unknown>) => void) => void
   onAborted: (callback: () => void) => void
   removeStreamListeners: () => void

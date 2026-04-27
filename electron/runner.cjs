@@ -205,6 +205,172 @@ function buildBenchmarkThinkingNotes(taskResults, runnableTasks) {
   }).join('\n\n---\n\n')
 }
 
+function normalizeProvidedScore(score, scoreType) {
+  if (score === null || score === undefined) return null
+  const text = String(score).trim().toLowerCase()
+  if (!text) return null
+
+  if (scoreType === 'boolean') {
+    if (['tak', 'yes', 'true', 'pass', 'passed', 'ok', '1'].includes(text)) return 'tak'
+    if (['nie', 'no', 'false', 'fail', 'failed', '0'].includes(text)) return 'nie'
+    return null
+  }
+
+  const match = text.match(/-?\d+(?:[\.,]\d+)?/)
+  if (!match) return null
+  const numeric = Number(match[0].replace(',', '.'))
+  return Number.isNaN(numeric) ? null : Math.max(0, Math.min(100, numeric))
+}
+
+function resolveBatchTask(entry, runnableTasks) {
+  const rawTaskId = entry.taskId ?? entry.task_id ?? entry.id
+  const numericTaskId = rawTaskId === null || rawTaskId === undefined || rawTaskId === '' ? null : Number(rawTaskId)
+  if (Number.isFinite(numericTaskId) && numericTaskId !== 0) {
+    return runnableTasks.find((task) => Number(task.id) === numericTaskId) || null
+  }
+  if (Number.isFinite(numericTaskId) && numericTaskId === 0) {
+    return runnableTasks.find((task) => !task.id) || (runnableTasks.length === 1 ? runnableTasks[0] : null)
+  }
+  return runnableTasks.length === 1 ? runnableTasks[0] : null
+}
+
+function buildManualBatchThinking(evaluation, providedScore) {
+  const parts = []
+  if (providedScore !== null && providedScore !== undefined) parts.push(`Manual batch provided score: ${providedScore}`)
+  if (evaluation?.error) parts.push(`Evaluation note: ${evaluation.error}`)
+  if (evaluation?.sandbox) parts.push(`## Sandbox evaluation\n\n\`\`\`json\n${JSON.stringify(evaluation.sandbox, null, 2)}\n\`\`\``)
+  return parts.length > 0 ? parts.join('\n\n') : null
+}
+
+async function submitManualBatch(payload = {}) {
+  const modelId = Number(payload.modelId)
+  const benchmarkId = Number(payload.benchmarkId)
+  const entries = Array.isArray(payload.entries) ? payload.entries : []
+  const model = getModelById(modelId)
+  const benchmark = getBenchmarkById(benchmarkId)
+
+  if (!model) return { ok: false, error: 'Nie znaleziono modelu.', results: [] }
+  if (!benchmark) return { ok: false, error: 'Nie znaleziono benchmarku.', results: [] }
+  if (entries.length === 0) return { ok: false, error: 'Brak odpowiedzi w paczce manualnej.', results: [] }
+
+  const runnableTasks = getRunnableTasks(benchmarkId, benchmark)
+  const existingSession = payload.runSessionId || payload.sessionId ? getRunSession(payload.runSessionId || payload.sessionId) : null
+  const session = existingSession || createRunSession({ model_id: modelId, benchmark_ids: [benchmarkId], current_benchmark_id: benchmarkId, completed_task_ids: [] })
+  const repoSandboxRoots = getPreference('repo_sandbox_roots') || []
+  const sandboxUseDocker = Boolean(getPreference('sandbox_use_docker'))
+  const completedIdSet = new Set((session.completed_task_ids || []).map(Number))
+  const batchResults = []
+
+  updateRunSession(session.id, { current_benchmark_id: benchmarkId, status: 'running' })
+
+  for (const entry of entries) {
+    const task = resolveBatchTask(entry || {}, runnableTasks)
+    const response = String(entry?.response ?? entry?.answer ?? entry?.patch ?? entry?.diff ?? '').trim()
+    const taskId = task?.id || null
+
+    if (!task) {
+      batchResults.push({ ok: false, taskId: entry?.taskId ?? entry?.task_id ?? null, error: 'Nie znaleziono task_id w tym benchmarku.' })
+      continue
+    }
+    if (!response) {
+      batchResults.push({ ok: false, taskId, error: 'Pusta odpowiedź w paczce manualnej.' })
+      continue
+    }
+
+    try {
+      updateRunSession(session.id, { current_benchmark_id: benchmarkId, current_task_id: taskId, status: 'running' })
+      const evaluation = await evaluateScore(task, response, { repoSandboxRoots, useDocker: sandboxUseDocker })
+      const providedScore = normalizeProvidedScore(entry?.score ?? entry?.result ?? entry?.passed, task.score_type)
+      const scoreCandidate = providedScore !== null ? providedScore : (!evaluation?.needs_verify && evaluation?.score !== null && evaluation?.score !== undefined ? evaluation.score : null)
+
+      if (scoreCandidate === null || scoreCandidate === undefined) {
+        batchResults.push({
+          ok: false,
+          taskId,
+          response,
+          error: evaluation?.needs_verify
+            ? 'To zadanie wymaga osobnej weryfikacji manualnej.'
+            : evaluation?.is_manual
+              ? 'Nie udało się ocenić automatycznie. Dodaj score="0-100" albo score="tak/nie" do bloku odpowiedzi.'
+              : evaluation?.error || 'Nie udało się ocenić odpowiedzi z paczki manualnej.',
+        })
+        continue
+      }
+
+      const score = normalizeBenchmarkScore(task, scoreCandidate, 1, 1)
+      const created = addResult({
+        model_id: modelId,
+        benchmark_id: benchmarkId,
+        task_id: taskId,
+        run_session_id: session.id,
+        score,
+        notes: response,
+        thinking_notes: buildManualBatchThinking(evaluation, providedScore),
+        attempt_number: 1,
+        tokens_used: null,
+        duration_ms: null,
+      })
+
+      if (taskId) completedIdSet.add(Number(taskId))
+      updateRunSession(session.id, { completed_task_ids: Array.from(completedIdSet), current_task_id: taskId })
+      batchResults.push({ ok: true, taskId, resultId: created.id, score: String(score), response, error: evaluation?.error || null })
+    } catch (error) {
+      batchResults.push({ ok: false, taskId, response, error: error instanceof Error ? error.message : 'Nieznany błąd oceny paczki manualnej.' })
+    }
+  }
+
+  const taskIds = runnableTasks.map((task) => task.id).filter(Boolean).map(Number)
+  const allTasksCompleted = taskIds.length > 0 ? taskIds.every((taskId) => completedIdSet.has(taskId)) : batchResults.some((result) => result.ok)
+  let aggregate = null
+
+  if (payload.finish && allTasksCompleted && taskIds.length > 0) {
+    const completedTaskResults = runnableTasks
+      .map((task) => task.id ? getLatestTaskResult(modelId, benchmarkId, task.id, session.started_at) : null)
+      .filter(Boolean)
+      .map((saved) => ({
+        benchmark_id: benchmarkId,
+        task_id: saved.task_id,
+        result_id: saved.id,
+        score: saved.score,
+        response: saved.notes,
+        thinking: saved.thinking_notes,
+        tokens_used: saved.tokens_used,
+        duration_ms: saved.duration_ms,
+        is_manual: false,
+        error: null,
+        attempt_number: saved.attempt_number || 1,
+      }))
+    const aggregateScore = aggregateBenchmarkScore(benchmark, completedTaskResults)
+    if (aggregateScore !== null) {
+      const aggregateResult = addResult({
+        model_id: modelId,
+        benchmark_id: benchmarkId,
+        task_id: null,
+        run_session_id: session.id,
+        score: aggregateScore,
+        notes: buildBenchmarkNotes(completedTaskResults, runnableTasks),
+        thinking_notes: buildBenchmarkThinkingNotes(completedTaskResults, runnableTasks),
+        attempt_number: 1,
+        tokens_used: null,
+        duration_ms: null,
+      })
+      aggregate = { resultId: aggregateResult.id, score: String(aggregateScore) }
+    }
+    finishRunSession(session.id)
+  } else if (payload.finish && allTasksCompleted) {
+    finishRunSession(session.id)
+  }
+
+  return {
+    ok: batchResults.some((result) => result.ok),
+    sessionId: session.id,
+    completedTaskIds: Array.from(completedIdSet),
+    results: batchResults,
+    aggregate,
+    error: batchResults.some((result) => !result.ok) ? 'Część odpowiedzi z paczki manualnej nie została zapisana.' : null,
+  }
+}
+
 function streamProviderPrompt(provider, model, prompt, handlers, imageBase64 = null, signal = null) {
   return new Promise((resolve, reject) => {
     Promise.resolve(provider.streamPrompt(
@@ -427,4 +593,4 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
   return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error }
 }
 
-module.exports = { runBenchmark, runBenchmarkStreaming }
+module.exports = { runBenchmark, runBenchmarkStreaming, submitManualBatch }

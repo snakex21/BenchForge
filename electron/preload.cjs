@@ -62,6 +62,7 @@ contextBridge.exposeInMainWorld('db', {
   abortBenchmark: () => ipcRenderer.invoke('benchmark:abort'),
   submitManualResult: (payload) => ipcRenderer.invoke('benchmark:submit-manual', payload),
   submitManualStreaming: (payload) => ipcRenderer.invoke('benchmark:submit-manual-streaming', payload),
+  submitManualBatch: (payload) => ipcRenderer.invoke('benchmark:submit-manual-batch', payload),
   onStreamEvent: (callback) => {
     ipcRenderer.on('task:chunk', (_, data) => callback('task:chunk', data))
     ipcRenderer.on('task:thinking-chunk', (_, data) => callback('task:thinking-chunk', data))
