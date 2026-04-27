@@ -44,7 +44,7 @@ const {
 const { resolveArtifactPath, zipDirectory } = require('./artifacts.cjs')
 const { checkEnvironment } = require('./systemTools.cjs')
 const { getProvider } = require('./providers/index.cjs')
-const { runBenchmark, runBenchmarkStreaming } = require('./runner.cjs')
+const { runBenchmark, runBenchmarkStreaming, submitManualBatch } = require('./runner.cjs')
 const { listBenchmarkPacks, downloadBenchmarkPack } = require('./benchmarkLibrary.cjs')
 const { listTools, runTool } = require('./toolRuntime.cjs')
 const { listMcpTools, callMcpTool } = require('./mcpRuntime.cjs')
@@ -474,6 +474,8 @@ ipcMain.handle('benchmark:submit-manual-streaming', async (_, payload) => {
     }
   }
 })
+
+ipcMain.handle('benchmark:submit-manual-batch', async (_, payload) => submitManualBatch(payload))
 
 app.whenReady().then(() => {
   initDb()

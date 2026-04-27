@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { ManualBatchDialog, type ManualBatchEntry, type ManualBatchTaskInput } from '@/components/benchmark/ManualBatchDialog'
 import { ManualPromptDialog } from '@/components/benchmark/ManualPromptDialog'
 import { MarkdownViewer, OutputViewer, SaveResponseButton } from '@/components/benchmark/OutputViewer'
 import { Badge } from '@/components/ui/Badge'
@@ -56,6 +57,19 @@ interface ManualStep {
   response?: string
   tokensUsed?: number | null
   durationMs?: number | null
+  completeItemOnSubmit?: boolean
+}
+
+interface ManualBatchStep {
+  modelId: number
+  benchmark: Benchmark
+  tasks: ManualBatchTaskInput[]
+  sessionId: number
+  itemKey: string
+  batchNumber: number
+  totalBatches: number
+  isLastBatch: boolean
+  largeRepoWarning?: boolean
 }
 
 const STATUS_LABEL_KEY: Record<RunnerItemStatus, TranslationKey> = {
@@ -130,6 +144,10 @@ export const RunnerView: React.FC = () => {
   const [summary, setSummary] = useState<string | null>(null)
   const [manualStep, setManualStep] = useState<ManualStep | null>(null)
   const [manualResolver, setManualResolver] = useState<((status: RunnerItemStatus) => void) | null>(null)
+  const [manualBatchStep, setManualBatchStep] = useState<ManualBatchStep | null>(null)
+  const [manualBatchResolver, setManualBatchResolver] = useState<((status: RunnerItemStatus) => void) | null>(null)
+  const [manualBatchSizeOption, setManualBatchSizeOption] = useState('1')
+  const [manualBatchCustomSize, setManualBatchCustomSize] = useState('30')
   const [isRunning, setIsRunning] = useState(false)
   const [resumeSession, setResumeSession] = useState<RunSession | null>(null)
   const [resumeSessionId, setResumeSessionId] = useState<number | null>(null)
@@ -196,6 +214,23 @@ export const RunnerView: React.FC = () => {
     return benchmarks.filter((benchmark) => [benchmark.name, benchmark.category, benchmark.suite_name, benchmark.description, benchmark.score_type].some((value) => String(value || '').toLowerCase().includes(query)))
   }, [benchmarkSearch, benchmarks])
 
+  const selectedManualModels = useMemo(() => models.filter((model) => selectedModelIds.includes(model.id) && model.mode === 'manual'), [models, selectedModelIds])
+  const effectiveManualBatchSize = useMemo(() => {
+    const rawValue = manualBatchSizeOption === 'custom' ? manualBatchCustomSize : manualBatchSizeOption
+    const numeric = Math.floor(Number(rawValue))
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : 1
+  }, [manualBatchCustomSize, manualBatchSizeOption])
+
+  const isRepoLikeBenchmark = (benchmark: Benchmark) => {
+    const taskText = (benchmark.tasks || []).map((task) => `${task.name} ${task.prompt_template} ${task.pass_condition || ''}`).join('\n')
+    const haystack = `${benchmark.name} ${benchmark.category} ${benchmark.suite_name || ''} ${benchmark.description || ''} ${benchmark.prompt_template} ${benchmark.pass_condition || ''} ${taskText}`.toLowerCase()
+    return haystack.includes('swe-bench') || haystack.includes('swe_bench_patch') || haystack.includes('repo_patch') || haystack.includes('base commit') || haystack.includes('test_patch')
+  }
+
+  const hasLargeRepoBatchWarning = selectedManualModels.length > 0 && effectiveManualBatchSize > 5 && selectedBenchmarkIds
+    .map((id) => benchmarks.find((benchmark) => benchmark.id === id))
+    .some((benchmark): benchmark is Benchmark => Boolean(benchmark && isRepoLikeBenchmark(benchmark)))
+
   const updateItem = (key: string, patch: Partial<RunnerItem>) => setItems((current) => current.map((item) => item.key === key ? { ...item, ...patch } : item))
   const updateItemTask = (key: string, taskId: number, patch: Partial<RunnerTaskState>) => setItems((current) => current.map((item) => {
     if (item.key !== key) return item
@@ -247,6 +282,8 @@ export const RunnerView: React.FC = () => {
     setIsLiveFollow(true)
     setManualStep(null)
     setManualResolver(null)
+    setManualBatchStep(null)
+    setManualBatchResolver(null)
   }
   const enableLiveFollow = () => {
     setFocusedItemKey(null)
@@ -254,6 +291,7 @@ export const RunnerView: React.FC = () => {
     setIsLiveFollow(true)
   }
   const waitForManual = (step: ManualStep) => new Promise<RunnerItemStatus>((resolve) => { setManualStep(step); setManualResolver(() => resolve) })
+  const waitForManualBatch = (step: ManualBatchStep) => new Promise<RunnerItemStatus>((resolve) => { setManualBatchStep(step); setManualBatchResolver(() => resolve) })
 
   useEffect(() => {
     void window.db?.runSession.getActive().then((active) => { if (active) setResumeSession(active) })
@@ -348,6 +386,121 @@ export const RunnerView: React.FC = () => {
     setResumeSession(null)
   }
 
+  const getManualTaskInputs = (benchmark: Benchmark, taskFilterIds?: number[] | null): ManualBatchTaskInput[] => {
+    const explicitTasks = (benchmark.tasks || [])
+      .filter((task) => !((benchmark.tasks?.length || 0) > 1 && isAutoGeneratedParentTask(task, benchmark)))
+      .filter((task) => !taskFilterIds?.length || taskFilterIds.includes(task.id))
+
+    if (explicitTasks.length > 0) {
+      return explicitTasks.map((task) => ({
+        taskId: task.id,
+        title: task.name,
+        prompt: task.prompt_template,
+        scoreType: task.score_type,
+        outputType: task.output_type,
+        passCondition: task.pass_condition || null,
+        expectedAnswer: task.expected_answer || null,
+        evaluationChecklist: task.evaluation_checklist || [],
+        evaluationRubric: task.evaluation_rubric || [],
+        referenceImage: task.reference_image || null,
+      }))
+    }
+
+    return [{
+      taskId: null,
+      title: benchmark.name,
+      prompt: benchmark.prompt_template,
+      scoreType: benchmark.score_type,
+      outputType: benchmark.output_type,
+      passCondition: benchmark.pass_condition || null,
+      expectedAnswer: benchmark.expected_answer || null,
+      evaluationChecklist: benchmark.evaluation_checklist || [],
+      evaluationRubric: benchmark.evaluation_rubric || [],
+      referenceImage: benchmark.reference_image || null,
+    }]
+  }
+
+  const chunkTasks = (tasks: ManualBatchTaskInput[], size: number) => {
+    const chunkSize = Math.max(1, size)
+    const chunks: ManualBatchTaskInput[][] = []
+    for (let index = 0; index < tasks.length; index += chunkSize) chunks.push(tasks.slice(index, index + chunkSize))
+    return chunks
+  }
+
+  const runManualModelBenchmark = async (pair: RunnerItem, benchmark: Benchmark) => {
+    if (!window.db) return { ok: false }
+    const tasks = getManualTaskInputs(benchmark, pair.taskFilterIds)
+    const session = await window.db.runSession.create({ model_id: pair.modelId, benchmark_ids: [pair.benchmarkId], current_benchmark_id: pair.benchmarkId, completed_task_ids: [] })
+    const completedTaskIds: number[] = []
+
+    updateItem(pair.key, { status: 'running', error: null, score: null, streamText: '', thinkingText: '', maxAttempts: 1 })
+
+    if (effectiveManualBatchSize <= 1) {
+      for (const task of tasks) {
+        updateItem(pair.key, { status: 'manual', attempt: 1, streamText: task.prompt, view: task.outputType !== 'text' ? 'preview' : 'code' })
+        if (task.taskId) updateItemTask(pair.key, task.taskId, { status: 'manual', text: '', thinking: '', attempt: 1 })
+        const status = await waitForManual({
+          modelId: pair.modelId,
+          benchmark,
+          taskId: task.taskId,
+          prompt: task.prompt,
+          scoreType: task.scoreType,
+          outputType: task.outputType,
+          referenceImage: task.referenceImage || null,
+          passCondition: task.passCondition || null,
+          evaluationChecklist: task.evaluationChecklist || [],
+          evaluationRubric: task.evaluationRubric || [],
+          sessionId: session.id,
+          itemKey: pair.key,
+          attemptNumber: 1,
+          response: '',
+          tokensUsed: null,
+          durationMs: null,
+          completeItemOnSubmit: false,
+        })
+        if (status !== 'done') {
+          await window.db.runSession.cancel({ id: session.id })
+          return { ok: false }
+        }
+        if (task.taskId) {
+          completedTaskIds.push(task.taskId)
+          await window.db.runSession.update({ id: session.id, data: { completed_task_ids: completedTaskIds, current_task_id: task.taskId } })
+        }
+      }
+      await window.db.runSession.finish({ id: session.id })
+      updateItem(pair.key, { status: 'done', error: null })
+      await loadResults()
+      return { ok: true }
+    }
+
+    const chunks = chunkTasks(tasks, effectiveManualBatchSize)
+    for (let index = 0; index < chunks.length; index += 1) {
+      const batchTasks = chunks[index]
+      updateItem(pair.key, { status: 'manual', attempt: 1, streamText: batchTasks.map((task) => `## ${task.title}\n\n${task.prompt}`).join('\n\n---\n\n') })
+      for (const task of batchTasks) {
+        if (task.taskId) updateItemTask(pair.key, task.taskId, { status: 'manual', text: '', thinking: '', attempt: 1 })
+      }
+      const status = await waitForManualBatch({
+        modelId: pair.modelId,
+        benchmark,
+        tasks: batchTasks,
+        sessionId: session.id,
+        itemKey: pair.key,
+        batchNumber: index + 1,
+        totalBatches: chunks.length,
+        isLastBatch: index === chunks.length - 1,
+        largeRepoWarning: isRepoLikeBenchmark(benchmark) && effectiveManualBatchSize > 5,
+      })
+      if (status !== 'done') {
+        await window.db.runSession.cancel({ id: session.id })
+        return { ok: false }
+      }
+    }
+
+    await loadResults()
+    return { ok: true }
+  }
+
   const runAll = async () => {
     if (!window.db || runningRef.current) return
     runningRef.current = true
@@ -396,6 +549,12 @@ export const RunnerView: React.FC = () => {
 
       setCurrentLabel(`Testowanie: ${models.find((m) => m.id === pair.modelId)?.name || pair.modelId} × ${pair.benchmarkName}...`)
       updateItem(pair.key, { status: 'running', error: null, score: null, streamText: '', thinkingText: '', maxAttempts: benchmark.attempts || 1 })
+      const selectedModel = models.find((model) => model.id === pair.modelId)
+      if (selectedModel?.mode === 'manual') {
+        const manualResult = await runManualModelBenchmark(pair, benchmark)
+        manualResult.ok ? successCount += 1 : errorCount += 1
+        continue
+      }
       let pendingManualStep: ManualStep | null = null
       let runError: string | null = null
       let lastScore: string | null = null
@@ -568,21 +727,94 @@ export const RunnerView: React.FC = () => {
     if (!window.db || !manualStep) return
     const thinkingNotes = rubricReport ? `## Manual rubric evaluation\n\n\`\`\`json\n${JSON.stringify(rubricReport, null, 2)}\n\`\`\`` : null
     const result = await window.db.submitManualStreaming({ modelId: manualStep.modelId, benchmarkId: manualStep.benchmark.id, taskId: manualStep.taskId || null, runSessionId: manualStep.sessionId || null, response, score, attemptNumber: manualStep.attemptNumber || 1, tokensUsed: manualStep.tokensUsed ?? null, durationMs: manualStep.durationMs ?? null, thinkingNotes })
-    updateItem(manualStep.itemKey, result.ok ? { status: 'done', score, streamText: response } : { status: 'error', error: result.error || t('runner.errorSaveManual') })
+    if (manualStep.taskId) updateItemTask(manualStep.itemKey, manualStep.taskId, result.ok ? { status: 'done', score, text: response, attempt: manualStep.attemptNumber || 1 } : { status: 'error', error: result.error || t('runner.errorSaveManual') })
+    if (manualStep.completeItemOnSubmit === false) {
+      updateItem(manualStep.itemKey, result.ok ? { status: 'running', streamText: response, error: null } : { status: 'error', error: result.error || t('runner.errorSaveManual') })
+    } else {
+      updateItem(manualStep.itemKey, result.ok ? { status: 'done', score, streamText: response } : { status: 'error', error: result.error || t('runner.errorSaveManual') })
+    }
     await loadResults()
     setManualStep(null)
     manualResolver?.(result.ok ? 'done' : 'error')
     setManualResolver(null)
   }
 
+  const handleManualBatchSubmit = async (entries: ManualBatchEntry[]) => {
+    if (!window.db || !manualBatchStep) return
+    const result = await window.db.submitManualBatch({
+      modelId: manualBatchStep.modelId,
+      benchmarkId: manualBatchStep.benchmark.id,
+      runSessionId: manualBatchStep.sessionId,
+      entries,
+      finish: manualBatchStep.isLastBatch,
+    })
+
+    const resultByTaskKey = new Map((result.results || []).map((item) => [String(item.taskId ?? 0), item]))
+    const entryByTaskKey = new Map(entries.map((entry) => [String(entry.taskId ?? 0), entry]))
+    const batchHadErrors = manualBatchStep.tasks.some((task) => !resultByTaskKey.get(String(task.taskId ?? 0))?.ok)
+
+    for (const task of manualBatchStep.tasks) {
+      const key = String(task.taskId ?? 0)
+      const saved = resultByTaskKey.get(key)
+      const entry = entryByTaskKey.get(key)
+      if (task.taskId) {
+        updateItemTask(manualBatchStep.itemKey, task.taskId, saved?.ok ? {
+          status: 'done',
+          score: saved.score || null,
+          text: saved.response || entry?.response || '',
+          attempt: 1,
+          error: saved.error || null,
+        } : {
+          status: 'error',
+          text: entry?.response || '',
+          error: saved?.error || result.error || t('runner.errorSaveManual'),
+        })
+      }
+    }
+
+    const combinedText = entries.map((entry) => `## task_id: ${entry.taskId ?? 0}\n\n${entry.response}`).join('\n\n---\n\n')
+    updateItem(manualBatchStep.itemKey, batchHadErrors ? {
+      status: 'error',
+      error: result.error || t('manual.batchSomeFailed'),
+      streamText: combinedText,
+    } : {
+      status: manualBatchStep.isLastBatch ? 'done' : 'running',
+      score: result.aggregate?.score || null,
+      error: null,
+      streamText: combinedText,
+    })
+
+    await loadResults()
+    setManualBatchStep(null)
+    manualBatchResolver?.(!result.ok || batchHadErrors ? 'error' : 'done')
+    setManualBatchResolver(null)
+  }
+
   const handleManualCancel = () => {
-    if (manualStep) updateItem(manualStep.itemKey, { status: 'error', error: 'Anulowano wprowadzanie odpowiedzi manualnej.' })
+    if (manualStep) {
+      updateItem(manualStep.itemKey, { status: 'error', error: 'Anulowano wprowadzanie odpowiedzi manualnej.' })
+      if (manualStep.taskId) updateItemTask(manualStep.itemKey, manualStep.taskId, { status: 'error', error: 'Anulowano wprowadzanie odpowiedzi manualnej.' })
+    }
     setManualStep(null)
     manualResolver?.('error')
     setManualResolver(null)
   }
 
-  const handleAbortBenchmark = async () => { await window.db?.abortBenchmark() }
+  const handleManualBatchCancel = () => {
+    if (manualBatchStep) {
+      updateItem(manualBatchStep.itemKey, { status: 'error', error: t('manual.batchCancelled') })
+      for (const task of manualBatchStep.tasks) if (task.taskId) updateItemTask(manualBatchStep.itemKey, task.taskId, { status: 'error', error: t('manual.batchCancelled') })
+    }
+    setManualBatchStep(null)
+    manualBatchResolver?.('error')
+    setManualBatchResolver(null)
+  }
+
+  const handleAbortBenchmark = async () => {
+    if (manualBatchStep) handleManualBatchCancel()
+    else if (manualStep) handleManualCancel()
+    await window.db?.abortBenchmark()
+  }
 
   const getBenchmarkTasks = (benchmark: Benchmark) => {
     const explicitTasks = (benchmark.tasks || []).filter((task) => !((benchmark.tasks?.length || 0) > 1 && isAutoGeneratedParentTask(task, benchmark)))
@@ -714,9 +946,38 @@ export const RunnerView: React.FC = () => {
       )}
 
       {models.length === 0 || benchmarks.length === 0 ? <EmptyState icon="plus" title={t('runner.noRunDataTitle')} description={t('runner.noRunDataDescription')} /> : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card title={t('runner.modelsCard')} subtitle={t('runner.modelsCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setModelPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{selectedModelIds.length ? t('runner.selectedModels', { count: selectedModelIds.length }) : t('runner.chooseModels')}</p><p className="truncate text-xs text-slate-500">{selectedModelIds.length ? models.filter((model) => selectedModelIds.includes(model.id)).map((model) => model.name).join(', ') : t('runner.openModelsPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
-          <Card title={t('runner.benchmarksCard')} subtitle={t('runner.benchmarksCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setBenchmarkPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{selectedBenchmarkIds.length ? t('runner.selectedBenchmarks', { count: selectedBenchmarkIds.length }) : t('runner.chooseBenchmarks')}</p><p className="truncate text-xs text-slate-500">{selectedBenchmarkIds.length ? benchmarks.filter((benchmark) => selectedBenchmarkIds.includes(benchmark.id)).map((benchmark) => benchmark.name).join(', ') : t('runner.openBenchmarksPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
+        <div className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title={t('runner.modelsCard')} subtitle={t('runner.modelsCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setModelPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{selectedModelIds.length ? t('runner.selectedModels', { count: selectedModelIds.length }) : t('runner.chooseModels')}</p><p className="truncate text-xs text-slate-500">{selectedModelIds.length ? models.filter((model) => selectedModelIds.includes(model.id)).map((model) => model.name).join(', ') : t('runner.openModelsPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
+            <Card title={t('runner.benchmarksCard')} subtitle={t('runner.benchmarksCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setBenchmarkPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{selectedBenchmarkIds.length ? t('runner.selectedBenchmarks', { count: selectedBenchmarkIds.length }) : t('runner.chooseBenchmarks')}</p><p className="truncate text-xs text-slate-500">{selectedBenchmarkIds.length ? benchmarks.filter((benchmark) => selectedBenchmarkIds.includes(benchmark.id)).map((benchmark) => benchmark.name).join(', ') : t('runner.openBenchmarksPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
+          </div>
+
+          {selectedManualModels.length > 0 && (
+            <Card title={t('runner.manualBatchTitle')} subtitle={t('runner.manualBatchDescription')}>
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">{t('runner.manualBatchSize')}</label>
+                  <select value={manualBatchSizeOption} onChange={(event) => setManualBatchSizeOption(event.target.value)} disabled={isRunning} className="h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 outline-none focus:border-indigo-500/60">
+                    <option value="1">{t('runner.manualBatchSingle')}</option>
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="custom">{t('runner.manualBatchCustom')}</option>
+                  </select>
+                </div>
+                {manualBatchSizeOption === 'custom' && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-400">{t('runner.manualBatchCustomSize')}</label>
+                    <input type="number" min={1} value={manualBatchCustomSize} onChange={(event) => setManualBatchCustomSize(event.target.value)} disabled={isRunning} className="h-10 w-28 rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 outline-none focus:border-indigo-500/60" />
+                  </div>
+                )}
+                <p className="text-xs text-slate-500">{t('runner.manualBatchActive', { count: effectiveManualBatchSize })}</p>
+              </div>
+              {hasLargeRepoBatchWarning && <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">{t('runner.manualBatchRepoWarning')}</div>}
+            </Card>
+          )}
         </div>
       )}
 
@@ -994,6 +1255,7 @@ export const RunnerView: React.FC = () => {
       )}
 
       {manualStep && <ManualPromptDialog prompt={manualStep.prompt || manualStep.benchmark.prompt_template} scoreType={manualStep.scoreType || manualStep.benchmark.score_type} outputType={manualStep.outputType || manualStep.benchmark.output_type || 'text'} initialResponse={manualStep.response || ''} referenceImage={manualStep.referenceImage ?? manualStep.benchmark.reference_image ?? null} passCondition={manualStep.passCondition ?? manualStep.benchmark.pass_condition ?? null} evaluationChecklist={manualStep.evaluationChecklist || manualStep.benchmark.evaluation_checklist || []} evaluationRubric={manualStep.evaluationRubric || manualStep.benchmark.evaluation_rubric || []} onSubmit={(response, score, rubricReport) => void handleManualSubmit(response, score, rubricReport)} onCancel={handleManualCancel} />}
+      {manualBatchStep && <ManualBatchDialog benchmarkName={manualBatchStep.benchmark.name} tasks={manualBatchStep.tasks} batchNumber={manualBatchStep.batchNumber} totalBatches={manualBatchStep.totalBatches} largeRepoWarning={manualBatchStep.largeRepoWarning} onSubmit={(entries) => void handleManualBatchSubmit(entries)} onCancel={handleManualBatchCancel} />}
     </div>
   )
 }
