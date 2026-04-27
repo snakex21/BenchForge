@@ -16,6 +16,7 @@ import { BenchmarksView } from '@/features/arena/BenchmarksView'
 import { ResultsView } from '@/features/arena/ResultsView'
 import { StatsView } from '@/features/arena/StatsView'
 import { SettingsView } from '@/features/arena/SettingsView'
+import { FirstRunWizard } from '@/components/onboarding/FirstRunWizard'
 import { useTranslation } from '@/i18n'
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
   const loadResults = useResultStore((state) => state.loadFromDb)
   const { t } = useTranslation()
   const [isReady, setIsReady] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -41,6 +43,9 @@ function App() {
   useEffect(() => {
     const bootstrap = async () => {
       await Promise.all([loadModels(), loadBenchmarks(), loadResults()])
+      const completed = await window.db?.getPreference?.('onboarding_completed')
+      const hasExistingData = useModelStore.getState().models.length > 0 || useBenchmarkStore.getState().benchmarks.length > 0
+      setShowOnboarding(completed !== true && !hasExistingData)
       setIsReady(true)
     }
 
@@ -96,6 +101,7 @@ function App() {
           {shouldShowDetailsPanel && <DetailsPanel />}
         </div>
       </AppLayout>
+      {isReady && showOnboarding && <FirstRunWizard onComplete={() => setShowOnboarding(false)} />}
     </div>
   )
 }

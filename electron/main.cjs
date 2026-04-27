@@ -59,6 +59,78 @@ function getGithubTokenPreference() {
   return String(getPreference('github_token') || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '').trim() || null
 }
 
+async function getHealthCheck() {
+  const environment = await checkEnvironment()
+  const models = getModels()
+  const apiModels = models.filter((model) => model.mode === 'api')
+  const localProviders = new Set(['lmstudio', 'ollama', 'liquid-ai'])
+  const remoteApiModels = apiModels.filter((model) => model.provider && !localProviders.has(model.provider))
+  const missingKeyModels = remoteApiModels.filter((model) => !String(model.api_key || '').trim())
+  const mcpServers = getPreference('mcp_servers') || []
+  const repoSandboxRoots = getPreference('repo_sandbox_roots') || []
+  const judgeModelId = getPreference('judge_model_id')
+  const githubToken = getGithubTokenPreference()
+  const dockerCheck = environment.checks.find((check) => check.label === 'Docker')
+  const sandboxUseDocker = Boolean(getPreference('sandbox_use_docker'))
+
+  const checks = [
+    ...environment.checks.map((check) => ({ ...check, group: 'environment' })),
+    {
+      label: 'API keys',
+      group: 'models',
+      ok: missingKeyModels.length === 0,
+      required: false,
+      version: remoteApiModels.length === 0 ? 'No remote API models configured' : `${remoteApiModels.length - missingKeyModels.length}/${remoteApiModels.length} remote API model keys present`,
+      error: missingKeyModels.length ? `Missing keys: ${missingKeyModels.map((model) => model.name).join(', ')}` : null,
+    },
+    {
+      label: 'Local model runtimes',
+      group: 'models',
+      ok: apiModels.some((model) => localProviders.has(model.provider)) || models.some((model) => model.mode === 'manual'),
+      required: false,
+      version: apiModels.some((model) => localProviders.has(model.provider)) ? 'Local runtime model configured' : models.some((model) => model.mode === 'manual') ? 'Manual model configured' : 'No local/manual model configured',
+    },
+    {
+      label: 'Docker sandbox preference',
+      group: 'sandbox',
+      ok: !sandboxUseDocker || Boolean(dockerCheck?.ok),
+      required: false,
+      version: sandboxUseDocker ? 'Docker sandbox enabled' : 'Docker sandbox disabled',
+      error: sandboxUseDocker && !dockerCheck?.ok ? 'Docker sandbox is enabled but Docker is unavailable.' : null,
+    },
+    {
+      label: 'MCP servers',
+      group: 'mcp',
+      ok: Array.isArray(mcpServers) && mcpServers.length > 0,
+      required: false,
+      version: `${Array.isArray(mcpServers) ? mcpServers.length : 0} configured`,
+    },
+    {
+      label: 'Repo Sandbox',
+      group: 'sandbox',
+      ok: Array.isArray(repoSandboxRoots) && repoSandboxRoots.length > 0,
+      required: false,
+      version: `${Array.isArray(repoSandboxRoots) ? repoSandboxRoots.length : 0} repo roots configured`,
+    },
+    {
+      label: 'Judge model',
+      group: 'judge',
+      ok: typeof judgeModelId === 'number' && models.some((model) => model.id === judgeModelId),
+      required: false,
+      version: typeof judgeModelId === 'number' ? `Model #${judgeModelId}` : 'Not configured',
+    },
+    {
+      label: 'GitHub Radar token',
+      group: 'radar',
+      ok: Boolean(githubToken),
+      required: false,
+      version: githubToken ? 'Configured' : 'Not configured',
+    },
+  ]
+
+  return { ok: checks.filter((check) => check.required).every((check) => check.ok), checks }
+}
+
 const DEFAULT_SCAN_ENDPOINTS = [
   { key: 'lmstudio', name: 'LMStudio', url: 'http://localhost:1234/v1', type: 'openai' },
   { key: 'ollama', name: 'Ollama', url: 'http://localhost:11434', type: 'ollama' },
@@ -238,6 +310,7 @@ ipcMain.handle('benchmark-radar:discover', (_, payload) => discoverBenchmarkBeac
 ipcMain.handle('tools:list', () => listTools())
 ipcMain.handle('tools:run', (_, payload) => runTool({ ...(payload || {}), mcpServers: getPreference('mcp_servers') || [] }))
 ipcMain.handle('env:check', () => checkEnvironment())
+ipcMain.handle('health:check', () => getHealthCheck())
 ipcMain.handle('mcp:servers:get', () => getPreference('mcp_servers') || [])
 ipcMain.handle('mcp:servers:save', (_, payload) => { savePreference('mcp_servers', Array.isArray(payload?.servers) ? payload.servers : []); return getPreference('mcp_servers') || [] })
 ipcMain.handle('mcp:tools:list', () => listMcpTools(getPreference('mcp_servers') || []))
