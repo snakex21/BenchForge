@@ -55,6 +55,10 @@ const isDev = Boolean(rendererUrl)
 let mainWindow = null
 let currentBenchmarkAbort = null
 
+function getGithubTokenPreference() {
+  return String(getPreference('github_token') || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '').trim() || null
+}
+
 const DEFAULT_SCAN_ENDPOINTS = [
   { key: 'lmstudio', name: 'LMStudio', url: 'http://localhost:1234/v1', type: 'openai' },
   { key: 'ollama', name: 'Ollama', url: 'http://localhost:11434', type: 'ollama' },
@@ -229,8 +233,8 @@ ipcMain.handle('files:export-artifact-zip', async (_, payload) => {
 
 ipcMain.handle('benchmark-library:list', () => listBenchmarkPacks())
 ipcMain.handle('benchmark-library:download', (_, payload) => downloadBenchmarkPack(payload?.id, payload || {}))
-ipcMain.handle('benchmark-radar:scan', (_, payload) => scanBenchmarkBeacon(payload || {}))
-ipcMain.handle('benchmark-radar:discover', (_, payload) => discoverBenchmarkBeacons(payload || {}))
+ipcMain.handle('benchmark-radar:scan', (_, payload) => scanBenchmarkBeacon({ ...(payload || {}), token: getGithubTokenPreference() }))
+ipcMain.handle('benchmark-radar:discover', (_, payload) => discoverBenchmarkBeacons({ ...(payload || {}), token: getGithubTokenPreference() }))
 ipcMain.handle('tools:list', () => listTools())
 ipcMain.handle('tools:run', (_, payload) => runTool({ ...(payload || {}), mcpServers: getPreference('mcp_servers') || [] }))
 ipcMain.handle('env:check', () => checkEnvironment())
