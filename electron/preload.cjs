@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('benchforge', {
   exportArtifactZip: (payload) => ipcRenderer.invoke('files:export-artifact-zip', payload),
   listBenchmarkPacks: () => ipcRenderer.invoke('benchmark-library:list'),
   downloadBenchmarkPack: (payload) => ipcRenderer.invoke('benchmark-library:download', payload),
+  scanBenchmarkBeacon: (payload) => ipcRenderer.invoke('benchmark-radar:scan', payload),
+  discoverBenchmarkBeacons: (payload) => ipcRenderer.invoke('benchmark-radar:discover', payload),
   listTools: () => ipcRenderer.invoke('tools:list'),
   runTool: (payload) => ipcRenderer.invoke('tools:run', payload),
   checkEnvironment: () => ipcRenderer.invoke('env:check'),
