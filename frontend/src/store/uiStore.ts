@@ -2,6 +2,15 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { ActiveView, UIState } from '@/types'
 
+const detectInitialLanguage = (): UIState['language'] => {
+  if (typeof navigator === 'undefined') return 'en'
+  const preferred = (navigator.languages?.[0] || navigator.language || '').toLowerCase()
+  if (preferred.startsWith('pl')) return 'pl'
+  if (preferred.startsWith('de')) return 'de'
+  if (preferred.startsWith('es')) return 'es'
+  return 'en'
+}
+
 interface UIStore extends UIState {
   setSidebarCollapsed: (collapsed: boolean) => void
   setActiveView: (view: ActiveView) => void
@@ -24,7 +33,7 @@ const defaultUIState: UIState = {
   rightPanelOpen: true,
   thinkingPanelOpen: false,
   theme: 'dark',
-  language: 'pl',
+  language: detectInitialLanguage(),
   rerunTarget: null,
 }
 

@@ -41,6 +41,11 @@ const CATALOG = [
     recommendedLimit: 20,
     homepage: 'https://www.swebench.com/',
   },
+  { id: 'swebench-full', name: 'SWE-bench Full', source: 'Princeton NLP / HuggingFace', description: 'Pełny SWE-bench: repo/patch tasks dla napraw prawdziwych issue w projektach open-source. Wymaga Repo Sandbox.', category: 'Kod', defaultLimit: 100, recommendedLimit: 20, homepage: 'https://www.swebench.com/original.html' },
+  { id: 'swebench-verified', name: 'SWE-bench Verified', source: 'Princeton NLP / HuggingFace', description: 'Human-filtered SWE-bench Verified: 500 zweryfikowanych zadań repo/patch. Wymaga Repo Sandbox.', category: 'Kod', defaultLimit: 100, recommendedLimit: 20, homepage: 'https://www.swebench.com/verified.html' },
+  { id: 'swebench-multilingual', name: 'SWE-bench Multilingual', source: 'SWE-bench / HuggingFace', description: 'SWE-bench Multilingual: zadania software engineering w wielu językach programowania. Wymaga Repo Sandbox.', category: 'Kod', defaultLimit: 100, recommendedLimit: 20, homepage: 'https://www.swebench.com/multilingual-leaderboard.html' },
+  { id: 'swebench-multimodal', name: 'SWE-bench Multimodal', source: 'SWE-bench / HuggingFace', description: 'SWE-bench Multimodal: issue z elementami wizualnymi i repo/patch evaluation. Wymaga Repo Sandbox; obrazy/metadane są zachowane w pass_condition.', category: 'Wizja', defaultLimit: 100, recommendedLimit: 20, homepage: 'https://www.swebench.com/multimodal.html' },
+  { id: 'swebench-pro', name: 'SWE-bench Pro', source: 'Scale AI / GitHub curated', description: 'SWE-bench Pro: długohoryzontowe zadania software engineering. Import jako repo_patch placeholder pod lokalne repo/testCommand.', category: 'Kod', defaultLimit: 20, recommendedLimit: 10, homepage: 'https://github.com/scaleapi/SWE-bench_Pro-os' },
   {
     id: 'mmlu-mini',
     name: 'MMLU mini',
@@ -82,6 +87,7 @@ const CATALOG = [
   { id: 'summarization-mini', name: 'Summarization mini', source: 'BenchForge curated / CNN-DM style', description: 'Streszczanie tekstu z ograniczeniami długości i zachowaniem faktów.', category: 'Kreatywność', defaultLimit: 10, recommendedLimit: 6 },
   { id: 'safety-helpfulness-mini', name: 'Safety/Helpfulness mini', source: 'BenchForge curated', description: 'Bezpieczne i pomocne odpowiedzi w sytuacjach odmowy lub porad ogólnych.', category: 'Wiedza', defaultLimit: 10, recommendedLimit: 6 },
   { id: 'visual-reasoning-mini', name: 'Visual reasoning mini', source: 'BenchForge curated / VQA style', description: 'Tekstowe zadania wizualnego rozumowania z opisem sceny.', category: 'Wizja', defaultLimit: 10, recommendedLimit: 6 },
+  { id: 'voxelbench-mini', name: 'VoxelBench mini', source: 'BenchForge curated / voxel-spatial style', description: 'Zadania przestrzenne 3D/voxel: model ma rozumować o siatkach 3D, objętości, sąsiedztwie i ścieżkach.', category: 'Wizja', defaultLimit: 12, recommendedLimit: 8 },
   { id: 'maze-tools-mini', name: 'Maze Tool Solving mini', source: 'BenchForge curated / tool benchmark', description: 'Benchmark agentowy: model ma użyć narzędzi python.run / image.draw_path_svg do rozwiązania labiryntu i zapisania ścieżki.', category: 'Wizja', defaultLimit: 4, recommendedLimit: 4 },
   { id: 'mcp-filesystem-mini', name: 'MCP Filesystem mini', source: 'BenchForge curated / MCP benchmark', description: 'Benchmark agentowy wymagający użycia MCP filesystem tools do czytania/listowania plików.', category: 'Kod', defaultLimit: 6, recommendedLimit: 4 },
   { id: 'mcp-sqlite-mini', name: 'MCP SQLite mini', source: 'BenchForge curated / MCP benchmark', description: 'Benchmark agentowy pod MCP database/sqlite tools — pytania wymagają zapytań do bazy przez MCP.', category: 'Kod', defaultLimit: 6, recommendedLimit: 4 },
@@ -89,13 +95,39 @@ const CATALOG = [
   { id: 'mcp-git-mini', name: 'MCP Git mini', source: 'BenchForge curated / MCP benchmark', description: 'Benchmark agentowy pod MCP git tools — model analizuje status, diff lub historię repozytorium przez MCP.', category: 'Kod', defaultLimit: 6, recommendedLimit: 4 },
 ]
 
+const TOTAL_TASKS = {
+  humaneval: 164,
+  mbpp: 974,
+  gsm8k: 1319,
+  'swebench-lite': 300,
+  'swebench-full': 2294,
+  'swebench-verified': 500,
+  'swebench-multilingual': 300,
+  'swebench-multimodal': 517,
+  'swebench-pro': 20,
+}
+
+function enrichCatalogItem(item) {
+  return {
+    ...item,
+    totalTasks: TOTAL_TASKS[item.id] || item.defaultLimit || item.recommendedLimit || 0,
+  }
+}
+
 const HUMAN_EVAL_URL = 'https://raw.githubusercontent.com/openai/human-eval/master/data/HumanEval.jsonl.gz'
 const MBPP_URL = 'https://raw.githubusercontent.com/google-research/google-research/master/mbpp/mbpp.jsonl'
 const GSM8K_URL = 'https://raw.githubusercontent.com/openai/grade-school-math/master/grade_school_math/data/test.jsonl'
 const SWEBENCH_ROWS_URL = 'https://datasets-server.huggingface.co/rows?dataset=princeton-nlp%2FSWE-bench_Lite&config=default&split=test&offset=0&length='
+const HF_ROWS_BASE = 'https://datasets-server.huggingface.co/rows'
+const SWEBENCH_DATASETS = {
+  'swebench-full': { dataset: 'princeton-nlp/SWE-bench', config: 'default', split: 'test', name: 'SWE-bench Full', suiteName: 'SWE-bench Full' },
+  'swebench-verified': { dataset: 'princeton-nlp/SWE-bench_Verified', config: 'default', split: 'test', name: 'SWE-bench Verified', suiteName: 'SWE-bench Verified' },
+  'swebench-multilingual': { dataset: 'SWE-bench/SWE-bench_Multilingual', config: 'default', split: 'test', name: 'SWE-bench Multilingual', suiteName: 'SWE-bench Multilingual' },
+  'swebench-multimodal': { dataset: 'SWE-bench/SWE-bench_Multimodal', config: 'default', split: 'test', name: 'SWE-bench Multimodal', suiteName: 'SWE-bench Multimodal' },
+}
 
 function listBenchmarkPacks() {
-  return CATALOG
+  return CATALOG.map(enrichCatalogItem)
 }
 
 async function fetchBuffer(url) {
@@ -116,6 +148,14 @@ async function fetchJson(url) {
   return response.json()
 }
 
+async function fetchHfRows({ dataset, config = 'default', split = 'test' }, limit) {
+  const params = new URLSearchParams({ dataset, config, split, offset: '0', length: String(limit) })
+  const payload = await fetchJson(`${HF_ROWS_BASE}?${params.toString()}`)
+  const rows = Array.isArray(payload?.rows) ? payload.rows : []
+  if (rows.length === 0) throw new Error(`HuggingFace rows response is empty for ${dataset}`)
+  return rows
+}
+
 function parseJsonl(text) {
   return String(text || '')
     .split(/\r?\n/g)
@@ -124,10 +164,11 @@ function parseJsonl(text) {
     .map((line) => JSON.parse(line))
 }
 
-function safeLimit(value, fallback) {
+function safeLimit(value, fallback, max = 500) {
   const numeric = Number(value)
-  if (!Number.isFinite(numeric) || numeric <= 0) return fallback
-  return Math.max(1, Math.min(500, Math.floor(numeric)))
+  const cap = Number.isFinite(Number(max)) && Number(max) > 0 ? Number(max) : 500
+  if (!Number.isFinite(numeric) || numeric <= 0) return Math.max(1, Math.min(cap, fallback))
+  return Math.max(1, Math.min(cap, Math.floor(numeric)))
 }
 
 function codePresenceCondition(required, sandbox) {
@@ -265,28 +306,32 @@ function convertGsm8k(records, limit) {
   })
 }
 
-function convertSwebenchRows(rows, limit) {
+function convertSwebenchRows(rows, limit, options = {}) {
   const selected = rows.slice(0, limit)
   return makeBenchmark({
-    name: `SWE-bench Lite (${selected.length})`,
-    category: 'Kod',
-    suiteName: 'SWE-bench Lite',
-    description: 'SWE-bench Lite w formacie BenchForge. To przygotowanie pod przyszły sandbox repo/patch; obecnie prompt prosi o patch i zapisuje metadane testów.',
-    promptTemplate: 'SWE-bench Lite — naprawy repozytoriów importowane z HuggingFace datasets-server.',
+    name: `${options.name || 'SWE-bench Lite'} (${selected.length})`,
+    category: options.category || 'Kod',
+    suiteName: options.suiteName || options.name || 'SWE-bench Lite',
+    description: options.description || 'SWE-bench w formacie BenchForge. Zadania repo/patch pod Repo Sandbox.',
+    promptTemplate: options.promptTemplate || `${options.name || 'SWE-bench'} — naprawy repozytoriów importowane z HuggingFace datasets-server.`,
     tasks: selected.map((entry, index) => {
       const item = entry.row || entry
       const repo = item.repo || 'repo'
       const instanceId = item.instance_id || `swebench-${index + 1}`
+      const problemStatement = item.problem_statement || item.problem || item.issue || item.description || ''
+      const imageText = item.image || item.image_url || item.screenshot || item.visual || null
       return taskBase({
         name: `${repo} — ${instanceId}`,
-        prompt: `Repo: ${repo}\nInstance: ${instanceId}\nBase commit: ${item.base_commit || 'unknown'}\n\nProblem statement:\n${item.problem_statement || ''}\n\nZwróć propozycję patcha/diff oraz krótki opis zmiany.`,
+        prompt: `Repo: ${repo}\nInstance: ${instanceId}\nBase commit: ${item.base_commit || 'unknown'}\n\nProblem statement:\n${problemStatement}${imageText ? `\n\nVisual/multimodal reference:\n${imageText}` : ''}\n\nZwróć propozycję patcha/diff oraz krótki opis zmiany.`,
         passCondition: externalCondition('swe_bench_patch', {
-          source: 'SWE-bench Lite',
+          source: options.suiteName || options.name || 'SWE-bench',
           repo,
           instance_id: instanceId,
           base_commit: item.base_commit || null,
           test_patch: item.test_patch || null,
           patch: item.patch || null,
+          language: item.language || item.repo_language || null,
+          image: imageText,
         }),
         checklist: ['Czy odpowiedź zawiera konkretny patch/diff?', 'Czy zmiana odnosi się do problem statement?', 'Docelowo sandbox powinien uruchomić test_patch.'],
         outputType: 'markdown',
@@ -350,6 +395,27 @@ function fallbackSwebench(limit) {
     { repo: 'django/django', instance_id: 'benchforge-demo-django', base_commit: 'demo', problem_statement: 'A model field validation error is unclear. Propose a patch improving the error message and add a regression test.', patch: null, test_patch: null },
     { repo: 'psf/requests', instance_id: 'benchforge-demo-requests', base_commit: 'demo', problem_statement: 'Session should preserve a custom header across redirects. Propose a patch and tests.', patch: null, test_patch: null },
   ], Math.min(limit, 2))
+}
+
+function fallbackSwebenchFamily(id, limit) {
+  const meta = packMeta(id)
+  const rows = [
+    { repo: 'django/django', instance_id: `${id}-django-demo`, base_commit: 'demo', problem_statement: `${meta.name} demo: fix a validation edge case and add a regression test.`, language: 'python', patch: null, test_patch: null },
+    { repo: 'pallets/flask', instance_id: `${id}-flask-demo`, base_commit: 'demo', problem_statement: `${meta.name} demo: repair request handling behavior and add tests.`, language: 'python', patch: null, test_patch: null },
+    { repo: 'qutebrowser/qutebrowser', instance_id: `${id}-qutebrowser-demo`, base_commit: 'demo', problem_statement: `${meta.name} demo: investigate UI/browser issue and propose a patch.`, language: 'python', patch: null, test_patch: null },
+    { repo: 'gravitational/teleport', instance_id: `${id}-teleport-demo`, base_commit: 'demo', problem_statement: `${meta.name} demo: fix a Go service regression and update tests.`, language: 'go', patch: null, test_patch: null },
+  ]
+  return convertSwebenchRows(rows, Math.min(limit, rows.length), { name: meta.name, suiteName: meta.name, category: meta.category, description: meta.description })
+}
+
+function fallbackVoxelBench(limit) {
+  const items = [
+    { name: 'Voxel — count cubes', context: 'Voxel grid layers z=0..1. z0: ##. / .#. / ... ; z1: #.. / ... / ..#', question: 'How many filled voxels (#) are in the grid?', answer: '5' },
+    { name: 'Voxel — neighbors', context: '3D grid coordinates use x,y,z. Filled voxels: (0,0,0), (1,0,0), (1,1,0), (1,1,1).', question: 'How many 6-connected neighbors does voxel (1,1,0) have?', answer: '2' },
+    { name: 'Voxel — shortest path', context: '3x3x1 grid, S at (0,0,0), E at (2,2,0), blocked: (1,1,0). Movement is 4-neighbor in the layer.', question: 'What is the shortest path length from S to E?', answer: '4' },
+    { name: 'Voxel — projection', context: 'Filled voxels: (0,0,0), (0,0,1), (1,0,0), (2,2,0).', question: 'How many occupied cells are visible in top-down XY projection?', answer: '3' },
+  ].slice(0, limit)
+  return makeExactPack('voxelbench-mini', items.length, items)
 }
 
 function fallbackMazeTools(limit) {
@@ -781,6 +847,8 @@ function fallbackPack(id, limit) {
   if (id === 'mbpp') return fallbackMbpp(limit)
   if (id === 'gsm8k') return fallbackGsm8k(limit)
   if (id === 'swebench-lite') return fallbackSwebench(limit)
+  if (['swebench-full', 'swebench-verified', 'swebench-multilingual', 'swebench-multimodal', 'swebench-pro'].includes(id)) return fallbackSwebenchFamily(id, limit)
+  if (id === 'voxelbench-mini') return fallbackVoxelBench(limit)
   if (id === 'maze-tools-mini') return fallbackMazeTools(limit)
   if (id === 'mcp-filesystem-mini') return fallbackMcpFilesystem(limit)
   if (id === 'mcp-sqlite-mini') return fallbackMcpSqlite(limit)
@@ -795,9 +863,10 @@ function fallbackPack(id, limit) {
 }
 
 async function downloadBenchmarkPack(id, options = {}) {
-  const catalogItem = CATALOG.find((item) => item.id === id)
-  if (!catalogItem) throw new Error(`Unknown benchmark pack: ${id}`)
-  const limit = safeLimit(options.limit, catalogItem.recommendedLimit || catalogItem.defaultLimit || 50)
+  const rawCatalogItem = CATALOG.find((item) => item.id === id)
+  if (!rawCatalogItem) throw new Error(`Unknown benchmark pack: ${id}`)
+  const catalogItem = enrichCatalogItem(rawCatalogItem)
+  const limit = safeLimit(options.limit, catalogItem.recommendedLimit || catalogItem.defaultLimit || 50, catalogItem.totalTasks || catalogItem.defaultLimit || 500)
 
   try {
     if (id === 'humaneval') {
@@ -818,6 +887,12 @@ async function downloadBenchmarkPack(id, options = {}) {
       const rows = Array.isArray(payload?.rows) ? payload.rows : []
       if (rows.length === 0) throw new Error('SWE-bench rows response is empty')
       return { ok: true, fromFallback: false, pack: catalogItem, benchmarks: [convertSwebenchRows(rows, limit)] }
+    }
+    if (SWEBENCH_DATASETS[id]) {
+      const rows = await fetchHfRows(SWEBENCH_DATASETS[id], limit)
+      const meta = SWEBENCH_DATASETS[id]
+      const category = id === 'swebench-multimodal' ? 'Wizja' : 'Kod'
+      return { ok: true, fromFallback: false, pack: catalogItem, benchmarks: [convertSwebenchRows(rows, limit, { ...meta, category, description: catalogItem.description })] }
     }
     return { ok: true, fromFallback: false, pack: catalogItem, benchmarks: [fallbackPack(id, limit)] }
   } catch (error) {
