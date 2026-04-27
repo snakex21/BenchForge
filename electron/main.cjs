@@ -46,6 +46,7 @@ const { checkEnvironment } = require('./systemTools.cjs')
 const { getProvider } = require('./providers/index.cjs')
 const { runBenchmark, runBenchmarkStreaming, submitManualBatch } = require('./runner.cjs')
 const { listBenchmarkPacks, downloadBenchmarkPack } = require('./benchmarkLibrary.cjs')
+const { scanBenchmarkBeacon, discoverBenchmarkBeacons } = require('./benchmarkRadar.cjs')
 const { listTools, runTool } = require('./toolRuntime.cjs')
 const { listMcpTools, callMcpTool } = require('./mcpRuntime.cjs')
 
@@ -228,6 +229,8 @@ ipcMain.handle('files:export-artifact-zip', async (_, payload) => {
 
 ipcMain.handle('benchmark-library:list', () => listBenchmarkPacks())
 ipcMain.handle('benchmark-library:download', (_, payload) => downloadBenchmarkPack(payload?.id, payload || {}))
+ipcMain.handle('benchmark-radar:scan', (_, payload) => scanBenchmarkBeacon(payload || {}))
+ipcMain.handle('benchmark-radar:discover', (_, payload) => discoverBenchmarkBeacons(payload || {}))
 ipcMain.handle('tools:list', () => listTools())
 ipcMain.handle('tools:run', (_, payload) => runTool({ ...(payload || {}), mcpServers: getPreference('mcp_servers') || [] }))
 ipcMain.handle('env:check', () => checkEnvironment())
