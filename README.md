@@ -89,13 +89,26 @@ Build installer:
 npm run dist
 ```
 
-The installer is created in `release/`.
+Windows release artifacts are created in `release/`:
+
+- NSIS installer: `BenchForge-Setup-<version>-x64.exe`
+- Portable build: `BenchForge-Portable-<version>-x64.exe`
+- ZIP archive: `BenchForge-<version>-x64.zip`
+- Checksums: `SHA256SUMS.txt`
+
+You can also run:
+
+```bash
+npm run release:win
+```
+
+GitHub Actions workflow `Windows Release Build` builds the same artifacts on `workflow_dispatch` and on tags like `v0.2.0`. Tag builds create a draft GitHub Release.
 
 ### Data and security notes
 
-- App data is stored in SQLite under Electron `app.getPath('userData')`.
+- App data is stored in the portable-first `data/` folder next to the app/project, e.g. `BenchForge/data/benchforge.db`.
 - Local exports, backups, artifacts, SQLite files, build outputs, and `node_modules` should not be committed.
-- API keys are stored in the local app database, not in the repository.
+- API keys and GitHub Radar tokens are encrypted locally with Electron `safeStorage` when available. Database backups/exports omit API keys.
 - MCP servers and sandboxed code can interact with your system depending on your configuration. Only enable tools and directories you trust.
 - Docker sandboxing is optional and requires Docker to be installed.
 
@@ -181,13 +194,26 @@ Build instalatora:
 npm run dist
 ```
 
-Instalator pojawi się w katalogu `release/`.
+Artefakty Windows pojawią się w katalogu `release/`:
+
+- instalator NSIS: `BenchForge-Setup-<version>-x64.exe`
+- wersja portable: `BenchForge-Portable-<version>-x64.exe`
+- archiwum ZIP: `BenchForge-<version>-x64.zip`
+- sumy kontrolne: `SHA256SUMS.txt`
+
+Możesz też uruchomić:
+
+```bash
+npm run release:win
+```
+
+Workflow GitHub Actions `Windows Release Build` buduje te same artefakty ręcznie (`workflow_dispatch`) oraz dla tagów typu `v0.2.0`. Build z taga tworzy draft GitHub Release.
 
 ### Dane i bezpieczeństwo
 
-- Dane aplikacji są przechowywane w SQLite w katalogu Electron `app.getPath('userData')`.
+- Dane aplikacji są przechowywane portable-first w folderze `data/` obok aplikacji/projektu, np. `BenchForge/data/benchforge.db`.
 - Lokalne eksporty, backupy, artefakty, pliki SQLite, buildy i `node_modules` nie powinny być commitowane.
-- Klucze API są w lokalnej bazie aplikacji, nie w repozytorium.
+- Klucze API i token GitHub Radaru są lokalnie szyfrowane przez Electron `safeStorage`, jeśli jest dostępny. Backup/eksport bazy pomija klucze API.
 - MCP i sandbox mogą mieć dostęp do systemu zależnie od konfiguracji. Włączaj tylko zaufane katalogi i narzędzia.
 - Docker sandbox jest opcjonalny i wymaga zainstalowanego Dockera.
 
@@ -273,13 +299,26 @@ Installer bauen:
 npm run dist
 ```
 
-Der Installer wird im Ordner `release/` erstellt.
+Windows-Artefakte werden im Ordner `release/` erstellt:
+
+- NSIS-Installer: `BenchForge-Setup-<version>-x64.exe`
+- Portable Build: `BenchForge-Portable-<version>-x64.exe`
+- ZIP-Archiv: `BenchForge-<version>-x64.zip`
+- Prüfsummen: `SHA256SUMS.txt`
+
+Alternativ:
+
+```bash
+npm run release:win
+```
+
+Der GitHub-Actions-Workflow `Windows Release Build` baut dieselben Artefakte per `workflow_dispatch` und für Tags wie `v0.2.0`. Tag-Builds erstellen einen Draft GitHub Release.
 
 ### Daten und Sicherheit
 
-- App-Daten liegen in SQLite unter Electron `app.getPath('userData')`.
+- App-Daten liegen portable-first im Ordner `data/` neben der App/dem Projekt, z. B. `BenchForge/data/benchforge.db`.
 - Lokale Exporte, Backups, Artefakte, SQLite-Dateien, Builds und `node_modules` sollten nicht committed werden.
-- API-Keys liegen in der lokalen App-Datenbank, nicht im Repository.
+- API-Keys und GitHub-Radar-Tokens werden lokal mit Electron `safeStorage` verschlüsselt, wenn verfügbar. Backups/Exporte enthalten keine API-Keys.
 - MCP-Server und Sandbox-Code können je nach Konfiguration auf das System zugreifen. Nur vertrauenswürdige Tools und Verzeichnisse aktivieren.
 - Docker-Sandboxing ist optional und erfordert Docker.
 
@@ -365,13 +404,26 @@ Crear instalador:
 npm run dist
 ```
 
-El instalador aparecerá en `release/`.
+Los artefactos de Windows aparecerán en `release/`:
+
+- Instalador NSIS: `BenchForge-Setup-<version>-x64.exe`
+- Build portable: `BenchForge-Portable-<version>-x64.exe`
+- Archivo ZIP: `BenchForge-<version>-x64.zip`
+- Checksums: `SHA256SUMS.txt`
+
+También puedes ejecutar:
+
+```bash
+npm run release:win
+```
+
+El workflow de GitHub Actions `Windows Release Build` genera los mismos artefactos con `workflow_dispatch` y para tags como `v0.2.0`. Los builds por tag crean un borrador de GitHub Release.
 
 ### Datos y seguridad
 
-- Los datos se guardan en SQLite en `app.getPath('userData')` de Electron.
+- Los datos se guardan en modo portable-first en la carpeta `data/` junto a la app/proyecto, por ejemplo `BenchForge/data/benchforge.db`.
 - Exportaciones locales, backups, artefactos, archivos SQLite, builds y `node_modules` no deben subirse al repositorio.
-- Las API keys están en la base de datos local de la app, no en el repositorio.
+- Las API keys y tokens de GitHub Radar se cifran localmente con Electron `safeStorage` cuando está disponible. Los backups/exportaciones omiten las API keys.
 - MCP y sandbox pueden acceder al sistema según la configuración. Activa solo herramientas y directorios de confianza.
 - Docker sandbox es opcional y requiere Docker instalado.
 

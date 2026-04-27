@@ -1,8 +1,8 @@
 const path = require('path')
 const Database = require('better-sqlite3')
-const { app } = require('electron')
 const { clearArtifacts, previewText, removeArtifact, writeResultArtifacts } = require('./artifacts.cjs')
 const { decryptSecret, encryptSecret, isEncryptedSecret } = require('./secretStore.cjs')
+const { getDataPath } = require('./paths.cjs')
 
 let db = null
 
@@ -436,7 +436,7 @@ function ensureBenchmarkColumns(database) {
 function initDb() {
   if (db) return db
 
-  const dbPath = path.join(app.getPath('userData'), 'benchforge.db')
+  const dbPath = path.join(getDataPath(), 'benchforge.db')
   db = new Database(dbPath)
   db.pragma('journal_mode = WAL')
   db.pragma('foreign_keys = ON')

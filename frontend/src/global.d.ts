@@ -14,7 +14,9 @@ declare module '*.svg' {
 }
 
 interface BenchForgeDesktopApi {
-  getMeta: () => Promise<{ name: string; version: string; platform: string }>
+  getMeta: () => Promise<{ name: string; version: string; platform: string; dataPath?: string }>
+  getDataPath: () => Promise<string>
+  openDataPath: () => Promise<{ ok: boolean; error?: string | null }>
   saveJsonFile: (payload: { defaultFileName: string; content: string }) => Promise<{ canceled: boolean; filePath?: string }>
   saveTextFile: (payload: { defaultFileName?: string; extension?: string; extensionLabel?: string; content: string }) => Promise<{ canceled: boolean; filePath?: string }>
   openJsonFile: () => Promise<{ canceled: boolean; filePath?: string; content?: string }>

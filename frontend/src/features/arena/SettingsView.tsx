@@ -37,6 +37,7 @@ export const SettingsView: React.FC = () => {
   const [environmentChecks, setEnvironmentChecks] = useState<Array<Record<string, unknown> & { label?: string; group?: string; ok?: boolean; version?: string; required?: boolean; error?: string | null }> | null>(null)
   const [sandboxUseDocker, setSandboxUseDocker] = useState(false)
   const [judgeModelId, setJudgeModelId] = useState<number | ''>('')
+  const [dataPath, setDataPath] = useState<string | null>(null)
 
   const themes = [
     { id: 'dark', name: 'Dark', colors: ['#0f1117', '#6366f1', '#e2e8f0'] },
@@ -51,6 +52,7 @@ export const SettingsView: React.FC = () => {
     void window.db?.getPreference?.('repo_sandbox_roots').then((value) => setRepoSandboxText(JSON.stringify(Array.isArray(value) ? value : [], null, 2)))
     void window.db?.getPreference?.('sandbox_use_docker').then((value) => setSandboxUseDocker(Boolean(value)))
     void window.db?.getPreference?.('judge_model_id').then((value) => setJudgeModelId(typeof value === 'number' ? value : ''))
+    void window.benchforge?.getDataPath?.().then((value) => setDataPath(value || null))
   }, [])
 
   const refreshData = async () => {
@@ -307,6 +309,19 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
           {toolStatus && <p className="text-xs text-slate-500">{toolStatus}</p>}
+        </div>
+      </Card>
+
+      <Card title={t('settings.dataLocation')}>
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500">{t('settings.dataLocationDescription')}</p>
+          <div className="rounded-xl border border-slate-700/40 bg-slate-950/30 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('settings.currentDataFolder')}</p>
+            <p className="mt-2 break-all font-mono text-sm text-slate-200">{dataPath || '—'}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" onClick={() => void window.benchforge?.openDataPath?.()}>{t('settings.openDataFolder')}</Button>
+          </div>
         </div>
       </Card>
 

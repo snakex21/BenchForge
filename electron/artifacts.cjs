@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { app } = require('electron')
+const { getDataPath, resolveDataPath } = require('./paths.cjs')
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256)
@@ -29,7 +29,7 @@ function toPosix(value) {
 }
 
 function getUserDataPath() {
-  return app.getPath('userData')
+  return getDataPath()
 }
 
 function getArtifactsRoot() {
@@ -78,11 +78,7 @@ function resultArtifactRelativePath(result) {
 
 function resolveArtifactPath(relativePath) {
   if (!relativePath) return null
-  const userData = path.resolve(getUserDataPath())
-  const absolute = path.resolve(userData, relativePath)
-  const relative = path.relative(userData, absolute)
-  if (relative.startsWith('..') || path.isAbsolute(relative)) return null
-  return absolute
+  return resolveDataPath(relativePath)
 }
 
 function removeArtifact(relativePath) {

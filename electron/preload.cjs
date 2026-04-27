@@ -2,6 +2,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('benchforge', {
   getMeta: () => ipcRenderer.invoke('app:get-meta'),
+  getDataPath: () => ipcRenderer.invoke('app:get-data-path'),
+  openDataPath: () => ipcRenderer.invoke('app:open-data-path'),
   saveJsonFile: (payload) => ipcRenderer.invoke('files:save-json', payload),
   saveTextFile: (payload) => ipcRenderer.invoke('files:save-text', payload),
   openJsonFile: () => ipcRenderer.invoke('files:open-json'),
