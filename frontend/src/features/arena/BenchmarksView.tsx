@@ -14,6 +14,9 @@ type Translate = (key: TranslationKey, params?: Record<string, string | number |
 type BenchmarkPack = { id: string; name: string; source: string; description: string; category: string; defaultLimit: number; recommendedLimit: number; totalTasks?: number; homepage?: string }
 type RadarPack = { ok: boolean; id: string; owner: string; repo: string; ref: string; name: string; description: string; version?: string | null; author?: string | null; license?: string | null; source: string; repoUrl: string; homepage?: string; manifestPath: string; beaconPath?: string | null; benchmarks: Array<Record<string, unknown> & { tasks?: Array<Record<string, unknown>> }>; benchmarkCount: number; taskCount: number; cachedAt?: string; validation?: { ok: boolean; errors: string[]; warnings: string[] } }
 type LibraryKind = 'code' | 'knowledge' | 'vision' | 'agent' | 'repo' | 'manual'
+type BenchmarkTemplateKind = 'qa' | 'code' | 'repo' | 'tool' | 'vision' | 'manual'
+type BenchmarkTemplateTask = { name: string; promptTemplate: string; scoreType: ScoreType; expectedAnswer?: 'tak' | 'nie' | null; passCondition?: string | null; evaluationChecklist?: string[]; evaluationRubric?: Benchmark['evaluation_rubric']; attempts?: number; outputType?: OutputType; referenceImage?: string | null }
+type BenchmarkTemplate = { id: BenchmarkTemplateKind; icon: string; titleKey: TranslationKey; descriptionKey: TranslationKey; benchmark: Omit<BenchmarkInput, 'tasks' | 'created_at'>; tasks: BenchmarkTemplateTask[] }
 
 const categories = ['Logika', 'Wiedza', 'Kod', 'Kreatywność', 'Wizja', 'Inne']
 const outputTypes: OutputType[] = ['text', 'markdown', 'html', 'svg', 'maze']
@@ -157,6 +160,178 @@ const makeDefaultToolCondition = (mode = 'tool_agent') => toToolCondition({
   required_artifacts: mode === 'tool_maze_path' ? ['path.json', 'path-overlay.svg'] : [],
   raw: mode === 'tool_maze_path' ? { start: [0, 0], end: [4, 4], grid: ['S....', '###..', '...#.', '.#...', '...#E'] } : {},
 })
+
+const toSandboxCondition = (language: 'python' | 'javascript', entryPoint: string, tests: string[]) => JSON.stringify({
+  mode: 'code_sandbox',
+  sandbox: {
+    language,
+    entry_point: entryPoint,
+    tests,
+    timeout_ms: 10000,
+  },
+}, null, 2)
+
+const toRepoPatchCondition = () => JSON.stringify({
+  mode: 'repo_patch',
+  repo: 'owner/repo',
+  instance_id: 'example-issue-1',
+  base_commit: 'HEAD',
+  test_command: 'npm test',
+  timeout_ms: 120000,
+}, null, 2)
+
+const BENCHMARK_TEMPLATES: BenchmarkTemplate[] = [
+  {
+    id: 'qa',
+    icon: '❓',
+    titleKey: 'benchmarks.templateQa',
+    descriptionKey: 'benchmarks.templateQaDescription',
+    benchmark: {
+      name: 'QA — factual short answers',
+      category: 'Wiedza',
+      suite_name: 'Template / QA',
+      description: 'Short factual QA benchmark with exact expected answers.',
+      prompt_template: 'Answer each question briefly and directly.',
+      score_type: 'boolean',
+      expected_answer: 'tak',
+      pass_condition: 'Odpowiedź powinna zawierać oczekiwaną frazę.',
+      evaluation_checklist: ['Czy odpowiedź jest zgodna z oczekiwanym faktem?'],
+      evaluation_rubric: [],
+      attempts: 1,
+      output_type: 'text',
+      reference_image: null,
+    },
+    tasks: [
+      { name: 'Capital of France', promptTemplate: 'What is the capital of France? Answer with one city name.', scoreType: 'boolean', expectedAnswer: 'tak', passCondition: 'Odpowiedź to Paris/Paryż.', outputType: 'text' },
+      { name: '2 + 2', promptTemplate: 'What is 2 + 2? Answer with one number.', scoreType: 'boolean', expectedAnswer: 'tak', passCondition: 'Odpowiedź to 4.', outputType: 'text' },
+    ],
+  },
+  {
+    id: 'code',
+    icon: '🧪',
+    titleKey: 'benchmarks.templateCode',
+    descriptionKey: 'benchmarks.templateCodeDescription',
+    benchmark: {
+      name: 'Code sandbox — Python function',
+      category: 'Kod',
+      suite_name: 'Template / Code Sandbox',
+      description: 'Python coding task evaluated by BenchForge sandbox tests.',
+      prompt_template: 'Return only code unless the task says otherwise.',
+      score_type: 'numeric',
+      expected_answer: null,
+      pass_condition: null,
+      evaluation_checklist: [],
+      evaluation_rubric: [],
+      attempts: 1,
+      output_type: 'text',
+      reference_image: null,
+    },
+    tasks: [
+      { name: 'add_numbers', promptTemplate: 'Write a Python function add_numbers(a, b) that returns the sum of a and b.', scoreType: 'numeric', passCondition: toSandboxCondition('python', 'add_numbers', ['assert add_numbers(2, 3) == 5', 'assert add_numbers(-1, 1) == 0']), outputType: 'text' },
+    ],
+  },
+  {
+    id: 'repo',
+    icon: '🧩',
+    titleKey: 'benchmarks.templateRepo',
+    descriptionKey: 'benchmarks.templateRepoDescription',
+    benchmark: {
+      name: 'Repo patch / SWE-style task',
+      category: 'Kod',
+      suite_name: 'Template / Repo Sandbox',
+      description: 'SWE-style patch benchmark. Configure Repo Sandbox root in Settings before running.',
+      prompt_template: 'Return a unified diff/patch that fixes the issue.',
+      score_type: 'numeric',
+      expected_answer: null,
+      pass_condition: toRepoPatchCondition(),
+      evaluation_checklist: ['Czy odpowiedź zawiera diff/patch?', 'Czy patch odnosi się do opisu problemu?', 'Czy testy przechodzą w Repo Sandbox?'],
+      evaluation_rubric: [],
+      attempts: 1,
+      output_type: 'markdown',
+      reference_image: null,
+    },
+    tasks: [
+      { name: 'Fix example issue', promptTemplate: 'Repo: owner/repo\nIssue: A function returns null for empty input, but it should return an empty array. Provide a minimal patch and a regression test.', scoreType: 'numeric', passCondition: toRepoPatchCondition(), evaluationChecklist: ['Patch is concrete', 'Includes or updates tests', 'Applies cleanly'], outputType: 'markdown' },
+    ],
+  },
+  {
+    id: 'tool',
+    icon: '🛠️',
+    titleKey: 'benchmarks.templateTool',
+    descriptionKey: 'benchmarks.templateToolDescription',
+    benchmark: {
+      name: 'Tool / MCP agent task',
+      category: 'Kod',
+      suite_name: 'Template / Tool Agent',
+      description: 'Agent benchmark that expects real local tool or MCP calls.',
+      prompt_template: 'Use available tools when needed and return the final answer as JSON.',
+      score_type: 'numeric',
+      expected_answer: null,
+      pass_condition: makeDefaultToolCondition('tool_agent'),
+      evaluation_checklist: ['Czy model użył narzędzi?', 'Czy final answer jest zgodny z zadaniem?', 'Czy artefakty zostały utworzone, jeśli wymagane?'],
+      evaluation_rubric: [],
+      attempts: 1,
+      output_type: 'markdown',
+      reference_image: null,
+    },
+    tasks: [
+      { name: 'Calculate via tool', promptTemplate: 'Use python.run or node.run to calculate 12345 * 6789. Return JSON: {"final_answer":"..."}.', scoreType: 'numeric', passCondition: makeDefaultToolCondition('tool_agent'), outputType: 'markdown' },
+    ],
+  },
+  {
+    id: 'vision',
+    icon: '🧭',
+    titleKey: 'benchmarks.templateVision',
+    descriptionKey: 'benchmarks.templateVisionDescription',
+    benchmark: {
+      name: 'Vision / Maze tool path',
+      category: 'Wizja',
+      suite_name: 'Template / Vision Maze',
+      description: 'Tool maze benchmark. Model should create path.json and path-overlay.svg.',
+      prompt_template: 'Solve the maze using tools and save path artifacts.',
+      score_type: 'numeric',
+      expected_answer: null,
+      pass_condition: makeDefaultToolCondition('tool_maze_path'),
+      evaluation_checklist: ['Czy ścieżka prowadzi od S do E?', 'Czy path.json istnieje?', 'Czy overlay SVG został utworzony?'],
+      evaluation_rubric: [],
+      attempts: 1,
+      output_type: 'markdown',
+      reference_image: null,
+    },
+    tasks: [
+      { name: 'Simple maze', promptTemplate: 'Grid:\nS....\n###..\n...#.\n.#...\n...#E\nFind a valid path from S to E. Use tools and create path.json plus path-overlay.svg.', scoreType: 'numeric', passCondition: makeDefaultToolCondition('tool_maze_path'), outputType: 'markdown' },
+    ],
+  },
+  {
+    id: 'manual',
+    icon: '📝',
+    titleKey: 'benchmarks.templateManual',
+    descriptionKey: 'benchmarks.templateManualDescription',
+    benchmark: {
+      name: 'Manual batch qualitative eval',
+      category: 'Kreatywność',
+      suite_name: 'Template / Manual Batch',
+      description: 'Qualitative benchmark for web/manual models. Use Runner Manual Batch Mode.',
+      prompt_template: 'Answer each prompt according to the rubric. Manual batch mode can group tasks in one paste.',
+      score_type: 'numeric',
+      expected_answer: null,
+      pass_condition: 'Ocena manualna lub Judge według rubryki.',
+      evaluation_checklist: ['Czy odpowiedź jest pomocna?', 'Czy zachowuje ograniczenia?', 'Czy jest kompletna?'],
+      evaluation_rubric: [
+        { label: 'Correctness', points: 40, type: 'scale' },
+        { label: 'Completeness', points: 30, type: 'scale' },
+        { label: 'Clarity', points: 30, type: 'scale' },
+      ],
+      attempts: 1,
+      output_type: 'text',
+      reference_image: null,
+    },
+    tasks: [
+      { name: 'Explain simply', promptTemplate: 'Explain what a benchmark is to a non-technical user in 4 sentences.', scoreType: 'numeric', passCondition: 'Ocena manualna według rubryki.', evaluationChecklist: ['Simple language', 'No jargon', 'Exactly 4 sentences'], evaluationRubric: [{ label: 'Clarity', points: 50, type: 'scale' }, { label: 'Instruction following', points: 50, type: 'scale' }], outputType: 'text' },
+      { name: 'Summarize with constraints', promptTemplate: 'Summarize BenchForge in exactly 3 bullet points.', scoreType: 'numeric', passCondition: 'Ocena manualna według rubryki.', evaluationChecklist: ['Exactly 3 bullets', 'Mentions models', 'Mentions benchmarks'], outputType: 'text' },
+    ],
+  },
+]
 
 const toCodePresenceCondition = (requiredText: string) => JSON.stringify({
   mode: 'code_presence',
@@ -314,6 +489,7 @@ export const BenchmarksView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeBenchmarkId, setActiveBenchmarkId] = useState<number | null>(null)
   const [editingReturnBenchmarkId, setEditingReturnBenchmarkId] = useState<number | null>(null)
+  const [templateOpen, setTemplateOpen] = useState(false)
   const [libraryOpen, setLibraryOpen] = useState(false)
   const [libraryPacks, setLibraryPacks] = useState<BenchmarkPack[]>([])
   const [libraryLimits, setLibraryLimits] = useState<Record<string, number>>({})
@@ -520,6 +696,34 @@ export const BenchmarksView: React.FC = () => {
     closeTaskForm()
   }
 
+  const createFromTemplate = async (template: BenchmarkTemplate) => {
+    const created = await addBenchmark({
+      ...template.benchmark,
+      tasks: [],
+    })
+    if (!created) return
+    for (const [index, task] of template.tasks.entries()) {
+      await addTask({
+        benchmarkId: created.id,
+        name: task.name,
+        promptTemplate: task.promptTemplate,
+        scoreType: task.scoreType,
+        expectedAnswer: task.scoreType === 'boolean' ? task.expectedAnswer || null : null,
+        passCondition: task.passCondition || null,
+        evaluationChecklist: task.evaluationChecklist || [],
+        evaluationRubric: task.evaluationRubric || [],
+        attempts: task.attempts || 1,
+        outputType: task.outputType || template.benchmark.output_type || 'text',
+        referenceImage: task.referenceImage || null,
+        orderIndex: index,
+      })
+    }
+    await loadFromDb()
+    setTemplateOpen(false)
+    setActiveBenchmarkId(created.id)
+    setMessage(t('benchmarks.templateCreated', { name: template.benchmark.name, tasks: template.tasks.length }))
+  }
+
   const importBenchmarkObjects = async (items: unknown[]) => {
     let importedBenchmarks = 0
     let importedTasks = 0
@@ -687,6 +891,7 @@ export const BenchmarksView: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-slate-100">{t('benchmarks.title')}</h2>
         <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setTemplateOpen(true)}>{t('benchmarks.templates')}</Button>
           <Button variant="secondary" onClick={() => void openLibrary()}>{t('benchmarks.library')}</Button>
           <Button variant="secondary" onClick={() => void openRadar()}>{t('benchmarks.radarTitle')}</Button>
           <Button variant="secondary" onClick={() => void importJson()}>{t('benchmarks.importJson')}</Button>
@@ -696,6 +901,47 @@ export const BenchmarksView: React.FC = () => {
       </div>
 
       {message && <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{message}</div>}
+
+      {templateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4" onClick={() => setTemplateOpen(false)}>
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-auto rounded-2xl border border-indigo-500/40 bg-[#161822] shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-indigo-500/20 p-3 sm:p-5">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100">{t('benchmarks.templatesTitle')}</h3>
+                <p className="mt-1 text-sm text-slate-500">{t('benchmarks.templatesDescription')}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setTemplateOpen(false)}>{t('common.close')}</Button>
+            </div>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(20rem,100%),1fr))] gap-3 p-3 sm:p-5">
+              {BENCHMARK_TEMPLATES.map((template) => (
+                <section key={template.id} className="rounded-xl border border-slate-700/50 bg-slate-950/30 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-2xl">{template.icon}</p>
+                      <h4 className="mt-2 text-sm font-semibold text-slate-100">{t(template.titleKey)}</h4>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1"><Badge variant="neutral">{template.benchmark.category}</Badge><Badge variant="info">{template.tasks.length} {t('common.tasks')}</Badge></div>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-400">{t(template.descriptionKey)}</p>
+                  <div className="mt-3 rounded-lg border border-slate-800 bg-black/20 p-2">
+                    <p className="text-xs font-semibold text-slate-300">{template.benchmark.name}</p>
+                    <p className="mt-1 text-xs text-slate-500">{template.benchmark.suite_name} · {template.benchmark.score_type} · {template.benchmark.output_type}</p>
+                  </div>
+                  <details className="mt-3 rounded-lg border border-slate-800 bg-black/20 p-2">
+                    <summary className="cursor-pointer text-xs text-slate-400">{t('benchmarks.templatePreviewTasks')}</summary>
+                    <div className="mt-2 max-h-36 space-y-1 overflow-auto">
+                      {template.tasks.map((task, index) => <p key={`${template.id}-${index}`} className="truncate text-xs text-slate-500">{index + 1}. {task.name}</p>)}
+                    </div>
+                  </details>
+                  <div className="mt-4 flex justify-end">
+                    <Button size="sm" onClick={() => void createFromTemplate(template)}>{t('benchmarks.createFromTemplate')}</Button>
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {libraryOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4" onClick={() => setLibraryOpen(false)}>

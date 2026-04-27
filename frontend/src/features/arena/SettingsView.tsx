@@ -34,7 +34,7 @@ export const SettingsView: React.FC = () => {
   const [mcpToolsText, setMcpToolsText] = useState<string | null>(null)
   const [repoSandboxText, setRepoSandboxText] = useState('[]')
   const [helpTopic, setHelpTopic] = useState<'mcp' | 'repo' | null>(null)
-  const [environmentChecks, setEnvironmentChecks] = useState<Array<Record<string, unknown> & { label?: string; ok?: boolean; version?: string; required?: boolean }> | null>(null)
+  const [environmentChecks, setEnvironmentChecks] = useState<Array<Record<string, unknown> & { label?: string; group?: string; ok?: boolean; version?: string; required?: boolean; error?: string | null }> | null>(null)
   const [sandboxUseDocker, setSandboxUseDocker] = useState(false)
   const [judgeModelId, setJudgeModelId] = useState<number | ''>('')
 
@@ -180,7 +180,7 @@ export const SettingsView: React.FC = () => {
   }
 
   const runEnvironmentCheck = async () => {
-    const result = await window.benchforge?.checkEnvironment?.()
+    const result = await window.benchforge?.healthCheck?.() || await window.benchforge?.checkEnvironment?.()
     setEnvironmentChecks(result?.checks || [])
     setToolStatus(result?.ok ? t('settings.environmentOk') : t('settings.environmentFailed'))
   }

@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('benchforge', {
   listTools: () => ipcRenderer.invoke('tools:list'),
   runTool: (payload) => ipcRenderer.invoke('tools:run', payload),
   checkEnvironment: () => ipcRenderer.invoke('env:check'),
+  healthCheck: () => ipcRenderer.invoke('health:check'),
   getMcpServers: () => ipcRenderer.invoke('mcp:servers:get'),
   saveMcpServers: (servers) => ipcRenderer.invoke('mcp:servers:save', { servers }),
   listMcpTools: () => ipcRenderer.invoke('mcp:tools:list'),

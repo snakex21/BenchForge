@@ -27,6 +27,7 @@ interface BenchForgeDesktopApi {
   listTools: () => Promise<Array<{ id: string; name: string; description: string }>>
   runTool: (payload: { tool: string; workdir?: string; input?: Record<string, unknown>; [key: string]: unknown }) => Promise<Record<string, unknown> & { ok?: boolean; workdir?: string; tracePath?: string }>
   checkEnvironment: () => Promise<{ ok: boolean; checks: Array<Record<string, unknown> & { label?: string; ok?: boolean; version?: string; required?: boolean }> }>
+  healthCheck: () => Promise<{ ok: boolean; checks: Array<Record<string, unknown> & { label?: string; group?: string; ok?: boolean; version?: string; required?: boolean; error?: string | null }> }>
   getMcpServers: () => Promise<Array<Record<string, unknown>>>
   saveMcpServers: (servers: Array<Record<string, unknown>>) => Promise<Array<Record<string, unknown>>>
   listMcpTools: () => Promise<Array<{ server: { id: string; name: string }; ok: boolean; tools: Array<Record<string, unknown>>; error?: string }>>
