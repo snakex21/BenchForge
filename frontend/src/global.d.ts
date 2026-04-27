@@ -20,7 +20,7 @@ interface BenchForgeDesktopApi {
   openJsonFile: () => Promise<{ canceled: boolean; filePath?: string; content?: string }>
   openPath: (relativePath: string) => Promise<{ ok: boolean; error?: string | null }>
   exportArtifactZip: (payload: { relativePath: string; defaultFileName?: string }) => Promise<{ canceled: boolean; filePath?: string; files?: number }>
-  listBenchmarkPacks: () => Promise<Array<{ id: string; name: string; source: string; description: string; category: string; defaultLimit: number; recommendedLimit: number; homepage?: string }>>
+  listBenchmarkPacks: () => Promise<Array<{ id: string; name: string; source: string; description: string; category: string; defaultLimit: number; recommendedLimit: number; totalTasks?: number; homepage?: string }>>
   downloadBenchmarkPack: (payload: { id: string; limit?: number }) => Promise<{ ok: boolean; fromFallback: boolean; error?: string; pack: { id: string; name: string }; benchmarks: Array<Record<string, unknown> & { tasks?: Array<Record<string, unknown>> }> }>
   listTools: () => Promise<Array<{ id: string; name: string; description: string }>>
   runTool: (payload: { tool: string; workdir?: string; input?: Record<string, unknown>; [key: string]: unknown }) => Promise<Record<string, unknown> & { ok?: boolean; workdir?: string; tracePath?: string }>
