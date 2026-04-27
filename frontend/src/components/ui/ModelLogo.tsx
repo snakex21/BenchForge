@@ -12,7 +12,7 @@ const logoModules = import.meta.glob('../../assets/ai-logos/*', {
 const logoByName = Object.fromEntries(
   Object.entries(logoModules).map(([path, url]) => {
     const fileName = path.split('/').pop() || ''
-    const name = fileName.replace(/\.(svg|png|ico|webp)$/i, '')
+    const name = fileName.replace(/\.(svg|png|ico|webp|jpg|jpeg)$/i, '')
     return [name, url]
   }),
 ) as Record<string, string>
@@ -51,9 +51,10 @@ const MODEL_KEYWORD_LOGOS: Array<[RegExp, string]> = [
   [/claude|anthropic/i, 'anthropic'],
   [/gpt|openai|chatgpt|\bo[134]\b/i, 'openai'],
   [/gemini|google/i, 'google-gemini'],
+  [/\bphi(?:[-\s]?\d|\b)|microsoft|msft/i, 'microsoft'],
   [/nvidia|\bnim\b/i, 'nvidia'],
   [/mistral|mixtral|codestral/i, 'mistral-ai'],
-  [/llama|meta/i, 'meta'],
+  [/llama|meta[-\s]?llama|meta/i, 'meta'],
   [/grok|xai|x\.ai/i, 'xai'],
   [/cohere|command-r/i, 'cohere'],
   [/perplexity|sonar/i, 'perplexity'],
