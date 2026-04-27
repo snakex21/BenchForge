@@ -149,9 +149,16 @@ async function fetchJson(url) {
 }
 
 async function fetchHfRows({ dataset, config = 'default', split = 'test' }, limit) {
-  const params = new URLSearchParams({ dataset, config, split, offset: '0', length: String(limit) })
-  const payload = await fetchJson(`${HF_ROWS_BASE}?${params.toString()}`)
-  const rows = Array.isArray(payload?.rows) ? payload.rows : []
+  const rows = []
+  const batchSize = 100
+  for (let offset = 0; offset < limit; offset += batchSize) {
+    const length = Math.min(batchSize, limit - offset)
+    const params = new URLSearchParams({ dataset, config, split, offset: String(offset), length: String(length) })
+    const payload = await fetchJson(`${HF_ROWS_BASE}?${params.toString()}`)
+    const batch = Array.isArray(payload?.rows) ? payload.rows : []
+    rows.push(...batch)
+    if (batch.length < length) break
+  }
   if (rows.length === 0) throw new Error(`HuggingFace rows response is empty for ${dataset}`)
   return rows
 }

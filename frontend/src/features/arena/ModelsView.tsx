@@ -26,6 +26,11 @@ interface ProviderGroup {
   options: ProviderOption[]
 }
 
+interface SavedProviderConfig {
+  apiKey?: string
+  baseUrl?: string
+}
+
 const PROVIDER_SCAN_OVERRIDES: Partial<Record<ApiProvider, { url?: string; scanPath?: string; authType?: string; scanUnsupported?: boolean; requiresApiKey?: boolean }>> = {
   openai: { requiresApiKey: true },
   anthropic: { scanPath: '/models', authType: 'anthropic', requiresApiKey: true },
@@ -111,6 +116,13 @@ const ProviderLogo: React.FC<{ provider: ApiProvider; className?: string }> = ({
   return <span className={`${className} inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-lg border border-slate-700/50 bg-white/95 p-1`}><img src={logo} alt="" className="h-full w-full object-contain" /></span>
 }
 
+const maskApiKey = (apiKey?: string | null) => {
+  const value = apiKey?.trim()
+  if (!value) return '—'
+  if (value.length <= 8) return '•'.repeat(Math.max(4, value.length))
+  return `${value.slice(0, 4)}${'•'.repeat(Math.min(16, value.length - 8))}${value.slice(-4)}`
+}
+
 const ChevronIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className = '', ...props }) => (
   <svg
     viewBox="0 0 20 20"
@@ -150,8 +162,53 @@ export const ModelsView: React.FC = () => {
   const [scanErrors, setScanErrors] = useState<Record<string, string>>({})
   const [modelPickerOpen, setModelPickerOpen] = useState(false)
   const [providerPickerOpen, setProviderPickerOpen] = useState(false)
+  const [showDraftApiKey, setShowDraftApiKey] = useState(false)
+  const [visibleApiKeys, setVisibleApiKeys] = useState<Record<number, boolean>>({})
+  const [keyActionStatuses, setKeyActionStatuses] = useState<Record<number, string>>({})
 
   const isApiMode = form.mode === 'api'
+
+  const savedProviderConfigs = useMemo<Partial<Record<ApiProvider, SavedProviderConfig>>>(() => {
+    const configs: Partial<Record<ApiProvider, SavedProviderConfig>> = {}
+    const sortedModels = [...models].sort((left, right) => right.id - left.id)
+
+    for (const model of sortedModels) {
+      if (model.mode !== 'api' || !model.provider) continue
+      const config = configs[model.provider] || {}
+      const apiKey = model.api_key?.trim()
+      const baseUrl = model.base_url?.trim()
+
+      if (!config.apiKey && apiKey) config.apiKey = apiKey
+      if (!config.baseUrl && baseUrl) config.baseUrl = baseUrl
+      configs[model.provider] = config
+    }
+
+    return configs
+  }, [models])
+
+  const lastUsedProvider = useMemo<ApiProvider>(() => {
+    const sortedModels = [...models].sort((left, right) => right.id - left.id)
+    return sortedModels.find((model) => model.mode === 'api' && model.provider)?.provider || 'lmstudio'
+  }, [models])
+
+  const getProviderDefaults = (provider: ApiProvider) => ({
+    baseUrl: savedProviderConfigs[provider]?.baseUrl || PROVIDER_PRESETS[provider],
+    apiKey: savedProviderConfigs[provider]?.apiKey || '',
+  })
+
+  const createFormDefaults = (provider: ApiProvider = lastUsedProvider): FormState => {
+    const defaults = getProviderDefaults(provider)
+    return {
+      ...defaultFormState,
+      provider,
+      base_url: defaults.baseUrl,
+      api_key: defaults.apiKey,
+    }
+  }
+
+  const currentSavedProviderConfig = savedProviderConfigs[form.provider]
+  const canUseSavedApiKey = Boolean(currentSavedProviderConfig?.apiKey && form.api_key !== currentSavedProviderConfig.apiKey)
+  const isUsingSavedApiKey = Boolean(currentSavedProviderConfig?.apiKey && form.api_key === currentSavedProviderConfig.apiKey)
 
   useEffect(() => {
     let cancelled = false
@@ -187,6 +244,7 @@ export const ModelsView: React.FC = () => {
         api_key: '',
         model_id: '',
       }))
+      setShowDraftApiKey(false)
       setTestStatus(null)
       return
     }
@@ -195,22 +253,35 @@ export const ModelsView: React.FC = () => {
       ...current,
       mode,
       provider: current.provider || 'lmstudio',
-      base_url: PROVIDER_PRESETS[current.provider || 'lmstudio'],
+      base_url: getProviderDefaults(current.provider || 'lmstudio').baseUrl,
+      api_key: getProviderDefaults(current.provider || 'lmstudio').apiKey || current.api_key,
     }))
     setTestStatus(null)
   }
 
   const handleProviderChange = (provider: ApiProvider) => {
+    const defaults = getProviderDefaults(provider)
     setForm((current) => ({
       ...current,
       provider,
-      base_url: PROVIDER_PRESETS[provider],
+      base_url: defaults.baseUrl,
+      api_key: current.provider === provider ? current.api_key : defaults.apiKey,
       name: '',
       model_id: '',
     }))
     setTestStatus(null)
+    setShowDraftApiKey(false)
     setModelPickerOpen(false)
     setProviderPickerOpen(false)
+  }
+
+  const openModelForm = (provider: ApiProvider = lastUsedProvider) => {
+    setForm(createFormDefaults(provider))
+    setShowDraftApiKey(false)
+    setTestStatus(null)
+    setModelPickerOpen(false)
+    setProviderPickerOpen(false)
+    setShowForm(true)
   }
 
   const closeModelForm = () => {
@@ -219,6 +290,7 @@ export const ModelsView: React.FC = () => {
     setTestStatus(null)
     setModelPickerOpen(false)
     setProviderPickerOpen(false)
+    setShowDraftApiKey(false)
   }
 
   const scanKey = (model: ScannedModel) => `${model.provider}:${model.modelId}`
@@ -231,12 +303,13 @@ export const ModelsView: React.FC = () => {
   }, [form.name, form.provider, scannedModels])
 
   const fillFormFromScannedModel = (model: ScannedModel) => {
+    const defaults = getProviderDefaults(model.provider)
     setForm((current) => ({
       name: `${PROVIDER_LABELS[model.provider]} · ${model.modelId}`,
       mode: 'api',
       provider: model.provider,
-      base_url: PROVIDER_PRESETS[model.provider],
-      api_key: current.provider === model.provider ? current.api_key : '',
+      base_url: defaults.baseUrl,
+      api_key: current.provider === model.provider ? current.api_key || defaults.apiKey : defaults.apiKey,
       model_id: model.modelId,
     }))
     setShowForm(true)
@@ -250,16 +323,24 @@ export const ModelsView: React.FC = () => {
     setScanErrors({})
     try {
       const endpoints = PROVIDER_OPTIONS
-        .filter((provider) => provider.baseUrl && (scanAll || provider.value === form.provider || provider.value === 'lmstudio' || provider.value === 'ollama'))
+        .filter((provider) => {
+          const savedBaseUrl = savedProviderConfigs[provider.value]?.baseUrl
+          const selectedBaseUrl = provider.value === form.provider ? form.base_url.trim() : ''
+          const hasBaseUrl = Boolean(provider.baseUrl || savedBaseUrl || selectedBaseUrl)
+          return hasBaseUrl && (scanAll || provider.value === form.provider || provider.value === 'lmstudio' || provider.value === 'ollama')
+        })
         .map((provider) => {
           const override = PROVIDER_SCAN_OVERRIDES[provider.value] || {}
-          const savedApiKey = models.find((model) => model.provider === provider.value && model.api_key)?.api_key || undefined
+          const savedConfig = savedProviderConfigs[provider.value]
+          const selectedProvider = provider.value === form.provider
+          const sourceBaseUrl = selectedProvider ? form.base_url.trim() || savedConfig?.baseUrl || provider.baseUrl : savedConfig?.baseUrl || provider.baseUrl
+          const sourceApiKey = selectedProvider ? form.api_key.trim() || savedConfig?.apiKey : savedConfig?.apiKey
           return {
             key: provider.value,
             name: provider.label,
-            url: override.url || (provider.value === 'ollama' ? provider.baseUrl.replace(/\/v1$/i, '') : provider.baseUrl),
+            url: override.url || (provider.value === 'ollama' ? sourceBaseUrl.replace(/\/v1$/i, '') : sourceBaseUrl),
             type: provider.value === 'ollama' ? 'ollama' : 'openai',
-            apiKey: provider.value === form.provider ? form.api_key.trim() || savedApiKey : savedApiKey,
+            apiKey: sourceApiKey || undefined,
             scanPath: override.scanPath,
             authType: override.authType,
             scanUnsupported: override.scanUnsupported,
@@ -290,12 +371,15 @@ export const ModelsView: React.FC = () => {
   const handleAddSelectedScanned = async () => {
     const selected = scannedModels.filter((model) => selectedScanned.includes(scanKey(model)))
     for (const model of selected) {
+      const defaults = getProviderDefaults(model.provider)
+      const baseUrl = model.provider === form.provider ? form.base_url.trim() || defaults.baseUrl : defaults.baseUrl
+      const apiKey = model.provider === form.provider ? form.api_key.trim() || defaults.apiKey : defaults.apiKey
       await addModel({
         name: `${PROVIDER_LABELS[model.provider]} · ${model.modelId}`,
         mode: 'api',
         provider: model.provider,
-        base_url: PROVIDER_PRESETS[model.provider],
-        api_key: null,
+        base_url: baseUrl,
+        api_key: apiKey || null,
         model_id: model.modelId,
       })
     }
@@ -328,6 +412,19 @@ export const ModelsView: React.FC = () => {
     setTestStatus(null)
     setModelPickerOpen(false)
     setProviderPickerOpen(false)
+    setShowDraftApiKey(false)
+  }
+
+  const handleCopyApiKey = async (model: AIModel) => {
+    const apiKey = model.api_key?.trim()
+    if (!apiKey) return
+
+    try {
+      await navigator.clipboard.writeText(apiKey)
+      setKeyActionStatuses((current) => ({ ...current, [model.id]: t('models.apiKeyCopied') }))
+    } catch {
+      setKeyActionStatuses((current) => ({ ...current, [model.id]: t('models.apiKeyCopyFailed') }))
+    }
   }
 
   const handleDraftTest = async () => {
@@ -375,7 +472,7 @@ export const ModelsView: React.FC = () => {
           <h2 className="text-xl font-bold text-slate-100">{t('models.title')}</h2>
         </div>
         {models.length > 0 && (
-        <Button onClick={() => showForm ? closeModelForm() : setShowForm(true)}>
+        <Button onClick={() => showForm ? closeModelForm() : openModelForm()}>
             {showForm ? t('common.cancel') : t('models.addModel')}
           </Button>
         )}
@@ -531,7 +628,10 @@ export const ModelsView: React.FC = () => {
                                     onClick={() => handleProviderChange(provider.value)}
                                   >
                                     <ProviderLogo provider={provider.value} className="h-7 w-7 rounded-lg" />
-                                    <span className="min-w-0 flex-1 truncate">{provider.label}</span>
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block truncate">{provider.label}</span>
+                                      {savedProviderConfigs[provider.value]?.apiKey && <span className="block truncate text-[11px] text-emerald-300">🔑 {t('models.savedKeyBadge')}</span>}
+                                    </span>
                                      {selected && <span className="text-xs text-indigo-300">{t('models.selectedProvider')}</span>}
                                   </button>
                                 )
@@ -566,14 +666,34 @@ export const ModelsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-400">API Key</label>
-                  <input
-                    type="password"
-                    value={form.api_key}
-                    onChange={(event) => updateForm('api_key', event.target.value)}
-                    placeholder={PROVIDER_API_KEY_PLACEHOLDERS[form.provider]}
-                    className="h-12 w-full rounded-xl border border-slate-600/50 bg-[#0f1117] px-4 text-sm text-slate-200 placeholder:text-slate-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  />
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <label className="block text-xs font-medium text-slate-400">{t('models.apiKey')}</label>
+                    {currentSavedProviderConfig?.apiKey && <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">🔑 {t('models.apiKeySaved')}</span>}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showDraftApiKey ? 'text' : 'password'}
+                      value={form.api_key}
+                      onChange={(event) => updateForm('api_key', event.target.value)}
+                      placeholder={PROVIDER_API_KEY_PLACEHOLDERS[form.provider]}
+                      className="h-12 w-full rounded-xl border border-slate-600/50 bg-[#0f1117] px-4 pr-24 text-sm text-slate-200 placeholder:text-slate-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowDraftApiKey((visible) => !visible)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-slate-100"
+                    >
+                      {showDraftApiKey ? t('models.hideApiKey') : t('models.showApiKey')}
+                    </button>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span>{currentSavedProviderConfig?.apiKey ? (isUsingSavedApiKey ? t('models.apiKeyReused') : t('models.apiKeySavedHint')) : t('models.apiKeyNoSavedHint')}</span>
+                    {canUseSavedApiKey && (
+                      <button type="button" onClick={() => updateForm('api_key', currentSavedProviderConfig?.apiKey || '')} className="text-emerald-300 hover:text-emerald-200">
+                        {t('models.useSavedKey')}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -611,7 +731,7 @@ export const ModelsView: React.FC = () => {
           title={t('models.emptyTitle')}
           description={t('models.emptyDescription')}
           actionLabel={t('models.addFirst')}
-          onAction={() => { setForm(defaultFormState); setShowForm(true) }}
+          onAction={() => openModelForm()}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -637,6 +757,32 @@ export const ModelsView: React.FC = () => {
                     ✕
                   </button>
                 </div>
+
+                {model.mode === 'api' && (
+                  <div className="rounded-xl border border-slate-700/40 bg-slate-950/30 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{t('models.apiKey')}</p>
+                      {model.api_key && (
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setVisibleApiKeys((current) => ({ ...current, [model.id]: !current[model.id] }))}>
+                            {visibleApiKeys[model.id] ? t('models.hideApiKey') : t('models.showApiKey')}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => void handleCopyApiKey(model)}>
+                            {t('models.copyApiKey')}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {model.api_key ? (
+                      <code className="block break-all rounded-lg border border-slate-800 bg-black/30 px-3 py-2 text-xs text-slate-300">
+                        {visibleApiKeys[model.id] ? model.api_key : maskApiKey(model.api_key)}
+                      </code>
+                    ) : (
+                      <p className="text-xs text-slate-500">{t('models.noApiKeySaved')}</p>
+                    )}
+                    {keyActionStatuses[model.id] && <p className="mt-2 text-xs text-slate-500">{keyActionStatuses[model.id]}</p>}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2">
                   <Button
