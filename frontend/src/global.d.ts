@@ -17,6 +17,10 @@ interface BenchForgeDesktopApi {
   getMeta: () => Promise<{ name: string; version: string; platform: string; dataPath?: string }>
   getDataPath: () => Promise<string>
   openDataPath: () => Promise<{ ok: boolean; error?: string | null }>
+  openExternal: (url: string) => Promise<{ ok: boolean; error?: string | null }>
+  checkForUpdates: (payload?: { repo?: string }) => Promise<{ ok: boolean; noRelease?: boolean; message?: string; repo: string; currentVersion: string; latestVersion: string; updateAvailable: boolean; tagName: string | null; name: string | null; body: string; htmlUrl: string; publishedAt?: string | null; prerelease: boolean; draft: boolean; assets: Array<{ id: number; name: string; size: number; downloadUrl: string; contentType?: string | null }>; recommended: { zip?: { name: string; downloadUrl: string; size: number } | null; portable?: { name: string; downloadUrl: string; size: number } | null; setup?: { name: string; downloadUrl: string; size: number } | null; checksum?: { name: string; downloadUrl: string; size: number } | null } }>
+  downloadUpdate: (payload?: { repo?: string; assetName?: string | null; kind?: 'zip' | 'portable' | 'setup' }) => Promise<{ canceled: boolean; filePath?: string; assetName?: string; size?: number; sha256?: string; expectedSha256?: string | null; checksumVerified?: boolean; release?: { tagName: string; latestVersion: string; htmlUrl: string } }>
+  applyPortableUpdate: (payload?: { repo?: string; assetName?: string | null }) => Promise<{ ok: boolean; willQuit: boolean; appDir: string; dataDir: string; scriptPath: string; logPath: string; downloaded: { canceled: boolean; filePath?: string; assetName?: string; size?: number; sha256?: string; expectedSha256?: string | null; checksumVerified?: boolean } }>
   saveJsonFile: (payload: { defaultFileName: string; content: string }) => Promise<{ canceled: boolean; filePath?: string }>
   saveTextFile: (payload: { defaultFileName?: string; extension?: string; extensionLabel?: string; content: string }) => Promise<{ canceled: boolean; filePath?: string }>
   openJsonFile: () => Promise<{ canceled: boolean; filePath?: string; content?: string }>

@@ -5,6 +5,10 @@
   "description": "BenchForge desktop app powered by Electron, React, TypeScript and Vite.",
   "author": "BenchForge",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/snakex21/BenchForge.git"
+  },
   "main": "electron/main.cjs",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",

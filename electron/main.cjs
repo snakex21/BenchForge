@@ -51,6 +51,8 @@ const { listTools, runTool } = require('./toolRuntime.cjs')
 const { listMcpTools, callMcpTool } = require('./mcpRuntime.cjs')
 const { getSecretStoreStatus } = require('./secretStore.cjs')
 const { getDataPath } = require('./paths.cjs')
+const { DEFAULT_REPO: UPDATE_REPO, downloadLatestAsset, getLatestRelease } = require('./updateChecker.cjs')
+const { applyPortableUpdate } = require('./portableUpdater.cjs')
 
 const rendererUrl = process.env.ELECTRON_RENDERER_URL || process.env.VITE_DEV_SERVER_URL || ''
 const isDev = Boolean(rendererUrl)
@@ -254,6 +256,15 @@ ipcMain.handle('app:open-data-path', async () => {
   const error = await shell.openPath(getDataPath())
   return { ok: !error, error: error || null }
 })
+ipcMain.handle('app:open-external', async (_, url) => {
+  const target = String(url || '')
+  if (!/^https:\/\//i.test(target)) return { ok: false, error: 'Only HTTPS URLs are allowed.' }
+  await shell.openExternal(target)
+  return { ok: true, error: null }
+})
+ipcMain.handle('updates:check', async (_, payload) => getLatestRelease({ repo: payload?.repo || UPDATE_REPO, token: getGithubTokenPreference(), currentVersion: app.getVersion() }))
+ipcMain.handle('updates:download', async (_, payload) => downloadLatestAsset({ repo: payload?.repo || UPDATE_REPO, token: getGithubTokenPreference(), currentVersion: app.getVersion(), assetName: payload?.assetName || null, kind: payload?.kind || 'zip' }))
+ipcMain.handle('updates:apply-portable', async (_, payload) => applyPortableUpdate({ repo: payload?.repo || UPDATE_REPO, token: getGithubTokenPreference(), currentVersion: app.getVersion(), assetName: payload?.assetName || null }))
 
 ipcMain.handle('files:save-json', async (_, payload) => {
   const { canceled, filePath } = await dialog.showSaveDialog({
