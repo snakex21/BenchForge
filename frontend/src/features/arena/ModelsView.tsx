@@ -276,14 +276,14 @@ export const ModelsView: React.FC = () => {
           }
         })
       console.group(`[BenchForge] Skanowanie modeli: ${scanAll ? 'wszyscy providerzy' : 'lokalne + wybrany provider'}`)
-      console.table(endpoints.map((endpoint) => ({ provider: endpoint.key, name: endpoint.name, url: endpoint.url, auth: endpoint.apiKey ? 'API key' : 'brak' })))
+      console.table(endpoints.map((endpoint) => ({ provider: endpoint.key, name: endpoint.name, url: endpoint.url, auth: endpoint.apiKey ? 'API key' : 'missing' })))
       const result = await window.db.scanModels({ endpoints })
       const found: ScannedModel[] = PROVIDER_OPTIONS.flatMap((provider) => {
         const modelsForProvider = result[provider.value]
         return Array.isArray(modelsForProvider) ? modelsForProvider.map((modelId) => ({ provider: provider.value, modelId: String(modelId) })) : []
       })
       console.table(found.map((model) => ({ provider: model.provider, model: model.modelId })))
-      if (result.errors && Object.keys(result.errors).length > 0) console.warn('[BenchForge] Błędy skanowania:', result.errors)
+      if (result.errors && Object.keys(result.errors).length > 0) console.warn('[BenchForge] Scan errors:', result.errors)
       console.groupEnd()
       setScannedModels(found)
       setSelectedScanned([])

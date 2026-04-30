@@ -11,12 +11,21 @@ import { useResultStore } from '@/store/resultStore'
 import { Badge } from '../ui/Badge'
 import { ModelLogo } from '../ui/ModelLogo'
 import { getModelBenchmarkScore } from '@/utils/scoring'
-import { useTranslation } from '@/i18n'
+import { useTranslation, type TranslationKey } from '@/i18n'
 import type { Benchmark } from '@/types'
 
 interface BenchmarkMatrixProps {
   benchmarksOverride?: Benchmark[]
   onModelOpen?: (modelId: number) => void
+}
+
+const CATEGORY_KEYS: Record<string, TranslationKey> = {
+  Logika: 'benchmarks.categoryLogika',
+  Wiedza: 'benchmarks.categoryWiedza',
+  Kod: 'benchmarks.categoryKod',
+  Kreatywność: 'benchmarks.categoryKreatywnosc',
+  Wizja: 'benchmarks.categoryWizja',
+  Inne: 'benchmarks.categoryInne',
 }
 
 export const BenchmarkMatrix: React.FC<BenchmarkMatrixProps> = ({ benchmarksOverride, onModelOpen }) => {
@@ -33,7 +42,7 @@ export const BenchmarkMatrix: React.FC<BenchmarkMatrixProps> = ({ benchmarksOver
 
   // Category label → color
   const getCategoryBadge = (cat: string) => {
-    return <Badge variant="neutral">{cat}</Badge>
+    return <Badge variant="neutral">{CATEGORY_KEYS[cat] ? t(CATEGORY_KEYS[cat]) : cat}</Badge>
   }
 
   if (models.length === 0 || benchmarks.length === 0) {

@@ -202,15 +202,15 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
     setIsBusy(true)
     try {
       const created = await addBenchmark({
-        name: 'BenchForge Quick Start QA',
+        name: t('onboarding.benchmarkName'),
         category: 'Logika',
-        suite_name: 'BenchForge Onboarding',
-        description: 'Tiny starter benchmark created by the first-run wizard.',
-        prompt_template: 'Starter benchmark with one simple task.',
+        suite_name: t('onboarding.benchmarkSuite'),
+        description: t('onboarding.benchmarkDescription'),
+        prompt_template: t('onboarding.benchmarkPrompt'),
         score_type: 'boolean',
         expected_answer: 'tak',
-        pass_condition: 'Odpowiedź powinna brzmieć TAK.',
-        evaluation_checklist: ['Czy model odpowiedział TAK?'],
+        pass_condition: t('onboarding.benchmarkPass'),
+        evaluation_checklist: [t('onboarding.benchmarkChecklist')],
         evaluation_rubric: [],
         attempts: 1,
         output_type: 'text',
@@ -220,12 +220,12 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
       if (created) {
         await addTask({
           benchmarkId: created.id,
-          name: 'Say TAK',
-          promptTemplate: 'Odpowiedz dokładnie jednym słowem: TAK',
+          name: t('onboarding.taskName'),
+          promptTemplate: t('onboarding.taskPrompt'),
           scoreType: 'boolean',
           expectedAnswer: 'tak',
-          passCondition: 'Odpowiedź powinna zawierać TAK.',
-          evaluationChecklist: ['Czy odpowiedź zawiera TAK?'],
+          passCondition: t('onboarding.taskPass'),
+          evaluationChecklist: [t('onboarding.taskChecklist')],
           attempts: 1,
           outputType: 'text',
           orderIndex: 0,

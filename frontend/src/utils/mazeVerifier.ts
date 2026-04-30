@@ -1,6 +1,7 @@
 export interface MazeVerifyResult {
   passed: boolean
   reason: string
+  reasonKey?: string
   pathPoints: [number, number][]
   collisionPoint?: [number, number]
 }
@@ -67,7 +68,7 @@ function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
     image.onload = () => resolve(image)
-    image.onerror = () => reject(new Error('Nie udało się wczytać obrazka labiryntu.'))
+    image.onerror = () => reject(new Error('Could not load the maze image.'))
     image.src = src.startsWith('data:') ? src : `data:image/png;base64,${src}`
   })
 }
@@ -84,29 +85,29 @@ export async function verifyMazePath(
   canvas.width = image.naturalWidth || image.width
   canvas.height = image.naturalHeight || image.height
   const ctx = canvas.getContext('2d')
-  if (!ctx) return { passed: false, reason: 'Brak canvas context', pathPoints: [] }
+  if (!ctx) return { passed: false, reason: 'Canvas context is unavailable.', reasonKey: 'maze.errorCanvas', pathPoints: [] }
 
   ctx.drawImage(image, 0, 0)
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const pathPoints = parseModelPath(modelResponse)
-  if (!pathPoints) return { passed: false, reason: 'Brak poprawnego JSON ze ścieżką', pathPoints: [] }
+  if (!pathPoints) return { passed: false, reason: 'No valid path JSON found.', reasonKey: 'maze.errorInvalidPathJson', pathPoints: [] }
 
   const first = pathPoints[0]
   if (Math.hypot(first[0] - start[0], first[1] - start[1]) > tolerance) {
-    return { passed: false, reason: 'Ścieżka nie zaczyna się w punkcie startowym', pathPoints }
+    return { passed: false, reason: 'The path does not start at the start point.', reasonKey: 'maze.errorStartPoint', pathPoints }
   }
 
   const densePoints = interpolatePath(pathPoints, 2)
   for (const point of densePoints) {
     if (!isWalkable(imageData, point[0], point[1])) {
-      return { passed: false, reason: 'Kolizja ze ścianą', pathPoints, collisionPoint: [Math.round(point[0]), Math.round(point[1])] }
+      return { passed: false, reason: 'Collision with a wall.', reasonKey: 'maze.errorWallCollision', pathPoints, collisionPoint: [Math.round(point[0]), Math.round(point[1])] }
     }
   }
 
   const last = pathPoints[pathPoints.length - 1]
   if (Math.hypot(last[0] - end[0], last[1] - end[1]) > tolerance) {
-    return { passed: false, reason: 'Ścieżka nie dotarła do celu', pathPoints }
+    return { passed: false, reason: 'The path did not reach the goal.', reasonKey: 'maze.errorGoal', pathPoints }
   }
 
-  return { passed: true, reason: 'Ścieżka poprawna', pathPoints }
+  return { passed: true, reason: 'Path is valid.', reasonKey: 'maze.successPath', pathPoints }
 }

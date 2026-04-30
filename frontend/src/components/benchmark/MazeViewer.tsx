@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import type { MazeVerifyResult } from '@/utils/mazeVerifier'
+import { useTranslation, type TranslationKey } from '@/i18n'
 
 interface MazeViewerProps {
   imageBase64: string
@@ -10,6 +11,7 @@ interface MazeViewerProps {
 
 export const MazeViewer: React.FC<MazeViewerProps> = ({ imageBase64, pathPoints, collisionPoint, verifyResult }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const { t } = useTranslation()
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -53,7 +55,7 @@ export const MazeViewer: React.FC<MazeViewerProps> = ({ imageBase64, pathPoints,
   return (
     <div className="space-y-2">
       <canvas ref={canvasRef} className={`max-h-[520px] max-w-full rounded-xl border-2 ${borderClass} bg-white`} />
-      {verifyResult && <p className={verifyResult.passed ? 'text-sm text-emerald-300' : 'text-sm text-red-300'}>{verifyResult.reason}</p>}
+      {verifyResult && <p className={verifyResult.passed ? 'text-sm text-emerald-300' : 'text-sm text-red-300'}>{verifyResult.reasonKey ? t(verifyResult.reasonKey as TranslationKey) : verifyResult.reason}</p>}
     </div>
   )
 }

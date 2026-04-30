@@ -318,12 +318,23 @@ export const SettingsView: React.FC = () => {
           <div className="py-2">
             <p className="text-sm text-slate-300">{t('settings.language')}</p>
             <p className="mt-0.5 text-xs text-slate-500">{t('settings.languageDescription')}</p>
-            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(12rem,100%),1fr))] gap-3">
-              {LANGUAGE_OPTIONS.map((item) => (
-                <button key={item.id} type="button" onClick={() => setLanguage(item.id)} className={`rounded-xl border p-3 text-left transition ${language === item.id ? 'border-indigo-400 bg-indigo-500/10' : 'border-slate-700/40 bg-slate-950/30 hover:border-slate-500'}`}>
-                  <div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-slate-200">{item.flag} {t(`settings.language.${item.id}`)}</span>{language === item.id && <span>✓</span>}</div>
-                </button>
-              ))}
+            <div className="mt-3 max-w-md">
+              <label className="sr-only" htmlFor="settings-language-select">{t('settings.language')}</label>
+              <select
+                id="settings-language-select"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value as typeof language)}
+                className="w-full rounded-xl border border-slate-700/40 bg-slate-950/30 px-3 py-3 text-sm font-medium text-slate-200 outline-none transition hover:border-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
+              >
+                {LANGUAGE_OPTIONS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.flag} {item.nativeLabel} — {item.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">
+                {LANGUAGE_OPTIONS.find((item) => item.id === language)?.flag} {LANGUAGE_OPTIONS.find((item) => item.id === language)?.nativeLabel}
+              </p>
             </div>
           </div>
         </div>

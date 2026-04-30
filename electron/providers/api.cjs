@@ -2,7 +2,7 @@ function normalizeBaseUrl(baseUrl) {
   return (baseUrl || '').trim().replace(/\/$/, '')
 }
 
-const TIMEOUT_MESSAGE = 'Przekroczono czas oczekiwania na odpowiedź modelu.'
+const TIMEOUT_MESSAGE = 'Timed out waiting for the model response.'
 
 function estimateTokens(...parts) {
   const text = parts.filter(Boolean).map((part) => typeof part === 'string' ? part : JSON.stringify(part)).join('\n')
@@ -57,11 +57,11 @@ function buildMessages(prompt, imageBase64) {
 async function sendPrompt(modelConfig, prompt, imageBase64 = null) {
   const baseUrl = normalizeBaseUrl(modelConfig.base_url)
   if (!baseUrl) {
-    throw new Error('Brak base_url dla modelu API.')
+    throw new Error('Missing base_url for the API model.')
   }
 
   if (!modelConfig.model_id) {
-    throw new Error('Brak model_id dla modelu API.')
+    throw new Error('Missing model_id for the API model.')
   }
 
   const headers = {
@@ -149,17 +149,17 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
 
   try {
     if (externalSignal?.aborted) {
-      throw Object.assign(new Error('Benchmark anulowany przez użytkownika.'), { name: 'AbortError' })
+      throw Object.assign(new Error('Benchmark was cancelled by the user.'), { name: 'AbortError' })
     }
     externalSignal?.addEventListener?.('abort', abortFromExternalSignal, { once: true })
 
     const baseUrl = normalizeBaseUrl(modelConfig.base_url)
     if (!baseUrl) {
-      throw new Error('Brak base_url dla modelu API.')
+      throw new Error('Missing base_url for the API model.')
     }
 
     if (!modelConfig.model_id) {
-      throw new Error('Brak model_id dla modelu API.')
+      throw new Error('Missing model_id for the API model.')
     }
 
     const headers = {
@@ -187,7 +187,7 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
     }
 
     if (!response.body) {
-      throw new Error('Brak strumienia odpowiedzi z API.')
+      throw new Error('Missing response stream from the API.')
     }
 
     const reader = response.body.getReader()
@@ -267,8 +267,8 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
     finish(null)
   } catch (error) {
     const message = error instanceof Error && error.name === 'AbortError'
-      ? externalSignal?.aborted ? 'Benchmark anulowany przez użytkownika.' : TIMEOUT_MESSAGE
-      : error instanceof Error ? error.message : 'Nieznany błąd streamingu.'
+      ? externalSignal?.aborted ? 'Benchmark was cancelled by the user.' : TIMEOUT_MESSAGE
+      : error instanceof Error ? error.message : 'Unknown streaming error.'
     onError(message)
   } finally {
     clearTimeout(timeout)
@@ -279,7 +279,7 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
 async function testConnection(modelConfig) {
   const baseUrl = normalizeBaseUrl(modelConfig.base_url)
   if (!baseUrl) {
-    return { ok: false, error: 'Brak base_url dla modelu API.' }
+    return { ok: false, error: 'Missing base_url for the API model.' }
   }
 
   try {
@@ -301,7 +301,7 @@ async function testConnection(modelConfig) {
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : 'Nieznany błąd połączenia.',
+      error: error instanceof Error ? error.message : 'Unknown connection error.',
     }
   }
 }

@@ -6,13 +6,13 @@ const detectInitialLanguage = (): UIState['language'] => {
   if (typeof navigator === 'undefined') return 'en'
   const preferred = (navigator.languages?.[0] || navigator.language || '').toLowerCase()
   if (preferred.startsWith('zh-tw') || preferred.startsWith('zh-hk') || preferred.startsWith('zh-mo')) return 'zh-TW'
-  const detected = ['pl', 'en', 'de', 'es', 'fr', 'it', 'pt', 'uk', 'cs', 'nl', 'tr', 'ja', 'ru', 'zh', 'ko', 'id', 'vi', 'th', 'hi', 'ar', 'he', 'el', 'sv', 'no', 'nb', 'nn', 'da', 'fi', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'lt', 'lv', 'et', 'sr', 'fa', 'ur', 'ms', 'fil', 'bn'].find((language) => preferred.startsWith(language))
+  const detected = ['pl', 'en', 'de', 'es', 'fr', 'it', 'pt', 'uk', 'cs', 'nl', 'tr', 'ja', 'ru', 'zh', 'ko', 'id', 'vi', 'th', 'hi', 'ar', 'he', 'el', 'sv', 'no', 'nb', 'nn', 'da', 'fi', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'lt', 'lv', 'et', 'sr', 'ca', 'eu', 'gl', 'ga', 'cy', 'is', 'mt', 'sq', 'mk', 'be', 'bs', 'lb', 'gd', 'br', 'co', 'fy', 'fa', 'ur', 'ms', 'fil', 'bn'].find((language) => preferred.startsWith(language))
   if (detected === 'nb' || detected === 'nn') return 'no'
   if (detected) return detected as UIState['language']
   return 'en'
 }
 
-const supportedLanguages: UIState['language'][] = ['pl', 'en', 'de', 'es', 'fr', 'it', 'pt', 'uk', 'cs', 'nl', 'tr', 'ja', 'ru', 'zh', 'zh-TW', 'ko', 'id', 'vi', 'th', 'hi', 'ar', 'he', 'el', 'sv', 'no', 'da', 'fi', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'lt', 'lv', 'et', 'sr', 'fa', 'ur', 'ms', 'fil', 'bn']
+const supportedLanguages: UIState['language'][] = ['pl', 'en', 'de', 'es', 'fr', 'it', 'pt', 'uk', 'cs', 'nl', 'tr', 'ja', 'ru', 'zh', 'zh-TW', 'ko', 'id', 'vi', 'th', 'hi', 'ar', 'he', 'el', 'sv', 'no', 'da', 'fi', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'lt', 'lv', 'et', 'sr', 'ca', 'eu', 'gl', 'ga', 'cy', 'is', 'mt', 'sq', 'mk', 'be', 'bs', 'lb', 'gd', 'br', 'co', 'fy', 'fa', 'ur', 'ms', 'fil', 'bn']
 
 const defaultKeyboardShortcuts: KeyboardShortcuts = {
   goToArena: { key: '1', ctrl: true },
