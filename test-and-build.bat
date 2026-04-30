@@ -17,7 +17,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [1/4] Uruchamianie testow...
+echo [1/5] Uruchamianie testow...
 echo.
 cd frontend
 call npm test
@@ -30,7 +30,17 @@ if errorlevel 1 (
 cd ..
 
 echo.
-echo [2/4] Budowanie frontendu...
+echo [2/5] Sprawdzanie tlumaczen...
+echo.
+call npm run i18n:check
+if errorlevel 1 (
+    echo [!] BLAD: Walidacja tlumaczen nie powiodla sie!
+    pause
+    exit /b 1
+)
+
+echo.
+echo [3/5] Budowanie frontendu...
 echo.
 cd frontend
 call npm run build
@@ -42,7 +52,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [3/4] Tworzenie installerow...
+echo [4/5] Tworzenie installerow...
 echo.
 call npx electron-builder --win nsis portable zip --publish never
 if errorlevel 1 (
@@ -52,7 +62,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [4/4] Generowanie checksum...
+echo [5/5] Generowanie checksum...
 echo.
 if exist scripts\checksums.cjs (
     node scripts\checksums.cjs release

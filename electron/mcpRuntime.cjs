@@ -110,7 +110,7 @@ async function withInitializedClient(server, fn) {
     await client.request('initialize', {
       protocolVersion: '2024-11-05',
       capabilities: {},
-      clientInfo: { name: 'BenchForge', version: '0.2.0' },
+      clientInfo: { name: 'BenchForge', version: '1.0.0' },
     })
     client.notify('notifications/initialized', {})
     return await fn(client)

@@ -20,6 +20,7 @@
     "dist:win": "npm run build && electron-builder --win nsis portable zip --publish never",
     "pack": "npm run build && electron-builder --dir",
     "checksum": "node scripts/checksums.cjs release",
+    "i18n:check": "node scripts/check-i18n.cjs",
     "release:win": "npm run dist:win && npm run checksum"
   },
   "dependencies": {

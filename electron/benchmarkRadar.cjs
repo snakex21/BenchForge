@@ -51,7 +51,7 @@ function parseGithubUrl(input) {
     return { owner, repo, ref, path: pathParts.join('/'), raw: true, repoUrl: `https://github.com/${owner}/${repo}` }
   }
 
-  if (url.hostname !== 'github.com' && url.hostname !== 'www.github.com') throw new Error('Radar obsługuje na razie tylko github.com.')
+  if (url.hostname !== 'github.com' && url.hostname !== 'www.github.com') throw new Error('Radar currently supports only github.com.')
   const [owner, repoWithGit, mode, ref, ...pathParts] = url.pathname.split('/').filter(Boolean)
   const repo = repoWithGit?.replace(/\.git$/i, '')
   if (!owner || !repo) throw new Error('Niepoprawny URL repozytorium GitHub.')
@@ -73,9 +73,9 @@ async function fetchText(url, timeoutMs = 12000, maxBytes = MAX_TEXT_BYTES, opti
     const response = await fetch(url, { headers: { 'user-agent': 'BenchForge-Radar', accept: 'application/vnd.github+json, application/json, text/plain, */*', ...getAuthHeaders(options) }, signal: controller.signal })
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
     const length = Number(response.headers.get('content-length') || 0)
-    if (length && length > maxBytes) throw new Error(`Plik za duży (${length} B). Limit: ${maxBytes} B.`)
+    if (length && length > maxBytes) throw new Error(`File too large (${length} B). Limit: ${maxBytes} B.`)
     const text = await response.text()
-    if (text.length > maxBytes) throw new Error(`Plik za duży (${text.length} znaków). Limit: ${maxBytes} znaków.`)
+    if (text.length > maxBytes) throw new Error(`File too large (${text.length} characters). Limit: ${maxBytes} characters.`)
     return setCached(cacheKey, text)
   } finally {
     clearTimeout(timeout)
@@ -92,7 +92,7 @@ async function getRepoMeta(owner, repo, options = {}) {
 }
 
 function rawUrl(owner, repo, ref, filePath) {
-  if (!isSafeGithubPath(filePath)) throw new Error(`Niebezpieczna ścieżka w manifeście: ${filePath}`)
+  if (!isSafeGithubPath(filePath)) throw new Error(`Unsafe path in manifest: ${filePath}`)
   return `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(ref).replace(/%2F/g, '/')}/${normalizePath(filePath).split('/').map(encodeURIComponent).join('/')}`
 }
 
@@ -223,21 +223,21 @@ function resolveManifestUrl(filePath, context) {
   const value = String(filePath || '').trim()
   if (/^https:\/\//i.test(value)) {
     const url = new URL(value)
-    if (url.hostname !== 'raw.githubusercontent.com' && url.hostname !== 'github.com' && url.hostname !== 'www.github.com') throw new Error('Manifest może pobierać benchmarki tylko z GitHuba/Raw GitHub.')
+    if (url.hostname !== 'raw.githubusercontent.com' && url.hostname !== 'github.com' && url.hostname !== 'www.github.com') throw new Error('Manifest may download benchmarks only from GitHub/Raw GitHub.')
     if (url.hostname === 'raw.githubusercontent.com') return value
     const parsed = parseGithubUrl(value)
-    if (!parsed.raw || !parsed.ref || !parsed.path) throw new Error(`Link GitHub musi wskazywać plik: ${value}`)
+    if (!parsed.raw || !parsed.ref || !parsed.path) throw new Error(`GitHub link must point to a file: ${value}`)
     return rawUrl(parsed.owner, parsed.repo, parsed.ref, parsed.path)
   }
 
-  if (!isSafeGithubPath(value)) throw new Error(`Niebezpieczna ścieżka w manifeście: ${value}`)
+  if (!isSafeGithubPath(value)) throw new Error(`Unsafe path in manifest: ${value}`)
   const baseDir = context.manifestPath.includes('/') ? context.manifestPath.split('/').slice(0, -1).join('/') : ''
   const relative = normalizePath(baseDir ? `${baseDir}/${value}` : value)
   return rawUrl(context.owner, context.repo, context.ref, relative)
 }
 
 async function buildPackFromManifest({ manifest, manifestPath, owner, repo, ref, repoUrl, beaconPath = null, token = null, forceRefresh = false }) {
-  if (!manifest || typeof manifest !== 'object') throw new Error('Manifest musi być obiektem JSON.')
+  if (!manifest || typeof manifest !== 'object') throw new Error('Manifest must be a JSON object.')
   const manifestObject = Array.isArray(manifest) ? { benchmarks: manifest } : manifest
   const context = { owner, repo, ref, manifestPath, token, forceRefresh, checksums: manifestObject.checksums && typeof manifestObject.checksums === 'object' ? manifestObject.checksums : {} }
   const benchmarkEntries = Array.isArray(manifestObject.benchmarks) ? manifestObject.benchmarks : []
@@ -245,7 +245,7 @@ async function buildPackFromManifest({ manifest, manifestPath, owner, repo, ref,
   for (const entry of benchmarkEntries) benchmarks.push(...await loadBenchmarkEntry(entry, context))
 
   if (benchmarks.length === 0 && (manifestObject.name || manifestObject.prompt_template || manifestObject.tasks)) benchmarks.push(...normalizeBenchmarkPayload(manifestObject))
-  if (benchmarks.length === 0) throw new Error('Manifest nie zawiera żadnych benchmarków do importu.')
+  if (benchmarks.length === 0) throw new Error('Manifest does not contain any benchmarks to import.')
 
   const taskCount = benchmarks.reduce((sum, benchmark) => sum + (Array.isArray(benchmark?.tasks) ? benchmark.tasks.length : 1), 0)
   const validation = validatePack(manifestObject, benchmarks)
@@ -308,7 +308,7 @@ async function scanBenchmarkBeacon(payload = {}) {
     return buildPackFromManifest({ manifest, manifestPath, owner: parsed.owner, repo: parsed.repo, ref, repoUrl, beaconPath, ...options })
   }
 
-  throw new Error(`Nie znaleziono benchforge.beacon ani benchforge.json w ${parsed.owner}/${parsed.repo}.`)
+  throw new Error(`No benchforge.beacon or benchforge.json found in ${parsed.owner}/${parsed.repo}.`)
 }
 
 async function discoverBenchmarkBeacons(payload = {}) {

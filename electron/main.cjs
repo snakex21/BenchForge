@@ -173,7 +173,7 @@ async function scanEndpoint(endpoint) {
   const key = endpoint.key || String(endpoint.name || '').toLowerCase() || 'custom'
   const isOllama = endpoint.type === 'ollama' || /ollama/i.test(endpoint.name || '') || /11434/.test(endpoint.url || '')
   if (endpoint.scanUnsupported) return { key, models: [] }
-  if (endpoint.requiresApiKey && !endpoint.apiKey) return { key, models: [], skipped: 'brak API key' }
+  if (endpoint.requiresApiKey && !endpoint.apiKey) return { key, models: [], skipped: 'missing API key' }
   let url = normalizeScanUrl(endpoint.url, endpoint.scanPath || (isOllama ? '/api/tags' : '/models'))
   const headers = {}
   if (endpoint.apiKey) {
@@ -282,7 +282,7 @@ ipcMain.handle('updates:apply-portable', async (_, payload) => applyPortableUpda
 
 ipcMain.handle('files:save-json', async (_, payload) => {
   const { canceled, filePath } = await dialog.showSaveDialog({
-    title: 'Eksportuj wyniki BenchForge',
+    title: 'Export BenchForge results',
     defaultPath: payload?.defaultFileName || `benchforge-results-${Date.now()}.json`,
     filters: [{ name: 'JSON', extensions: ['json'] }],
   })
@@ -298,9 +298,9 @@ ipcMain.handle('files:save-json', async (_, payload) => {
 ipcMain.handle('files:save-text', async (_, payload) => {
   const ext = payload?.extension || 'txt'
   const { canceled, filePath } = await dialog.showSaveDialog({
-    title: 'Zapisz odpowiedź modelu',
+    title: 'Save model response',
     defaultPath: payload?.defaultFileName || `benchforge-output.${ext}`,
-    filters: [{ name: payload?.extensionLabel || 'Plik', extensions: [ext] }],
+    filters: [{ name: payload?.extensionLabel || 'File', extensions: [ext] }],
   })
 
   if (canceled || !filePath) {
@@ -313,7 +313,7 @@ ipcMain.handle('files:save-text', async (_, payload) => {
 
 ipcMain.handle('files:open-json', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    title: 'Importuj dane BenchForge',
+    title: 'Import BenchForge data',
     properties: ['openFile'],
     filters: [{ name: 'JSON', extensions: ['json'] }],
   })
@@ -329,7 +329,7 @@ ipcMain.handle('files:open-json', async () => {
 
 ipcMain.handle('files:open-path', async (_, relativePath) => {
   const absolutePath = resolveArtifactPath(relativePath)
-  if (!absolutePath) return { ok: false, error: 'Nieprawidłowa ścieżka artefaktu.' }
+  if (!absolutePath) return { ok: false, error: 'Invalid artifact path.' }
   const error = await shell.openPath(absolutePath)
   return { ok: !error, error: error || null }
 })
@@ -337,7 +337,7 @@ ipcMain.handle('files:open-path', async (_, relativePath) => {
 ipcMain.handle('files:export-artifact-zip', async (_, payload) => {
   const relativePath = payload?.relativePath
   const { canceled, filePath } = await dialog.showSaveDialog({
-    title: 'Eksportuj artefakty BenchForge',
+    title: 'Export BenchForge artifacts',
     defaultPath: payload?.defaultFileName || `benchforge-artifacts-${Date.now()}.zip`,
     filters: [{ name: 'ZIP', extensions: ['zip'] }],
   })
@@ -402,7 +402,7 @@ ipcMain.handle('db:preference:get', (_, key) => getPreference(key))
 ipcMain.handle('model:test-connection', async (_, payload) => {
   const model = payload?.modelId ? getModelById(payload.modelId) : payload?.modelConfig
   if (!model) {
-    return { ok: false, error: 'Nie znaleziono konfiguracji modelu.' }
+    return { ok: false, error: 'Model configuration was not found.' }
   }
 
   const provider = getProvider(model.mode)
@@ -412,9 +412,9 @@ ipcMain.handle('model:test-connection', async (_, payload) => {
 ipcMain.handle('judge:evaluate', async (_, payload) => {
   try {
     const model = getModelById(payload?.modelId)
-    if (!model) return { ok: false, error: 'Nie znaleziono modelu judge.' }
+    if (!model) return { ok: false, error: 'Judge model was not found.' }
     const provider = getProvider(model.mode)
-    const prompt = `Oceń odpowiedź modelu jako judge. Zwróć WYŁĄCZNIE JSON: {"score":0-100,"passed":true/false,"reason":"..."}.\n\nBenchmark/task:\n${payload?.taskPrompt || ''}\n\nChecklist:\n${Array.isArray(payload?.checklist) ? payload.checklist.map((item) => `- ${item}`).join('\n') : ''}\n\nOdpowiedź oceniana:\n${payload?.response || ''}`
+    const prompt = `Evaluate the model response as a judge. Return ONLY JSON: {"score":0-100,"passed":true/false,"reason":"..."}.\n\nBenchmark/task:\n${payload?.taskPrompt || ''}\n\nChecklist:\n${Array.isArray(payload?.checklist) ? payload.checklist.map((item) => `- ${item}`).join('\n') : ''}\n\nResponse to evaluate:\n${payload?.response || ''}`
     const result = await provider.sendPrompt(model, prompt)
     let parsed = null
     try {
@@ -459,7 +459,7 @@ ipcMain.handle('models:scan', async (_, payload) => {
       console.log(`[models:scan] OK: ${endpoint.name || key} - ${scanned.models.length} model(i)`)
     } catch (error) {
       result[key] = result[key] || []
-      result.errors[key] = error instanceof Error ? error.message : 'Nieznany błąd skanowania.'
+      result.errors[key] = error instanceof Error ? error.message : 'Unknown scan error.'
       console.warn(`[models:scan] FAIL: ${endpoint.name || key} - ${result.errors[key]}`)
     }
   }))
@@ -474,7 +474,7 @@ ipcMain.handle('models:scan', async (_, payload) => {
 ipcMain.handle('model:send-prompt', async (_, payload) => {
   const model = getModelById(payload?.modelId)
   if (!model) {
-    throw new Error('Nie znaleziono modelu.')
+    throw new Error('Model was not found.')
   }
 
   const provider = getProvider(model.mode)
@@ -495,7 +495,7 @@ ipcMain.handle('benchmark:run', async (_, payload) => {
       response: null,
       tokens_used: null,
       is_manual: false,
-      error: error instanceof Error ? error.message : 'Nieznany błąd benchmark:run',
+      error: error instanceof Error ? error.message : 'Unknown benchmark:run error',
     }
   }
 })
@@ -503,11 +503,11 @@ ipcMain.handle('benchmark:run', async (_, payload) => {
 ipcMain.handle('benchmark:run-streaming', async (_, payload) => {
   try {
     if (!mainWindow) {
-      return { started: false, error: 'Okno aplikacji nie jest dostępne.' }
+      return { started: false, error: 'Application window is not available.' }
     }
 
     if (currentBenchmarkAbort) {
-      return { started: false, error: 'Benchmark jest już uruchomiony.' }
+      return { started: false, error: 'A benchmark is already running.' }
     }
     currentBenchmarkAbort = new AbortController()
 
@@ -520,7 +520,7 @@ ipcMain.handle('benchmark:run-streaming', async (_, payload) => {
     })
     return { started: true }
   } catch (error) {
-    return { started: false, error: error instanceof Error ? error.message : 'Nieznany błąd benchmark:run-streaming' }
+    return { started: false, error: error instanceof Error ? error.message : 'Unknown benchmark:run-streaming error' }
   }
 })
 
@@ -534,7 +534,7 @@ ipcMain.handle('benchmark:submit-manual', async (_, payload) => {
   try {
     const benchmark = getBenchmarkById(payload.benchmarkId)
     if (!benchmark) {
-      return { ok: false, resultId: null, error: 'Nie znaleziono benchmarku.' }
+      return { ok: false, resultId: null, error: 'Benchmark was not found.' }
     }
 
     const result = addResult({
@@ -552,7 +552,7 @@ ipcMain.handle('benchmark:submit-manual', async (_, payload) => {
     return {
       ok: false,
       resultId: null,
-      error: error instanceof Error ? error.message : 'Nieznany błąd benchmark:submit-manual',
+      error: error instanceof Error ? error.message : 'Unknown benchmark:submit-manual error',
     }
   }
 })
@@ -562,7 +562,7 @@ ipcMain.handle('benchmark:submit-manual-streaming', async (_, payload) => {
     const task = payload.taskId ? getTaskById(payload.taskId) : null
     const benchmarkId = payload.benchmarkId || task?.benchmark_id
     if (!benchmarkId) {
-      return { ok: false, resultId: null, error: 'Nie znaleziono benchmarku dla zadania manualnego.' }
+      return { ok: false, resultId: null, error: 'Benchmark for the manual task was not found.' }
     }
 
     const result = addResult({
@@ -593,7 +593,7 @@ ipcMain.handle('benchmark:submit-manual-streaming', async (_, payload) => {
     return {
       ok: false,
       resultId: null,
-      error: error instanceof Error ? error.message : 'Nieznany błąd benchmark:submit-manual-streaming',
+      error: error instanceof Error ? error.message : 'Unknown benchmark:submit-manual-streaming error',
     }
   }
 })

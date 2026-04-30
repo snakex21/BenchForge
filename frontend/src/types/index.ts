@@ -115,7 +115,7 @@ export interface UIState {
   rightPanelOpen: boolean
   thinkingPanelOpen: boolean
   theme: 'dark' | 'light' | 'cyberpunk' | 'graphite'
-  language: 'pl' | 'en' | 'de' | 'es' | 'fr' | 'it' | 'pt' | 'uk' | 'cs' | 'nl' | 'tr' | 'ja' | 'ru' | 'zh' | 'zh-TW' | 'ko' | 'id' | 'vi' | 'th' | 'hi' | 'ar' | 'he' | 'el' | 'sv' | 'no' | 'da' | 'fi' | 'hu' | 'ro' | 'bg' | 'hr' | 'sk' | 'sl' | 'lt' | 'lv' | 'et' | 'sr' | 'fa' | 'ur' | 'ms' | 'fil' | 'bn'
+  language: 'pl' | 'en' | 'de' | 'es' | 'fr' | 'it' | 'pt' | 'uk' | 'cs' | 'nl' | 'tr' | 'ja' | 'ru' | 'zh' | 'zh-TW' | 'ko' | 'id' | 'vi' | 'th' | 'hi' | 'ar' | 'he' | 'el' | 'sv' | 'no' | 'da' | 'fi' | 'hu' | 'ro' | 'bg' | 'hr' | 'sk' | 'sl' | 'lt' | 'lv' | 'et' | 'sr' | 'ca' | 'eu' | 'gl' | 'ga' | 'cy' | 'is' | 'mt' | 'sq' | 'mk' | 'be' | 'bs' | 'lb' | 'gd' | 'br' | 'co' | 'fy' | 'fa' | 'ur' | 'ms' | 'fil' | 'bn'
   rerunTarget: { modelId: number; benchmarkId: number; taskIds?: number[] } | null
   keyboardShortcuts: KeyboardShortcuts
 }

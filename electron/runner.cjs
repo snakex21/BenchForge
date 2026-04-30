@@ -111,15 +111,15 @@ function evaluateCodePresenceBenchmark(benchmark, response) {
     if (parsed?.mode !== 'code_presence') return null
 
     const text = String(response || '').toLowerCase()
-    if (!text.trim()) return { score: 0, error: 'Model zakończył generowanie bez odpowiedzi.', passed: 0, total: 1 }
+    if (!text.trim()) return { score: 0, error: 'The model finished generation without a response.', passed: 0, total: 1 }
     if (Array.isArray(parsed.required)) {
       const required = parsed.required.map((needle) => String(needle || '').trim()).filter(Boolean)
-      if (required.length === 0) return { score: 0, error: 'Warunek code_presence nie ma żadnych wymaganych fragmentów.', passed: 0, total: 1 }
+      if (required.length === 0) return { score: 0, error: 'The code_presence condition has no required fragments.', passed: 0, total: 1 }
       const missing = required.filter((needle) => !matchesRequiredCodeFragment(text, needle))
       const ok = missing.length === 0
       return {
         score: ok ? 100 : 0,
-        error: ok ? null : `Brak wymaganych fragmentów: ${missing.join(', ')}`,
+        error: ok ? null : `Missing required fragments: ${missing.join(', ')}`,
         passed: ok ? 1 : 0,
         total: 1,
       }
@@ -132,7 +132,7 @@ function evaluateCodePresenceBenchmark(benchmark, response) {
 
 async function evaluateScore(benchmark, response, options = {}) {
   if (benchmark.output_type === 'maze') return { score: null, is_manual: false, needs_verify: true, error: null }
-  if (!String(response || '').trim()) return { score: 0, error: 'Model zakończył generowanie bez odpowiedzi.' }
+  if (!String(response || '').trim()) return { score: 0, error: 'The model finished generation without a response.' }
   const sandbox = await evaluateSandbox(benchmark, response, options)
   if (sandbox) return sandbox
   const codePresence = evaluateCodePresenceBenchmark(benchmark, response)
@@ -141,11 +141,11 @@ async function evaluateScore(benchmark, response, options = {}) {
 
   if (benchmark.score_type === 'boolean') {
     const score = evaluateBooleanResponse(benchmark, response)
-    return score ? { score, error: null } : { score: null, error: 'Nie udało się ocenić odpowiedzi modelu dla benchmarku boolean.' }
+    return score ? { score, error: null } : { score: null, error: 'Could not evaluate the model response for a boolean benchmark.' }
   }
 
   const score = evaluateNumericResponse(response)
-  return score === null ? { score: null, error: 'Nie udało się odczytać oceny numerycznej z odpowiedzi modelu.' } : { score, error: null }
+  return score === null ? { score: null, error: 'Could not read a numeric score from the model response.' } : { score, error: null }
 }
 
 function normalizeBenchmarkScore(benchmark, score, attempt, attempts) {
@@ -201,7 +201,7 @@ function buildBenchmarkThinkingNotes(taskResults, runnableTasks) {
   return taskResults.map((result, index) => {
     const task = runnableTasks.find((item) => item.id === result.task_id)
     const title = task?.name || `Zadanie ${index + 1}`
-    return `## ${index + 1}. ${title}\n\n${result.thinking || '_Brak zapisanego myślenia._'}`
+    return `## ${index + 1}. ${title}\n\n${result.thinking || '_No saved thinking._'}`
   }).join('\n\n---\n\n')
 }
 
@@ -249,9 +249,9 @@ async function submitManualBatch(payload = {}) {
   const model = getModelById(modelId)
   const benchmark = getBenchmarkById(benchmarkId)
 
-  if (!model) return { ok: false, error: 'Nie znaleziono modelu.', results: [] }
-  if (!benchmark) return { ok: false, error: 'Nie znaleziono benchmarku.', results: [] }
-  if (entries.length === 0) return { ok: false, error: 'Brak odpowiedzi w paczce manualnej.', results: [] }
+  if (!model) return { ok: false, error: 'Model was not found.', results: [] }
+  if (!benchmark) return { ok: false, error: 'Benchmark was not found.', results: [] }
+  if (entries.length === 0) return { ok: false, error: 'No responses in the manual batch.', results: [] }
 
   const runnableTasks = getRunnableTasks(benchmarkId, benchmark)
   const existingSession = payload.runSessionId || payload.sessionId ? getRunSession(payload.runSessionId || payload.sessionId) : null
@@ -269,11 +269,11 @@ async function submitManualBatch(payload = {}) {
     const taskId = task?.id || null
 
     if (!task) {
-      batchResults.push({ ok: false, taskId: entry?.taskId ?? entry?.task_id ?? null, error: 'Nie znaleziono task_id w tym benchmarku.' })
+      batchResults.push({ ok: false, taskId: entry?.taskId ?? entry?.task_id ?? null, error: 'task_id was not found in this benchmark.' })
       continue
     }
     if (!response) {
-      batchResults.push({ ok: false, taskId, error: 'Pusta odpowiedź w paczce manualnej.' })
+      batchResults.push({ ok: false, taskId, error: 'Empty response in the manual batch.' })
       continue
     }
 
@@ -289,10 +289,10 @@ async function submitManualBatch(payload = {}) {
           taskId,
           response,
           error: evaluation?.needs_verify
-            ? 'To zadanie wymaga osobnej weryfikacji manualnej.'
+            ? 'This task requires separate manual verification.'
             : evaluation?.is_manual
-              ? 'Nie udało się ocenić automatycznie. Dodaj score="0-100" albo score="tak/nie" do bloku odpowiedzi.'
-              : evaluation?.error || 'Nie udało się ocenić odpowiedzi z paczki manualnej.',
+              ? 'Could not evaluate automatically. Add score="0-100" or score="tak/nie" to the answer block.'
+              : evaluation?.error || 'Could not evaluate the response from the manual batch.',
         })
         continue
       }
@@ -315,7 +315,7 @@ async function submitManualBatch(payload = {}) {
       updateRunSession(session.id, { completed_task_ids: Array.from(completedIdSet), current_task_id: taskId })
       batchResults.push({ ok: true, taskId, resultId: created.id, score: String(score), response, error: evaluation?.error || null })
     } catch (error) {
-      batchResults.push({ ok: false, taskId, response, error: error instanceof Error ? error.message : 'Nieznany błąd oceny paczki manualnej.' })
+      batchResults.push({ ok: false, taskId, response, error: error instanceof Error ? error.message : 'Unknown manual batch evaluation error.' })
     }
   }
 
@@ -367,7 +367,7 @@ async function submitManualBatch(payload = {}) {
     completedTaskIds: Array.from(completedIdSet),
     results: batchResults,
     aggregate,
-    error: batchResults.some((result) => !result.ok) ? 'Część odpowiedzi z paczki manualnej nie została zapisana.' : null,
+    error: batchResults.some((result) => !result.ok) ? 'Some manual batch responses were not saved.' : null,
   }
 }
 
@@ -378,7 +378,7 @@ function streamProviderPrompt(provider, model, prompt, handlers, imageBase64 = n
       prompt,
       handlers.onChunk,
       (response, tokensUsed) => resolve({ response, tokens_used: tokensUsed }),
-      (error) => reject(new Error(typeof error === 'string' ? error : error?.message || 'Nieznany błąd streamingu.')),
+      (error) => reject(new Error(typeof error === 'string' ? error : error?.message || 'Unknown streaming error.')),
       imageBase64,
       signal,
       handlers.onThinkingChunk,
@@ -388,11 +388,11 @@ function streamProviderPrompt(provider, model, prompt, handlers, imageBase64 = n
 
 async function runBenchmark(modelId, benchmarkId) {
   const model = getModelById(modelId)
-  if (!model) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Nie znaleziono modelu.' }
+  if (!model) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Model was not found.' }
 
   const benchmark = getBenchmarkById(benchmarkId)
-  if (!benchmark) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Nie znaleziono benchmarku.' }
-  if (!benchmark.prompt_template?.trim()) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Benchmark nie ma prompt_template' }
+  if (!benchmark) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Benchmark was not found.' }
+  if (!benchmark.prompt_template?.trim()) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Benchmark has no prompt_template' }
 
   const provider = getProvider(model.mode)
   const repoSandboxRoots = getPreference('repo_sandbox_roots') || []
@@ -418,14 +418,14 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
   const model = getModelById(modelId)
   const benchmark = getBenchmarkById(benchmarkId)
   if (!model || !benchmark) {
-    const error = !model ? 'Nie znaleziono modelu.' : 'Nie znaleziono benchmarku.'
+    const error = !model ? 'Model was not found.' : 'Benchmark was not found.'
     sendEvent('benchmark:done', { summary: { total: 1, completed: 0, avgScore: null }, results: [], error })
     return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error }
   }
   const requestedTaskIds = Array.isArray(taskIds) && taskIds.length > 0 ? new Set(taskIds.map(Number)) : null
   const runnableTasks = getRunnableTasks(benchmarkId, benchmark).filter((task) => !requestedTaskIds || requestedTaskIds.has(Number(task.id)))
   if (runnableTasks.some((task) => !task.prompt_template?.trim())) {
-    const error = 'Benchmark nie ma prompt_template'
+    const error = 'Benchmark has no prompt_template'
     sendEvent('task:error', { benchmarkId, error })
     sendEvent('benchmark:done', { summary: { total: 1, completed: 0, avgScore: null }, results: [], error })
     return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error }
@@ -435,7 +435,7 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
   const session = existingSession || createRunSession({ model_id: modelId, benchmark_ids: [benchmarkId], current_benchmark_id: benchmarkId, completed_task_ids: [] })
 
   try {
-    if (signal?.aborted) throw new Error('Benchmark anulowany przez użytkownika.')
+    if (signal?.aborted) throw new Error('Benchmark was cancelled by the user.')
     updateRunSession(session.id, { current_benchmark_id: benchmarkId, current_task_id: null, status: 'running' })
     const provider = getProvider(model.mode)
     const repoSandboxRoots = getPreference('repo_sandbox_roots') || []
@@ -469,7 +469,7 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
       let totalTaskDurationMs = 0
       let taskThinking = ''
       for (let attempt = 1; attempt <= attempts; attempt++) {
-        if (signal?.aborted) throw new Error('Benchmark anulowany przez użytkownika.')
+        if (signal?.aborted) throw new Error('Benchmark was cancelled by the user.')
         const start = Date.now()
         if (isToolTask(task, benchmark)) {
           const mcpServers = getPreference('mcp_servers') || []
@@ -577,7 +577,7 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
     sendEvent('benchmark:done', { summary, results: allResults, error: null })
     return { results: allResults, summary, error: null }
   } catch (error) {
-    const message = signal?.aborted ? 'Benchmark anulowany przez użytkownika.' : error instanceof Error ? error.message : 'Nieznany błąd benchmarku.'
+    const message = signal?.aborted ? 'Benchmark was cancelled by the user.' : error instanceof Error ? error.message : 'Unknown benchmark error.'
     if (signal?.aborted) {
       cancelRunSession(session.id)
       sendEvent('benchmark:aborted', {})
@@ -588,7 +588,7 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
     return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: message }
   }
 
-  const error = 'Nie udało się uruchomić benchmarku.'
+  const error = 'Could not start the benchmark.'
   sendEvent('task:error', { benchmarkId, error })
   return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error }
 }

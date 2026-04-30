@@ -151,7 +151,7 @@ async function runToolAgent({ provider, model, benchmark, task, sendEvent, signa
   transcript.push({ role: 'system', content: toolProtocolPrompt({ task, benchmark, spec, allowedTools }) })
 
   for (let step = 1; step <= spec.maxCalls + 1; step++) {
-    if (signal?.aborted) throw new Error('Benchmark anulowany przez użytkownika.')
+    if (signal?.aborted) throw new Error('Benchmark was cancelled by the user.')
     const prompt = transcript.map((item) => `${item.role.toUpperCase()}:\n${item.content}`).join('\n\n---\n\n')
     const modelResult = await provider.sendPrompt(model, prompt, task.output_type === 'maze' ? task.reference_image : null)
     tokensUsed += Number(modelResult.tokens_used) || 0
