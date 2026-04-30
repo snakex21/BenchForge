@@ -512,7 +512,7 @@ export const SettingsView: React.FC = () => {
           <p><strong className="text-slate-200">BenchForge</strong></p>
           <p>{t('settings.aboutDescription')}</p>
           <p>{t('settings.stack')}</p>
-          <p className="mt-2 text-xs text-slate-600">BenchForge v0.2.0</p>
+          <p className="mt-2 text-xs text-slate-600">BenchForge v1.0.0</p>
         </div>
       </Card>
 
