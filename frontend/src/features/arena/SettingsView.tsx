@@ -10,17 +10,19 @@ import { useResultStore } from '@/store/resultStore'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LANGUAGE_OPTIONS, useTranslation } from '@/i18n'
+import { formatShortcut } from '@/hooks/useKeyboardShortcuts'
+import type { KeyboardAction, KeyboardShortcut } from '@/types'
 
 export const SettingsView: React.FC = () => {
   const sidebarCollapsed = useUIStore((state) => state.sidebarCollapsed)
   const theme = useUIStore((state) => state.theme)
   const language = useUIStore((state) => state.language)
+  const keyboardShortcuts = useUIStore((state) => state.keyboardShortcuts)
   const toggleSidebar = useUIStore((state) => state.toggleSidebar)
   const setTheme = useUIStore((state) => state.setTheme)
   const setLanguage = useUIStore((state) => state.setLanguage)
-  const selectModel = useUIStore((state) => state.selectModel)
-  const selectBenchmark = useUIStore((state) => state.selectBenchmark)
-  const setRightPanelOpen = useUIStore((state) => state.setRightPanelOpen)
+  const setKeyboardShortcuts = useUIStore((state) => state.setKeyboardShortcuts)
+  const resetKeyboardShortcuts = useUIStore((state) => state.resetKeyboardShortcuts)
   const loadModels = useModelStore((state) => state.loadFromDb)
   const loadBenchmarks = useBenchmarkStore((state) => state.loadFromDb)
   const loadResults = useResultStore((state) => state.loadFromDb)
@@ -43,6 +45,7 @@ export const SettingsView: React.FC = () => {
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false)
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false)
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false)
+  const [editingShortcut, setEditingShortcut] = useState<KeyboardAction | null>(null)
 
   const themes = [
     { id: 'dark', name: t('settings.themeDark'), colors: ['#0f1117', '#6366f1', '#e2e8f0'] },
@@ -107,12 +110,42 @@ export const SettingsView: React.FC = () => {
     if (!window.db) return
     const confirmed = confirm(t('settings.clearAllConfirm'))
     if (!confirmed) return
+
     await window.db.clearAllData()
-    selectModel(null)
-    selectBenchmark(null)
-    setRightPanelOpen(false)
     await refreshData()
-    setStatusMessage(t('settings.cleared'))
+    setStatusMessage(t('settings.allDataCleared'))
+  }
+
+  const handleShortcutKeyDown = (action: KeyboardAction, event: React.KeyboardEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    // Ignore if only modifier keys are pressed
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) return
+
+    const newShortcut: KeyboardShortcut = {
+      key: event.key,
+      ctrl: event.ctrlKey || event.metaKey,
+      alt: event.altKey,
+      shift: event.shiftKey,
+      meta: event.metaKey,
+    }
+
+    setKeyboardShortcuts({ [action]: newShortcut })
+    setEditingShortcut(null)
+  }
+
+  const SHORTCUT_LABELS: Record<KeyboardAction, string> = {
+    goToArena: t('nav.arena'),
+    goToRunner: t('nav.runner'),
+    goToModels: t('nav.models'),
+    goToBenchmarks: t('nav.benchmarks'),
+    goToResults: t('nav.results'),
+    goToStats: t('nav.stats'),
+    goToSettings: t('nav.settings'),
+    toggleSidebar: t('settings.collapseSidebar'),
+    toggleRightPanel: t('settings.toggleRightPanel'),
+    closePanel: t('settings.closePanel'),
   }
 
   const runToolSmoke = async (tool: 'python.run' | 'node.run') => {
@@ -292,6 +325,47 @@ export const SettingsView: React.FC = () => {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card title={t('settings.keyboardShortcuts')}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">{t('settings.keyboardShortcutsDescription')}</p>
+            <Button variant="ghost" size="sm" onClick={resetKeyboardShortcuts}>
+              {t('settings.resetShortcuts')}
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {(Object.entries(keyboardShortcuts) as [KeyboardAction, KeyboardShortcut][]).map(([action, shortcut]) => (
+              <div key={action} className="flex items-center justify-between rounded-lg border border-slate-700/40 bg-slate-950/30 px-4 py-2.5">
+                <span className="text-sm text-slate-300">{SHORTCUT_LABELS[action]}</span>
+                {editingShortcut === action ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">{t('settings.pressKeys')}</span>
+                    <kbd
+                      className="rounded border border-indigo-500/50 bg-indigo-500/10 px-2 py-1 text-xs font-mono text-indigo-300"
+                      onKeyDown={(e) => handleShortcutKeyDown(action, e)}
+                      tabIndex={0}
+                      autoFocus
+                    >
+                      ...
+                    </kbd>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingShortcut(null)}>
+                      {t('common.cancel')}
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setEditingShortcut(action)}
+                    className="rounded border border-slate-600/50 bg-slate-800/50 px-3 py-1 text-xs font-mono text-slate-300 transition hover:border-indigo-400/60 hover:bg-indigo-500/10 hover:text-indigo-300"
+                  >
+                    {formatShortcut(shortcut)}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </Card>
