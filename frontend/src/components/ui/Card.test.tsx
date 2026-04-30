@@ -42,6 +42,6 @@ describe('Card', () => {
 
   it('applies custom className', () => {
     const { container } = render(<Card className="custom-class">Content</Card>)
-    expect(container.firstChild?.className).toContain('custom-class')
+    expect((container.firstElementChild as HTMLElement | null)?.className).toContain('custom-class')
   })
 })
