@@ -21,6 +21,7 @@
     "pack": "npm run build && electron-builder --dir",
     "checksum": "node scripts/checksums.cjs release",
     "i18n:check": "node scripts/check-i18n.cjs",
+    "screenshots": "npm run build && electron scripts/capture-screenshots.cjs",
     "release:win": "npm run dist:win && npm run checksum"
   },
   "dependencies": {

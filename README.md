@@ -2,6 +2,24 @@
 
 AI model benchmarking desktop app with custom benchmarks, sandboxed code evaluation, tool/MCP agent tests, result analytics, artifact exports, and a multilingual UI.
 
+## Screenshots
+
+| Arena | Runner |
+|---|---|
+| ![BenchForge Arena](docs/screenshots/arena.png) | ![BenchForge Runner](docs/screenshots/runner.png) |
+
+| Models | Benchmarks |
+|---|---|
+| ![BenchForge Models](docs/screenshots/models.png) | ![BenchForge Benchmarks](docs/screenshots/benchmarks.png) |
+
+| Results | Stats |
+|---|---|
+| ![BenchForge Results](docs/screenshots/results.png) | ![BenchForge Stats](docs/screenshots/stats.png) |
+
+| Settings |
+|---|
+| ![BenchForge Settings](docs/screenshots/settings.png) |
+
 <a id="languages"></a>
 
 ## Languages / Języki
@@ -3370,4 +3388,3 @@ test-and-build.bat
 MIT
 
 [↑ Back to languages](#languages)
-
