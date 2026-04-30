@@ -102,7 +102,7 @@ You can also run:
 npm run release:win
 ```
 
-GitHub Actions workflow `Windows Release Build` builds the same artifacts on `workflow_dispatch` and on tags like `v0.2.0`. Tag builds create a draft GitHub Release.
+GitHub Actions workflow `Windows Release Build` builds the same artifacts on `workflow_dispatch` and on tags like `v1.0.0`. Tag builds create a draft GitHub Release.
 
 ### Data and security notes
 
@@ -207,7 +207,7 @@ Możesz też uruchomić:
 npm run release:win
 ```
 
-Workflow GitHub Actions `Windows Release Build` buduje te same artefakty ręcznie (`workflow_dispatch`) oraz dla tagów typu `v0.2.0`. Build z taga tworzy draft GitHub Release.
+Workflow GitHub Actions `Windows Release Build` buduje te same artefakty ręcznie (`workflow_dispatch`) oraz dla tagów typu `v1.0.0`. Build z taga tworzy draft GitHub Release.
 
 ### Dane i bezpieczeństwo
 
@@ -312,7 +312,7 @@ Alternativ:
 npm run release:win
 ```
 
-Der GitHub-Actions-Workflow `Windows Release Build` baut dieselben Artefakte per `workflow_dispatch` und für Tags wie `v0.2.0`. Tag-Builds erstellen einen Draft GitHub Release.
+Der GitHub-Actions-Workflow `Windows Release Build` baut dieselben Artefakte per `workflow_dispatch` und für Tags wie `v1.0.0`. Tag-Builds erstellen einen Draft GitHub Release.
 
 ### Daten und Sicherheit
 
@@ -417,7 +417,7 @@ También puedes ejecutar:
 npm run release:win
 ```
 
-El workflow de GitHub Actions `Windows Release Build` genera los mismos artefactos con `workflow_dispatch` y para tags como `v0.2.0`. Los builds por tag crean un borrador de GitHub Release.
+El workflow de GitHub Actions `Windows Release Build` genera los mismos artefactos con `workflow_dispatch` y para tags como `v1.0.0`. Los builds por tag crean un borrador de GitHub Release.
 
 ### Datos y seguridad
 
