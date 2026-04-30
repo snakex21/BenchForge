@@ -10,6 +10,7 @@ import { useResultStore } from '@/store/resultStore'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DetailsPanel } from '@/components/benchmark/DetailsPanel'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 // Direct imports — all views loaded immediately (Electron loads from disk, no network)
 import { ArenaView } from '@/features/arena/ArenaView'
@@ -83,15 +84,17 @@ function App() {
       <AppLayout topBar={{ title: undefined }}>
         <div className="flex h-full min-h-0 w-full min-w-0 gap-[clamp(0.5rem,1vw,1rem)]">
           <div className="min-w-0 flex-1 overflow-auto">
-            {/*
-              Runner trzyma stan aktualnego benchmarku lokalnie (stream, fokus zadania,
-              wybory modeli/benchmarków). Nie odmontowujemy go przy zmianie zakładki,
-              żeby po powrocie do „Uruchom" kontynuacja była widoczna zamiast pustego ekranu.
-            */}
-            <div className={activeView === 'runner' ? 'block' : 'hidden'}>
-              <RunnerView />
-            </div>
-            {activeView !== 'runner' && renderView()}
+            <ErrorBoundary>
+              {/*
+                Runner trzyma stan aktualnego benchmarku lokalnie (stream, fokus zadania,
+                wybory modeli/benchmarków). Nie odmontowujemy go przy zmianie zakładki,
+                żeby po powrocie do „Uruchom" kontynuacja była widoczna zamiast pustego ekranu.
+              */}
+              <div className={activeView === 'runner' ? 'block' : 'hidden'}>
+                <RunnerView />
+              </div>
+              {activeView !== 'runner' && renderView()}
+            </ErrorBoundary>
           </div>
 
           {shouldShowDetailsPanel && <DetailsPanel />}
