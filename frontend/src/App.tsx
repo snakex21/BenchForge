@@ -9,6 +9,7 @@ import { useBenchmarkStore } from '@/store/benchmarkStore'
 import { useResultStore } from '@/store/resultStore'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DetailsPanel } from '@/components/benchmark/DetailsPanel'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 // Direct imports — all views loaded immediately (Electron loads from disk, no network)
 import { ArenaView } from '@/features/arena/ArenaView'
@@ -21,6 +22,9 @@ import { SettingsView } from '@/features/arena/SettingsView'
 import { FirstRunWizard } from '@/components/onboarding/FirstRunWizard'
 
 function App() {
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts()
+
   const activeView = useUIStore((state) => state.activeView)
   const selectedModelId = useUIStore((state) => state.selectedModelId)
   const selectedBenchmarkId = useUIStore((state) => state.selectedBenchmarkId)

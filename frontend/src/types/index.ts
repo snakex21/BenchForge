@@ -117,6 +117,30 @@ export interface UIState {
   theme: 'dark' | 'light' | 'cyberpunk' | 'graphite'
   language: 'pl' | 'en' | 'de' | 'es' | 'fr' | 'it' | 'pt' | 'uk' | 'cs' | 'nl' | 'tr' | 'ja' | 'ru' | 'zh' | 'zh-TW' | 'ko' | 'id' | 'vi' | 'th' | 'hi' | 'ar' | 'he' | 'el' | 'sv' | 'no' | 'da' | 'fi' | 'hu' | 'ro' | 'bg' | 'hr' | 'sk' | 'sl' | 'lt' | 'lv' | 'et' | 'sr' | 'fa' | 'ur' | 'ms' | 'fil' | 'bn'
   rerunTarget: { modelId: number; benchmarkId: number; taskIds?: number[] } | null
+  keyboardShortcuts: KeyboardShortcuts
 }
 
 export type ActiveView = 'arena' | 'runner' | 'models' | 'benchmarks' | 'results' | 'stats' | 'settings'
+
+export interface KeyboardShortcut {
+  key: string
+  ctrl?: boolean
+  alt?: boolean
+  shift?: boolean
+  meta?: boolean
+}
+
+export interface KeyboardShortcuts {
+  goToArena: KeyboardShortcut
+  goToRunner: KeyboardShortcut
+  goToModels: KeyboardShortcut
+  goToBenchmarks: KeyboardShortcut
+  goToResults: KeyboardShortcut
+  goToStats: KeyboardShortcut
+  goToSettings: KeyboardShortcut
+  toggleSidebar: KeyboardShortcut
+  toggleRightPanel: KeyboardShortcut
+  closePanel: KeyboardShortcut
+}
+
+export type KeyboardAction = keyof KeyboardShortcuts
