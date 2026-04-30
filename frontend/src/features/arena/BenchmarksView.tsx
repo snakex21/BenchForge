@@ -19,6 +19,14 @@ type BenchmarkTemplateTask = { name: string; promptTemplate: string; scoreType: 
 type BenchmarkTemplate = { id: BenchmarkTemplateKind; icon: string; titleKey: TranslationKey; descriptionKey: TranslationKey; benchmark: Omit<BenchmarkInput, 'tasks' | 'created_at'>; tasks: BenchmarkTemplateTask[] }
 
 const categories = ['Logika', 'Wiedza', 'Kod', 'Kreatywność', 'Wizja', 'Inne']
+const categoryKeys: Record<string, string> = {
+  'Logika': 'benchmarks.categoryLogika',
+  'Wiedza': 'benchmarks.categoryWiedza',
+  'Kod': 'benchmarks.categoryKod',
+  'Kreatywność': 'benchmarks.categoryKreatywnosc',
+  'Wizja': 'benchmarks.categoryWizja',
+  'Inne': 'benchmarks.categoryInne',
+}
 const outputTypes: OutputType[] = ['text', 'markdown', 'html', 'svg', 'maze']
 
 const emptyBenchmark = {
@@ -1120,7 +1128,7 @@ export const BenchmarksView: React.FC = () => {
                 <label className="text-sm text-slate-300">{t('common.suite')}<input className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2" value={form.suite_name || ''} onChange={(event) => setForm({ ...form, suite_name: event.target.value })} /></label>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-sm text-slate-300">{t('common.category')}<select className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
+                <label className="text-sm text-slate-300">{t('common.category')}<select className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{categories.map((category) => <option key={category} value={category}>{t(categoryKeys[category] as any) || category}</option>)}</select></label>
                 {form.category === 'Inne' && <label className="text-sm text-slate-300">{t('benchmarks.customCategory')}<input className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2" value={form.customCategory} onChange={(event) => setForm({ ...form, customCategory: event.target.value })} /></label>}
               </div>
               <label className="text-sm text-slate-300">{t('common.description')}<textarea className="mt-1 h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2" value={form.description || ''} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>

@@ -5,11 +5,14 @@ import type { ActiveView, UIState } from '@/types'
 const detectInitialLanguage = (): UIState['language'] => {
   if (typeof navigator === 'undefined') return 'en'
   const preferred = (navigator.languages?.[0] || navigator.language || '').toLowerCase()
-  if (preferred.startsWith('pl')) return 'pl'
-  if (preferred.startsWith('de')) return 'de'
-  if (preferred.startsWith('es')) return 'es'
+  if (preferred.startsWith('zh-tw') || preferred.startsWith('zh-hk') || preferred.startsWith('zh-mo')) return 'zh-TW'
+  const detected = ['pl', 'en', 'de', 'es', 'fr', 'it', 'pt', 'uk', 'cs', 'nl', 'tr', 'ja', 'ru', 'zh', 'ko', 'id', 'vi', 'th', 'hi', 'ar', 'he', 'el', 'sv', 'no', 'nb', 'nn', 'da', 'fi', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'lt', 'lv', 'et', 'sr', 'fa', 'ur', 'ms', 'fil', 'bn'].find((language) => preferred.startsWith(language))
+  if (detected === 'nb' || detected === 'nn') return 'no'
+  if (detected) return detected as UIState['language']
   return 'en'
 }
+
+const supportedLanguages: UIState['language'][] = ['pl', 'en', 'de', 'es', 'fr', 'it', 'pt', 'uk', 'cs', 'nl', 'tr', 'ja', 'ru', 'zh', 'zh-TW', 'ko', 'id', 'vi', 'th', 'hi', 'ar', 'he', 'el', 'sv', 'no', 'da', 'fi', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'lt', 'lv', 'et', 'sr', 'fa', 'ur', 'ms', 'fil', 'bn']
 
 interface UIStore extends UIState {
   setSidebarCollapsed: (collapsed: boolean) => void
@@ -49,7 +52,7 @@ const sanitizeUIState = (state: unknown): UIState => {
     rightPanelOpen: typeof persisted.rightPanelOpen === 'boolean' ? persisted.rightPanelOpen : defaultUIState.rightPanelOpen,
     thinkingPanelOpen: typeof persisted.thinkingPanelOpen === 'boolean' ? persisted.thinkingPanelOpen : defaultUIState.thinkingPanelOpen,
     theme: ['dark', 'light', 'cyberpunk', 'graphite'].includes(String(persisted.theme)) ? (persisted.theme as UIState['theme']) : defaultUIState.theme,
-    language: ['pl', 'en', 'de', 'es'].includes(String(persisted.language)) ? (persisted.language as UIState['language']) : defaultUIState.language,
+    language: supportedLanguages.includes(persisted.language as UIState['language']) ? (persisted.language as UIState['language']) : defaultUIState.language,
     rerunTarget: persisted.rerunTarget && typeof persisted.rerunTarget === 'object' && 'modelId' in persisted.rerunTarget && 'benchmarkId' in persisted.rerunTarget ? persisted.rerunTarget as { modelId: number; benchmarkId: number; taskIds?: number[] } : null,
   }
 }

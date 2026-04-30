@@ -496,8 +496,8 @@ export const ModelsView: React.FC = () => {
                   onChange={(event) => handleModeChange(event.target.value as ModelMode)}
                   className="h-12 w-full appearance-none rounded-xl border border-slate-600/50 bg-[#0f1117] px-4 pr-11 text-sm text-slate-200 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
-                  <option value="api">API (OpenAI-compatible)</option>
-                  <option value="manual">Manual (copy-paste)</option>
+                  <option value="api">{t('models.modeApi')}</option>
+                  <option value="manual">{t('models.modeManual')}</option>
                 </select>
                 <span className="pointer-events-none absolute right-3 top-[1.95rem] flex h-5 w-5 items-center justify-center rounded-md text-slate-400/90"><ChevronIcon className="h-4 w-4" /></span>
               </div>
@@ -526,7 +526,7 @@ export const ModelsView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 flex items-center gap-2 text-xs font-medium text-slate-400"><ProviderLogo provider={form.provider} />Provider</label>
+                    <label className="mb-1 flex items-center gap-2 text-xs font-medium text-slate-400"><ProviderLogo provider={form.provider} />{t('models.providerLabel')}</label>
                     <div className="relative">
                       <button
                         type="button"
@@ -571,7 +571,7 @@ export const ModelsView: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-400">Model ID</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-400">{t('models.modelIdLabel')}</label>
                     <input
                       type="text"
                       value={form.model_id}
@@ -583,7 +583,7 @@ export const ModelsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-400">Base URL</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">{t('models.baseUrlLabel')}</label>
                   <input
                     type="text"
                     value={form.base_url}
@@ -674,8 +674,8 @@ export const ModelsView: React.FC = () => {
                       <Badge variant={MODE_BADGE_VARIANTS[model.mode]}>{MODE_LABELS[model.mode]}</Badge>
                       {model.provider && <Badge variant="neutral">{PROVIDER_LABELS[model.provider]}</Badge>}
                     </div>
-                    {model.model_id && <p className="mt-2 text-xs text-slate-500">Model ID: {model.model_id}</p>}
-                    {model.base_url && <p className="mt-1 truncate text-xs text-slate-500">Base URL: {model.base_url}</p>}
+                    {model.model_id && <p className="mt-2 text-xs text-slate-500">{t('models.modelIdDisplay')} {model.model_id}</p>}
+                    {model.base_url && <p className="mt-1 truncate text-xs text-slate-500">{t('models.baseUrlDisplay')} {model.base_url}</p>}
                   </div>
                   <button
                     onClick={() => void removeModel(model.id)}

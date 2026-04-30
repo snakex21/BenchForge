@@ -222,6 +222,20 @@ function createMainWindow() {
     return { action: 'deny' }
   })
 
+  // Prevent unnecessary navigation — improves security and startup performance
+  win.webContents.on('will-navigate', (event, url) => {
+    // Allow navigation to the dev server or local files
+    if (isDev && url.startsWith(rendererUrl)) return
+    if (!isDev && url.startsWith('file://')) return
+    // Block all other navigation
+    event.preventDefault()
+  })
+
+  // Prevent unnecessary redirects
+  win.webContents.on('will-redirect', (event) => {
+    event.preventDefault()
+  })
+
   win.webContents.on('did-fail-load', (_, errorCode, errorDescription, validatedURL) => {
     console.error(`[did-fail-load] ${errorCode} ${errorDescription} ${validatedURL}`)
   })

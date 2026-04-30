@@ -60,7 +60,7 @@ export const TopBar: React.FC<TopBarProps> = ({ title, actions }) => {
       {/* Actions + toggle panel */}
       <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
         <span className={`rounded-full border px-2 py-1 text-[11px] ${lmStudioOnline ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : lmStudioOnline === false ? 'border-red-500/40 bg-red-500/10 text-red-300' : 'border-slate-600 bg-slate-800 text-slate-400'}`}>
-          LMStudio: {lmStudioOnline ? 'online' : lmStudioOnline === false ? 'offline' : '...' }
+          LMStudio: {lmStudioOnline ? t('topbar.online') : lmStudioOnline === false ? t('topbar.offline') : '...' }
         </span>
         {actions && <div className="flex items-center gap-2">{actions}</div>}
         <Button

@@ -2,7 +2,7 @@
 // ArenaView — centrum analityczne z 8 trybami wizualizacji
 // ============================================================
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { BenchmarkMatrix } from '@/components/benchmark/BenchmarkMatrix'
 import { RecentRuns } from '@/components/benchmark/RecentRuns'
 import { HorizontalBarChart } from '@/components/benchmark/HorizontalBarChart'
@@ -80,18 +80,18 @@ export const ArenaView: React.FC = () => {
     }).filter((c) => c.modelScores.length > 0 && c.modelScores.some((m) => m.percent > 0))
   }, [categories, filteredBenchmarks, models, results])
 
-  const toggleRanking = (id: number) => setExpandedRanking((c) => c.includes(id) ? c.filter((x) => x !== id) : [...c, id])
-  const openModelModal = (modelId: number) => {
+  const toggleRanking = useCallback((id: number) => setExpandedRanking((c) => c.includes(id) ? c.filter((x) => x !== id) : [...c, id]), [])
+  const openModelModal = useCallback((modelId: number) => {
     selectModel(modelId)
     setModelModalId(modelId)
-  }
-  const rerunFromArena = (modelId: number, benchmarkId: number) => {
+  }, [selectModel])
+  const rerunFromArena = useCallback((modelId: number, benchmarkId: number) => {
     setRerunTarget({ modelId, benchmarkId })
     setActiveView('runner')
-  }
+  }, [setRerunTarget, setActiveView])
 
   // Mode buttons
-  const modes: Array<{ id: ArenaMode; labelKey: TranslationKey }> = [
+  const modes: Array<{ id: ArenaMode; labelKey: TranslationKey }> = useMemo(() => [
     { id: 'table', labelKey: 'arena.mode.table' },
     { id: 'list', labelKey: 'arena.mode.list' },
     { id: 'aa', labelKey: 'arena.mode.bars' },
@@ -99,7 +99,7 @@ export const ArenaView: React.FC = () => {
     { id: 'ranking', labelKey: 'arena.mode.ranking' },
     { id: 'trend', labelKey: 'arena.mode.trend' },
     { id: 'categories', labelKey: 'arena.mode.categories' },
-  ]
+  ], [])
 
   // ---- RENDERERS ----
 

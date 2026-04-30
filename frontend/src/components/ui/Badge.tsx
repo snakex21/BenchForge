@@ -21,7 +21,7 @@ const VARIANT_CLASSES: Record<string, string> = {
   neutral: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
 }
 
-export const Badge: React.FC<BadgeProps> = ({
+export const Badge: React.FC<BadgeProps> = React.memo(({
   variant = 'neutral',
   children,
   className = '',
@@ -33,4 +33,6 @@ export const Badge: React.FC<BadgeProps> = ({
       {children}
     </span>
   )
-}
+})
+
+Badge.displayName = 'Badge'

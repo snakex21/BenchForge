@@ -9,6 +9,8 @@ import { useBenchmarkStore } from '@/store/benchmarkStore'
 import { useResultStore } from '@/store/resultStore'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DetailsPanel } from '@/components/benchmark/DetailsPanel'
+
+// Direct imports — all views loaded immediately (Electron loads from disk, no network)
 import { ArenaView } from '@/features/arena/ArenaView'
 import { RunnerView } from '@/features/arena/RunnerView'
 import { ModelsView } from '@/features/arena/ModelsView'
@@ -17,7 +19,6 @@ import { ResultsView } from '@/features/arena/ResultsView'
 import { StatsView } from '@/features/arena/StatsView'
 import { SettingsView } from '@/features/arena/SettingsView'
 import { FirstRunWizard } from '@/components/onboarding/FirstRunWizard'
-import { useTranslation } from '@/i18n'
 
 function App() {
   const activeView = useUIStore((state) => state.activeView)
@@ -28,8 +29,6 @@ function App() {
   const loadModels = useModelStore((state) => state.loadFromDb)
   const loadBenchmarks = useBenchmarkStore((state) => state.loadFromDb)
   const loadResults = useResultStore((state) => state.loadFromDb)
-  const { t } = useTranslation()
-  const [isReady, setIsReady] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
@@ -38,15 +37,16 @@ function App() {
 
   useEffect(() => {
     document.documentElement.lang = language
+    document.documentElement.dir = ['ar', 'he', 'fa', 'ur'].includes(language) ? 'rtl' : 'ltr'
   }, [language])
 
+  // Load data in background — UI shows immediately, data populates as it loads
   useEffect(() => {
     const bootstrap = async () => {
       await Promise.all([loadModels(), loadBenchmarks(), loadResults()])
       const completed = await window.db?.getPreference?.('onboarding_completed')
       const hasExistingData = useModelStore.getState().models.length > 0 || useBenchmarkStore.getState().benchmarks.length > 0
       setShowOnboarding(completed !== true && !hasExistingData)
-      setIsReady(true)
     }
 
     void bootstrap()
@@ -79,29 +79,21 @@ function App() {
       <AppLayout topBar={{ title: undefined }}>
         <div className="flex h-full min-h-0 w-full min-w-0 gap-[clamp(0.5rem,1vw,1rem)]">
           <div className="min-w-0 flex-1 overflow-auto">
-            {isReady ? (
-              <>
-                {/*
-                  Runner trzyma stan aktualnego benchmarku lokalnie (stream, fokus zadania,
-                  wybory modeli/benchmarków). Nie odmontowujemy go przy zmianie zakładki,
-                  żeby po powrocie do „Uruchom” kontynuacja była widoczna zamiast pustego ekranu.
-                */}
-                <div className={activeView === 'runner' ? 'block' : 'hidden'}>
-                  <RunnerView />
-                </div>
-                {activeView !== 'runner' && renderView()}
-              </>
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                {t('common.loadingData')}
-              </div>
-            )}
+            {/*
+              Runner trzyma stan aktualnego benchmarku lokalnie (stream, fokus zadania,
+              wybory modeli/benchmarków). Nie odmontowujemy go przy zmianie zakładki,
+              żeby po powrocie do „Uruchom" kontynuacja była widoczna zamiast pustego ekranu.
+            */}
+            <div className={activeView === 'runner' ? 'block' : 'hidden'}>
+              <RunnerView />
+            </div>
+            {activeView !== 'runner' && renderView()}
           </div>
 
           {shouldShowDetailsPanel && <DetailsPanel />}
         </div>
       </AppLayout>
-      {isReady && showOnboarding && <FirstRunWizard onComplete={() => setShowOnboarding(false)} />}
+      {showOnboarding && <FirstRunWizard onComplete={() => setShowOnboarding(false)} />}
     </div>
   )
 }

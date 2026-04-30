@@ -90,13 +90,13 @@ export const DetailsPanel: React.FC = () => {
               </div>
               {model.model_id && (
                 <div>
-                <span className="text-slate-500 text-xs uppercase tracking-wider">Model ID</span>
+                <span className="text-slate-500 text-xs uppercase tracking-wider">{t('details.modelIdLabel')}</span>
                 <p className="text-slate-300 mt-0.5 leading-relaxed">{model.model_id}</p>
               </div>
               )}
               {model.base_url && (
                 <div>
-                  <span className="text-slate-500 text-xs uppercase tracking-wider">Base URL</span>
+                  <span className="text-slate-500 text-xs uppercase tracking-wider">{t('details.baseUrlLabel')}</span>
                   <p className="text-slate-300 mt-0.5 leading-relaxed break-all">{model.base_url}</p>
                 </div>
               )}

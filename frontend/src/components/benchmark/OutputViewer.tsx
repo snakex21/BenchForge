@@ -3,43 +3,70 @@ import { MazeViewer } from './MazeViewer'
 import type { OutputType } from '@/types'
 import type { MazeVerifyResult } from '@/utils/mazeVerifier'
 import { useTranslation } from '@/i18n'
-import pythonLogo from '@/assets/lang-logos/python.svg'
-import javascriptLogo from '@/assets/lang-logos/javascript.svg'
-import typescriptLogo from '@/assets/lang-logos/typescript.svg'
-import htmlLogo from '@/assets/lang-logos/html5.svg'
-import cssLogo from '@/assets/lang-logos/css3.svg'
-import jsonLogo from '@/assets/lang-logos/json.svg'
-import bashLogo from '@/assets/lang-logos/bash.svg'
-import powershellLogo from '@/assets/lang-logos/powershell.svg'
-import javaLogo from '@/assets/lang-logos/java.svg'
-import cLogo from '@/assets/lang-logos/c.svg'
-import cppLogo from '@/assets/lang-logos/cplusplus.svg'
-import csharpLogo from '@/assets/lang-logos/csharp.svg'
-import goLogo from '@/assets/lang-logos/go.svg'
-import rustLogo from '@/assets/lang-logos/rust.svg'
-import phpLogo from '@/assets/lang-logos/php.svg'
-import rubyLogo from '@/assets/lang-logos/ruby.svg'
-import markdownLogo from '@/assets/lang-logos/markdown.svg'
-import swiftLogo from '@/assets/lang-logos/swift.svg'
-import dartLogo from '@/assets/lang-logos/dart.svg'
-import kotlinLogo from '@/assets/lang-logos/kotlin.svg'
-import scalaLogo from '@/assets/lang-logos/scala.svg'
-import rLogo from '@/assets/lang-logos/r.svg'
-import luaLogo from '@/assets/lang-logos/lua.svg'
-import perlLogo from '@/assets/lang-logos/perl.svg'
-import haskellLogo from '@/assets/lang-logos/haskell.svg'
-import elixirLogo from '@/assets/lang-logos/elixir.svg'
-import erlangLogo from '@/assets/lang-logos/erlang.svg'
-import clojureLogo from '@/assets/lang-logos/clojure.svg'
-import groovyLogo from '@/assets/lang-logos/groovy.svg'
-import objectivecLogo from '@/assets/lang-logos/objectivec.svg'
-import juliaLogo from '@/assets/lang-logos/julia.svg'
-import matlabLogo from '@/assets/lang-logos/matlab.svg'
-import zigLogo from '@/assets/lang-logos/zig.svg'
-import solidityLogo from '@/assets/lang-logos/solidity.svg'
-import dockerLogo from '@/assets/lang-logos/docker.svg'
-import terraformLogo from '@/assets/lang-logos/terraform.svg'
-import graphqlLogo from '@/assets/lang-logos/graphql.svg'
+
+// Lazy logo loader — cache loaded logos to avoid re-importing
+const logoCache = new Map<string, string>()
+
+const LOGO_FILES: Record<string, string> = {
+  python: 'python.svg',
+  javascript: 'javascript.svg',
+  typescript: 'typescript.svg',
+  html5: 'html5.svg',
+  css3: 'css3.svg',
+  json: 'json.svg',
+  bash: 'bash.svg',
+  powershell: 'powershell.svg',
+  java: 'java.svg',
+  c: 'c.svg',
+  cplusplus: 'cplusplus.svg',
+  csharp: 'csharp.svg',
+  go: 'go.svg',
+  rust: 'rust.svg',
+  php: 'php.svg',
+  ruby: 'ruby.svg',
+  markdown: 'markdown.svg',
+  swift: 'swift.svg',
+  dart: 'dart.svg',
+  kotlin: 'kotlin.svg',
+  scala: 'scala.svg',
+  r: 'r.svg',
+  lua: 'lua.svg',
+  perl: 'perl.svg',
+  haskell: 'haskell.svg',
+  elixir: 'elixir.svg',
+  erlang: 'erlang.svg',
+  clojure: 'clojure.svg',
+  groovy: 'groovy.svg',
+  objectivec: 'objectivec.svg',
+  julia: 'julia.svg',
+  matlab: 'matlab.svg',
+  zig: 'zig.svg',
+  solidity: 'solidity.svg',
+  docker: 'docker.svg',
+  terraform: 'terraform.svg',
+  graphql: 'graphql.svg',
+}
+
+const getLogoUrl = (logoKey: string): string | undefined => {
+  if (!logoKey) return undefined
+  const cached = logoCache.get(logoKey)
+  if (cached) return cached
+
+  const fileName = LOGO_FILES[logoKey]
+  if (!fileName) return undefined
+
+  // Start async load — will be available on next render
+  // Use Vite's glob import for reliable dynamic loading
+  const logoModules = import.meta.glob('@/assets/lang-logos/*.svg', { eager: false, query: '?url', import: 'default' })
+  const matchingPath = Object.keys(logoModules).find((p) => p.endsWith(`/${fileName}`))
+  if (matchingPath) {
+    logoModules[matchingPath]().then((url) => {
+      logoCache.set(logoKey, url as string)
+    }).catch(() => { /* ignore missing logos */ })
+  }
+
+  return undefined
+}
 
 interface OutputViewerProps {
   content: string
@@ -67,66 +94,66 @@ const inlineMarkdown = (value: string) => value
   .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   .replace(/\*([^*]+)\*/g, '<em>$1</em>')
 
-const LANGUAGE_META: Record<string, { label: string; icon: string; className: string; logo?: string }> = {
-  js: { label: 'JavaScript', icon: 'JS', logo: javascriptLogo, className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-200' },
-  javascript: { label: 'JavaScript', icon: 'JS', logo: javascriptLogo, className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-200' },
-  ts: { label: 'TypeScript', icon: 'TS', logo: typescriptLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  typescript: { label: 'TypeScript', icon: 'TS', logo: typescriptLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  tsx: { label: 'TSX', icon: 'TSX', logo: typescriptLogo, className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
-  jsx: { label: 'JSX', icon: 'JSX', logo: javascriptLogo, className: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' },
-  py: { label: 'Python', icon: 'PY', logo: pythonLogo, className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
-  python: { label: 'Python', icon: 'PY', logo: pythonLogo, className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
-  html: { label: 'HTML', icon: 'HTML', logo: htmlLogo, className: 'border-orange-400/40 bg-orange-400/10 text-orange-200' },
-  css: { label: 'CSS', icon: 'CSS', logo: cssLogo, className: 'border-indigo-400/40 bg-indigo-400/10 text-indigo-200' },
-  json: { label: 'JSON', icon: '{}', logo: jsonLogo, className: 'border-lime-400/40 bg-lime-400/10 text-lime-200' },
+const LANGUAGE_META: Record<string, { label: string; icon: string; className: string; logoKey?: string }> = {
+  js: { label: 'JavaScript', icon: 'JS', logoKey: 'javascript', className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-200' },
+  javascript: { label: 'JavaScript', icon: 'JS', logoKey: 'javascript', className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-200' },
+  ts: { label: 'TypeScript', icon: 'TS', logoKey: 'typescript', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  typescript: { label: 'TypeScript', icon: 'TS', logoKey: 'typescript', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  tsx: { label: 'TSX', icon: 'TSX', logoKey: 'typescript', className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
+  jsx: { label: 'JSX', icon: 'JSX', logoKey: 'javascript', className: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' },
+  py: { label: 'Python', icon: 'PY', logoKey: 'python', className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
+  python: { label: 'Python', icon: 'PY', logoKey: 'python', className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
+  html: { label: 'HTML', icon: 'HTML', logoKey: 'html5', className: 'border-orange-400/40 bg-orange-400/10 text-orange-200' },
+  css: { label: 'CSS', icon: 'CSS', logoKey: 'css3', className: 'border-indigo-400/40 bg-indigo-400/10 text-indigo-200' },
+  json: { label: 'JSON', icon: '{}', logoKey: 'json', className: 'border-lime-400/40 bg-lime-400/10 text-lime-200' },
   sql: { label: 'SQL', icon: 'DB', className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
-  bash: { label: 'Bash', icon: '$', logo: bashLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  sh: { label: 'Shell', icon: '$', logo: bashLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  powershell: { label: 'PowerShell', icon: 'PS', logo: powershellLogo, className: 'border-blue-500/40 bg-blue-500/10 text-blue-200' },
-  java: { label: 'Java', icon: 'JAVA', logo: javaLogo, className: 'border-red-400/40 bg-red-400/10 text-red-200' },
-  c: { label: 'C', icon: 'C', logo: cLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  cpp: { label: 'C++', icon: 'C++', logo: cppLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  cplusplus: { label: 'C++', icon: 'C++', logo: cppLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  cs: { label: 'C#', icon: 'C#', logo: csharpLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  csharp: { label: 'C#', icon: 'C#', logo: csharpLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  go: { label: 'Go', icon: 'GO', logo: goLogo, className: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' },
-  rust: { label: 'Rust', icon: 'RS', logo: rustLogo, className: 'border-orange-500/40 bg-orange-500/10 text-orange-200' },
-  php: { label: 'PHP', icon: 'PHP', logo: phpLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  ruby: { label: 'Ruby', icon: 'RB', logo: rubyLogo, className: 'border-red-400/40 bg-red-400/10 text-red-200' },
-  markdown: { label: 'Markdown', icon: 'MD', logo: markdownLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  md: { label: 'Markdown', icon: 'MD', logo: markdownLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  swift: { label: 'Swift', icon: 'SW', logo: swiftLogo, className: 'border-orange-400/40 bg-orange-400/10 text-orange-200' },
-  dart: { label: 'Dart', icon: 'DART', logo: dartLogo, className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
-  kotlin: { label: 'Kotlin', icon: 'KT', logo: kotlinLogo, className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
-  kt: { label: 'Kotlin', icon: 'KT', logo: kotlinLogo, className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
-  scala: { label: 'Scala', icon: 'SC', logo: scalaLogo, className: 'border-red-500/40 bg-red-500/10 text-red-200' },
-  r: { label: 'R', icon: 'R', logo: rLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  lua: { label: 'Lua', icon: 'LUA', logo: luaLogo, className: 'border-blue-500/40 bg-blue-500/10 text-blue-200' },
-  perl: { label: 'Perl', icon: 'PL', logo: perlLogo, className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
-  pl: { label: 'Perl', icon: 'PL', logo: perlLogo, className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
-  haskell: { label: 'Haskell', icon: 'HS', logo: haskellLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  hs: { label: 'Haskell', icon: 'HS', logo: haskellLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  elixir: { label: 'Elixir', icon: 'EX', logo: elixirLogo, className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
-  ex: { label: 'Elixir', icon: 'EX', logo: elixirLogo, className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
-  erlang: { label: 'Erlang', icon: 'ERL', logo: erlangLogo, className: 'border-red-400/40 bg-red-400/10 text-red-200' },
-  erl: { label: 'Erlang', icon: 'ERL', logo: erlangLogo, className: 'border-red-400/40 bg-red-400/10 text-red-200' },
-  clojure: { label: 'Clojure', icon: 'CLJ', logo: clojureLogo, className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
-  clj: { label: 'Clojure', icon: 'CLJ', logo: clojureLogo, className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
-  groovy: { label: 'Groovy', icon: 'GVY', logo: groovyLogo, className: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' },
-  objectivec: { label: 'Objective-C', icon: 'OBJ-C', logo: objectivecLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  objc: { label: 'Objective-C', icon: 'OBJ-C', logo: objectivecLogo, className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
-  julia: { label: 'Julia', icon: 'JL', logo: juliaLogo, className: 'border-fuchsia-400/40 bg-fuchsia-400/10 text-fuchsia-200' },
-  jl: { label: 'Julia', icon: 'JL', logo: juliaLogo, className: 'border-fuchsia-400/40 bg-fuchsia-400/10 text-fuchsia-200' },
-  matlab: { label: 'MATLAB', icon: 'MAT', logo: matlabLogo, className: 'border-orange-400/40 bg-orange-400/10 text-orange-200' },
-  zig: { label: 'Zig', icon: 'ZIG', logo: zigLogo, className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-200' },
-  solidity: { label: 'Solidity', icon: 'SOL', logo: solidityLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  sol: { label: 'Solidity', icon: 'SOL', logo: solidityLogo, className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
-  dockerfile: { label: 'Dockerfile', icon: 'DOCKER', logo: dockerLogo, className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
-  docker: { label: 'Docker', icon: 'DOCKER', logo: dockerLogo, className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
-  hcl: { label: 'Terraform', icon: 'HCL', logo: terraformLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  terraform: { label: 'Terraform', icon: 'TF', logo: terraformLogo, className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
-  graphql: { label: 'GraphQL', icon: 'GQL', logo: graphqlLogo, className: 'border-pink-400/40 bg-pink-400/10 text-pink-200' },
-  gql: { label: 'GraphQL', icon: 'GQL', logo: graphqlLogo, className: 'border-pink-400/40 bg-pink-400/10 text-pink-200' },
+  bash: { label: 'Bash', icon: '$', logoKey: 'bash', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  sh: { label: 'Shell', icon: '$', logoKey: 'bash', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  powershell: { label: 'PowerShell', icon: 'PS', logoKey: 'powershell', className: 'border-blue-500/40 bg-blue-500/10 text-blue-200' },
+  java: { label: 'Java', icon: 'JAVA', logoKey: 'java', className: 'border-red-400/40 bg-red-400/10 text-red-200' },
+  c: { label: 'C', icon: 'C', logoKey: 'c', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  cpp: { label: 'C++', icon: 'C++', logoKey: 'cplusplus', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  cplusplus: { label: 'C++', icon: 'C++', logoKey: 'cplusplus', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  cs: { label: 'C#', icon: 'C#', logoKey: 'csharp', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  csharp: { label: 'C#', icon: 'C#', logoKey: 'csharp', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  go: { label: 'Go', icon: 'GO', logoKey: 'go', className: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' },
+  rust: { label: 'Rust', icon: 'RS', logoKey: 'rust', className: 'border-orange-500/40 bg-orange-500/10 text-orange-200' },
+  php: { label: 'PHP', icon: 'PHP', logoKey: 'php', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  ruby: { label: 'Ruby', icon: 'RB', logoKey: 'ruby', className: 'border-red-400/40 bg-red-400/10 text-red-200' },
+  markdown: { label: 'Markdown', icon: 'MD', logoKey: 'markdown', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  md: { label: 'Markdown', icon: 'MD', logoKey: 'markdown', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  swift: { label: 'Swift', icon: 'SW', logoKey: 'swift', className: 'border-orange-400/40 bg-orange-400/10 text-orange-200' },
+  dart: { label: 'Dart', icon: 'DART', logoKey: 'dart', className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
+  kotlin: { label: 'Kotlin', icon: 'KT', logoKey: 'kotlin', className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
+  kt: { label: 'Kotlin', icon: 'KT', logoKey: 'kotlin', className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
+  scala: { label: 'Scala', icon: 'SC', logoKey: 'scala', className: 'border-red-500/40 bg-red-500/10 text-red-200' },
+  r: { label: 'R', icon: 'R', logoKey: 'r', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  lua: { label: 'Lua', icon: 'LUA', logoKey: 'lua', className: 'border-blue-500/40 bg-blue-500/10 text-blue-200' },
+  perl: { label: 'Perl', icon: 'PL', logoKey: 'perl', className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
+  pl: { label: 'Perl', icon: 'PL', logoKey: 'perl', className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
+  haskell: { label: 'Haskell', icon: 'HS', logoKey: 'haskell', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  hs: { label: 'Haskell', icon: 'HS', logoKey: 'haskell', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  elixir: { label: 'Elixir', icon: 'EX', logoKey: 'elixir', className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
+  ex: { label: 'Elixir', icon: 'EX', logoKey: 'elixir', className: 'border-purple-400/40 bg-purple-400/10 text-purple-200' },
+  erlang: { label: 'Erlang', icon: 'ERL', logoKey: 'erlang', className: 'border-red-400/40 bg-red-400/10 text-red-200' },
+  erl: { label: 'Erlang', icon: 'ERL', logoKey: 'erlang', className: 'border-red-400/40 bg-red-400/10 text-red-200' },
+  clojure: { label: 'Clojure', icon: 'CLJ', logoKey: 'clojure', className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
+  clj: { label: 'Clojure', icon: 'CLJ', logoKey: 'clojure', className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200' },
+  groovy: { label: 'Groovy', icon: 'GVY', logoKey: 'groovy', className: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' },
+  objectivec: { label: 'Objective-C', icon: 'OBJ-C', logoKey: 'objectivec', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  objc: { label: 'Objective-C', icon: 'OBJ-C', logoKey: 'objectivec', className: 'border-blue-400/40 bg-blue-400/10 text-blue-200' },
+  julia: { label: 'Julia', icon: 'JL', logoKey: 'julia', className: 'border-fuchsia-400/40 bg-fuchsia-400/10 text-fuchsia-200' },
+  jl: { label: 'Julia', icon: 'JL', logoKey: 'julia', className: 'border-fuchsia-400/40 bg-fuchsia-400/10 text-fuchsia-200' },
+  matlab: { label: 'MATLAB', icon: 'MAT', logoKey: 'matlab', className: 'border-orange-400/40 bg-orange-400/10 text-orange-200' },
+  zig: { label: 'Zig', icon: 'ZIG', logoKey: 'zig', className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-200' },
+  solidity: { label: 'Solidity', icon: 'SOL', logoKey: 'solidity', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  sol: { label: 'Solidity', icon: 'SOL', logoKey: 'solidity', className: 'border-slate-400/40 bg-slate-400/10 text-slate-200' },
+  dockerfile: { label: 'Dockerfile', icon: 'DOCKER', logoKey: 'docker', className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
+  docker: { label: 'Docker', icon: 'DOCKER', logoKey: 'docker', className: 'border-sky-400/40 bg-sky-400/10 text-sky-200' },
+  hcl: { label: 'Terraform', icon: 'HCL', logoKey: 'terraform', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  terraform: { label: 'Terraform', icon: 'TF', logoKey: 'terraform', className: 'border-violet-400/40 bg-violet-400/10 text-violet-200' },
+  graphql: { label: 'GraphQL', icon: 'GQL', logoKey: 'graphql', className: 'border-pink-400/40 bg-pink-400/10 text-pink-200' },
+  gql: { label: 'GraphQL', icon: 'GQL', logoKey: 'graphql', className: 'border-pink-400/40 bg-pink-400/10 text-pink-200' },
 }
 
 const normalizeLanguage = (value: string) => String(value || '').trim().toLowerCase().replace(/^language-/, '').split(/\s+/)[0]
@@ -208,11 +235,12 @@ const highlightEscapedCode = (value: string, language: string) => {
   return highlighted
 }
 
-const renderCodeBlock = (codeLines: string[], language: string) => {
+const renderCodeBlock = (codeLines: string[], language: string, t?: (key: any, params?: Record<string, string | number | null | undefined>) => string) => {
   const normalized = normalizeLanguage(language)
-  const meta = LANGUAGE_META[normalized] || { label: normalized ? normalized.toUpperCase() : 'Kod', icon: '&lt;/&gt;', className: 'border-slate-500/40 bg-slate-500/10 text-slate-200' }
-  const mark = meta.logo
-    ? `<span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-white/95 p-0.5"><img src="${meta.logo}" alt="" class="h-full w-full object-contain" /></span>`
+  const meta = LANGUAGE_META[normalized] || { label: normalized ? normalized.toUpperCase() : (t?.('output.codeFallback') || 'Code'), icon: '&lt;/&gt;', className: 'border-slate-500/40 bg-slate-500/10 text-slate-200' }
+  const logoUrl = meta.logoKey ? getLogoUrl(meta.logoKey) : undefined
+  const mark = logoUrl
+    ? `<span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-white/95 p-0.5"><img src="${logoUrl}" alt="" class="h-full w-full object-contain" /></span>`
     : `<span>${meta.icon}</span>`
   const highlightedCode = highlightEscapedCode(codeLines.join('\n'), normalized)
   return `<div class="my-3 overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
@@ -224,7 +252,7 @@ const renderCodeBlock = (codeLines: string[], language: string) => {
   </div>`
 }
 
-function markdownToHtml(markdown: string) {
+function markdownToHtml(markdown: string, t?: (key: any, params?: Record<string, string | number | null | undefined>) => string) {
   const lines = escapeHtml(markdown).split(/\r?\n/)
   const html: string[] = []
   let inCode = false
@@ -253,7 +281,7 @@ function markdownToHtml(markdown: string) {
 
     if (trimmed.startsWith('```')) {
       if (inCode) {
-        html.push(renderCodeBlock(codeLines, codeLanguage))
+        html.push(renderCodeBlock(codeLines, codeLanguage, t))
         codeLines = []
         codeLanguage = ''
         inCode = false
@@ -325,14 +353,15 @@ function markdownToHtml(markdown: string) {
 
   closeList()
   if (inCode) {
-    html.push(renderCodeBlock(codeLines, codeLanguage))
+    html.push(renderCodeBlock(codeLines, codeLanguage, t))
   }
 
   return html.join('\n')
 }
 
 export const MarkdownViewer: React.FC<{ content: string; className?: string }> = ({ content, className = '' }) => {
-  const markdownHtml = useMemo(() => markdownToHtml(content), [content])
+  const { t } = useTranslation()
+  const markdownHtml = useMemo(() => markdownToHtml(content, t), [content, t])
   return <div className={`prose prose-invert max-w-none text-sm text-slate-200 ${className}`} dangerouslySetInnerHTML={{ __html: markdownHtml }} />
 }
 
@@ -346,7 +375,7 @@ export const SaveResponseButton: React.FC<{ content: string; outputType?: Output
     await window.benchforge?.saveTextFile({
       defaultFileName,
       extension: ext,
-      extensionLabel: ext === 'html' ? 'HTML' : ext === 'svg' ? 'SVG' : ext === 'md' ? 'Markdown' : ext === 'txt' ? 'Tekst' : 'Plik',
+      extensionLabel: ext === 'html' ? 'HTML' : ext === 'svg' ? 'SVG' : ext === 'md' ? 'Markdown' : ext === 'txt' ? t('output.textExtension') : t('output.fileExtension'),
       content,
     })
   }
@@ -365,7 +394,7 @@ export const SaveResponseButton: React.FC<{ content: string; outputType?: Output
 
 export const OutputViewer: React.FC<OutputViewerProps> = ({ content, outputType, imageBase64, verifyResult, saveFileName }) => {
   const { t } = useTranslation()
-  const markdownHtml = useMemo(() => outputType === 'markdown' ? markdownToHtml(content) : '', [content, outputType])
+  const markdownHtml = useMemo(() => outputType === 'markdown' ? markdownToHtml(content, t) : '', [content, outputType, t])
   const [htmlFullscreen, setHtmlFullscreen] = React.useState(false)
 
   const saveButton = content?.trim() ? <SaveResponseButton content={content} outputType={outputType} fileName={saveFileName} /> : null
@@ -419,7 +448,7 @@ export const OutputViewer: React.FC<OutputViewerProps> = ({ content, outputType,
   if (outputType === 'maze') {
     const viewer = imageBase64
       ? <MazeViewer imageBase64={imageBase64} pathPoints={verifyResult?.pathPoints} collisionPoint={verifyResult?.collisionPoint} verifyResult={verifyResult} />
-      : <p className="text-sm text-amber-300">Brak obrazka labiryntu.</p>
+      : <p className="text-sm text-amber-300">{t('output.mazeImageMissing')}</p>
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">{saveButton}</div>

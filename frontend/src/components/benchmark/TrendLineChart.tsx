@@ -260,7 +260,7 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ models, benchmar
             const ts = minTime + (timeRange / (xTicks - 1)) * index
             return (
               <text key={index} x={x} y={chartHeight - 12} fill="#64748b" textAnchor="middle" fontSize="10">
-                {hasRealTimeRange ? new Date(ts).toLocaleDateString(locale, { day: '2-digit', month: '2-digit' }) : `Run ${index + 1}`}
+                {hasRealTimeRange ? new Date(ts).toLocaleDateString(locale, { day: '2-digit', month: '2-digit' }) : t('trend.runLabel', { index: index + 1 })}
               </text>
             )
           })}
@@ -326,11 +326,11 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ models, benchmar
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-slate-700/50 text-left text-xs text-slate-500">
-                <th className="py-1.5">Model</th>
+                <th className="py-1.5">{t('trend.modelHeader')}</th>
                 <th>{t('common.start')}</th>
-                <th>Benchmark</th>
+                <th>{t('trend.benchmarkHeader')}</th>
                 <th>{t('common.score')}</th>
-                <th>Raw</th>
+                <th>{t('trend.rawHeader')}</th>
               </tr>
             </thead>
             <tbody>
