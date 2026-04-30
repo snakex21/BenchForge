@@ -35,12 +35,12 @@ describe('Button', () => {
 
   it('applies variant classes', () => {
     const { container } = render(<Button variant="danger">Delete</Button>)
-    expect(container.firstChild?.className).toContain('bg-red-600')
+    expect((container.firstElementChild as HTMLElement | null)?.className).toContain('bg-red-600')
   })
 
   it('applies size classes', () => {
     const { container } = render(<Button size="lg">Large</Button>)
-    expect(container.firstChild?.className).toContain('px-5')
+    expect((container.firstElementChild as HTMLElement | null)?.className).toContain('px-5')
   })
 
   it('shows loading spinner when isLoading', () => {
