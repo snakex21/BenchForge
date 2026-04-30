@@ -45,10 +45,10 @@ export const SettingsView: React.FC = () => {
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false)
 
   const themes = [
-    { id: 'dark', name: 'Dark', colors: ['#0f1117', '#6366f1', '#e2e8f0'] },
-    { id: 'light', name: 'Light', colors: ['#eef2ff', '#4f46e5', '#0f172a'] },
-    { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#080514', '#ec4899', '#22d3ee'] },
-    { id: 'graphite', name: 'Graphite', colors: ['#111111', '#737373', '#e5e5e5'] },
+    { id: 'dark', name: t('settings.themeDark'), colors: ['#0f1117', '#6366f1', '#e2e8f0'] },
+    { id: 'light', name: t('settings.themeLight'), colors: ['#eef2ff', '#4f46e5', '#0f172a'] },
+    { id: 'cyberpunk', name: t('settings.themeCyberpunk'), colors: ['#080514', '#ec4899', '#22d3ee'] },
+    { id: 'graphite', name: t('settings.themeGraphite'), colors: ['#111111', '#737373', '#e5e5e5'] },
   ] as const
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export const SettingsView: React.FC = () => {
   const saveMcpServers = async () => {
     try {
       const parsed = JSON.parse(mcpServersText || '[]')
-      if (!Array.isArray(parsed)) throw new Error('MCP config must be an array')
+      if (!Array.isArray(parsed)) throw new Error(t('settings.mcpConfigArrayError'))
       await window.benchforge?.saveMcpServers?.(parsed)
       setToolStatus(t('settings.mcpSaved'))
     } catch {
@@ -178,7 +178,7 @@ export const SettingsView: React.FC = () => {
   const saveRepoSandbox = async () => {
     try {
       const parsed = JSON.parse(repoSandboxText || '[]')
-      if (!Array.isArray(parsed)) throw new Error('Repo sandbox config must be an array')
+      if (!Array.isArray(parsed)) throw new Error(t('settings.repoSandboxArrayError'))
       await window.db?.savePreference?.('repo_sandbox_roots', parsed)
       setToolStatus(t('settings.repoSandboxSaved'))
     } catch {

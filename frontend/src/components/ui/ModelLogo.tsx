@@ -3,9 +3,9 @@ import type { AIModel, ApiProvider } from '@/types'
 
 type LogoModel = Pick<AIModel, 'name' | 'provider' | 'model_id' | 'base_url'> | { name: string; provider?: string | null; model_id?: string | null; base_url?: string | null }
 
+// Eager import — icons are inlined as base64 in the bundle (no separate HTTP requests)
 const logoModules = import.meta.glob('../../assets/ai-logos/*', {
   eager: true,
-  query: '?url',
   import: 'default',
 }) as Record<string, string>
 
@@ -112,7 +112,7 @@ const SIZE_CLASSES = {
   lg: 'h-12 w-12',
 }
 
-export const ModelLogo: React.FC<ModelLogoProps> = ({ model, provider, modelId, name, size = 'md', className = '', showProviderBadge = true }) => {
+export const ModelLogo: React.FC<ModelLogoProps> = React.memo(({ model, provider, modelId, name, size = 'md', className = '', showProviderBadge = true }) => {
   const sourceModel: LogoModel = model || { name: name || '', provider: provider || undefined, model_id: modelId || null, base_url: null }
   const logo = getModelLogo(sourceModel)
   const providerValue = sourceModel.provider || provider
@@ -126,4 +126,6 @@ export const ModelLogo: React.FC<ModelLogoProps> = ({ model, provider, modelId, 
   }
 
   return <span className={`${sizeClass} ${className} relative inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-700/50 bg-white/95 p-1.5`}><img src={logo} alt="" className="h-full w-full object-contain" />{shouldShowProviderBadge && <span className={`${badgeClass} absolute inline-flex items-center justify-center overflow-hidden rounded-full border border-slate-700/60 bg-white`}><img src={providerLogo} alt="" className="h-full w-full object-contain" /></span>}</span>
-}
+})
+
+ModelLogo.displayName = 'ModelLogo'

@@ -25,6 +25,8 @@ export default defineConfig({
     rollupOptions: {
       external: ['electron'],
     },
+    // Inline assets smaller than 100KB as base64 (icons load immediately, no HTTP requests)
+    assetsInlineLimit: 102400,
   },
 
   server: {

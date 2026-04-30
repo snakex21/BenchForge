@@ -105,7 +105,7 @@ export const ManualPromptDialog: React.FC<ManualPromptDialogProps> = ({ prompt, 
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-400">Prompt</label>
+            <label className="mb-1 block text-xs font-medium text-slate-400">{t('manual.promptLabel')}</label>
             <textarea readOnly value={prompt} rows={8} className="w-full rounded-lg border border-slate-600/50 bg-[#0f1117] px-3 py-2 text-sm text-slate-200 focus:outline-none" />
           </div>
 
@@ -173,7 +173,7 @@ export const ManualPromptDialog: React.FC<ManualPromptDialogProps> = ({ prompt, 
                 }
                 return <label key={key} className="block rounded-lg border border-slate-700/40 bg-slate-950/40 p-2 text-sm text-slate-300"><span>{item.label} <span className="text-xs text-slate-500">0–{max}</span></span><input type="number" min={0} max={max} value={current} onChange={(event) => setRubricValues((values) => ({ ...values, [key]: Math.max(0, Math.min(max, Number(event.target.value) || 0)) }))} className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-slate-200" /></label>
               })}
-              <textarea value={rubricComment} onChange={(event) => setRubricComment(event.target.value)} placeholder="Komentarz oceniającego..." className="h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200" />
+              <textarea value={rubricComment} onChange={(event) => setRubricComment(event.target.value)} placeholder={t('manual.rubricCommentPlaceholder')} className="h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200" />
             </div>
           )}
 

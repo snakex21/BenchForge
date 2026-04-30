@@ -70,7 +70,7 @@ export const BenchmarkMatrix: React.FC<BenchmarkMatrixProps> = ({ benchmarksOver
                 #
               </th>
               <th className="sticky left-0 z-10 bg-[#1c1f2e] px-4 py-3 text-left text-xs font-semibold text-slate-400 min-w-[160px]">
-                Model AI
+                {t('matrix.modelHeader')}
               </th>
               {benchmarks.map((bm) => (
                 <th

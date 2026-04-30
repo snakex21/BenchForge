@@ -30,7 +30,7 @@ const SIZE_CLASSES: Record<string, string> = {
   lg: 'px-5 py-2.5 text-base rounded-xl',
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button: React.FC<ButtonProps> = React.memo(({
   children,
   variant = 'primary',
   size = 'md',
@@ -81,4 +81,6 @@ export const Button: React.FC<ButtonProps> = ({
       {children}
     </button>
   )
-}
+})
+
+Button.displayName = 'Button'

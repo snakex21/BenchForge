@@ -146,7 +146,7 @@ export const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({ models, 
             <thead>
               <tr className="border-b border-slate-700/50 text-left text-xs text-slate-500">
                 <th className="py-1.5">#</th>
-                <th className="py-1.5">Model</th>
+                <th className="py-1.5">{t('bars.modelHeader')}</th>
                 {benchmarks.map((b) => <th key={b.id} className="py-1.5">{b.name.slice(0, 14)}</th>)}
                 <th className="py-1.5 text-right">{t('bars.average')}</th>
               </tr>

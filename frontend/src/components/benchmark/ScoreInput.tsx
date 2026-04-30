@@ -32,7 +32,7 @@ export const ScoreInput: React.FC<ScoreInputProps> = ({ scoreType, value, onChan
         max="100"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="0–100"
+        placeholder={t('score.placeholder')}
         className="w-20 rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 text-center outline-none focus:border-indigo-500/60"
       />
       <span className="text-sm text-slate-400">%</span>

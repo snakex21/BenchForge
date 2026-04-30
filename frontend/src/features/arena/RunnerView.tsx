@@ -123,9 +123,9 @@ const formatTaskResultLabel = (taskState: RunnerTaskState, t: (key: TranslationK
     return `${prefix}${passed ? t('common.passed') : t('common.failed')}`
   }
   if (taskState.status === 'error') return t('common.failed')
-  if (taskState.status === 'retrying') return taskState.attempt ? t('runner.attempt', { attempt: taskState.attempt }) : 'Retry'
+  if (taskState.status === 'retrying') return taskState.attempt ? t('runner.attempt', { attempt: taskState.attempt }) : t('runner.status.retrying')
   if (taskState.status === 'running') return t('runner.status.running').replace('🔄 ', '')
-  if (taskState.status === 'manual') return 'Manual'
+  if (taskState.status === 'manual') return t('runner.status.manual')
   return '...'
 }
 
@@ -542,12 +542,12 @@ export const RunnerView: React.FC = () => {
     for (const pair of queue) {
       const benchmark = benchmarks.find((item) => item.id === pair.benchmarkId)
       if (!benchmark?.prompt_template?.trim()) {
-        updateItem(pair.key, { status: 'error', error: `Benchmark '${pair.benchmarkName}' nie ma prompt_template` })
+        updateItem(pair.key, { status: 'error', error: t('runner.errorNoPromptTemplate', { name: pair.benchmarkName }) })
         errorCount += 1
         continue
       }
 
-      setCurrentLabel(`Testowanie: ${models.find((m) => m.id === pair.modelId)?.name || pair.modelId} × ${pair.benchmarkName}...`)
+      setCurrentLabel(t('runner.testing', { model: models.find((m) => m.id === pair.modelId)?.name || pair.modelId, benchmark: pair.benchmarkName }))
       updateItem(pair.key, { status: 'running', error: null, score: null, streamText: '', thinkingText: '', maxAttempts: benchmark.attempts || 1 })
       const selectedModel = models.find((model) => model.id === pair.modelId)
       if (selectedModel?.mode === 'manual') {
@@ -715,7 +715,7 @@ export const RunnerView: React.FC = () => {
       setResumeSessionId(null)
       if (wasAborted) {
         clearCurrentRun()
-        setSummary('Benchmark anulowany — wyczyszczono ostatnie uruchomienie.')
+        setSummary(t('runner.aborted'))
       } else {
         setSummary(t('runner.finishedSummary', { total: queue.length, success: successCount, errors: errorCount }))
       }
@@ -725,7 +725,7 @@ export const RunnerView: React.FC = () => {
 
   const handleManualSubmit = async (response: string, score: string, rubricReport?: unknown) => {
     if (!window.db || !manualStep) return
-    const thinkingNotes = rubricReport ? `## Manual rubric evaluation\n\n\`\`\`json\n${JSON.stringify(rubricReport, null, 2)}\n\`\`\`` : null
+    const thinkingNotes = rubricReport ? `## ${t('runner.manualRubric')}\n\n\`\`\`json\n${JSON.stringify(rubricReport, null, 2)}\n\`\`\`` : null
     const result = await window.db.submitManualStreaming({ modelId: manualStep.modelId, benchmarkId: manualStep.benchmark.id, taskId: manualStep.taskId || null, runSessionId: manualStep.sessionId || null, response, score, attemptNumber: manualStep.attemptNumber || 1, tokensUsed: manualStep.tokensUsed ?? null, durationMs: manualStep.durationMs ?? null, thinkingNotes })
     if (manualStep.taskId) updateItemTask(manualStep.itemKey, manualStep.taskId, result.ok ? { status: 'done', score, text: response, attempt: manualStep.attemptNumber || 1 } : { status: 'error', error: result.error || t('runner.errorSaveManual') })
     if (manualStep.completeItemOnSubmit === false) {
@@ -792,8 +792,8 @@ export const RunnerView: React.FC = () => {
 
   const handleManualCancel = () => {
     if (manualStep) {
-      updateItem(manualStep.itemKey, { status: 'error', error: 'Anulowano wprowadzanie odpowiedzi manualnej.' })
-      if (manualStep.taskId) updateItemTask(manualStep.itemKey, manualStep.taskId, { status: 'error', error: 'Anulowano wprowadzanie odpowiedzi manualnej.' })
+      updateItem(manualStep.itemKey, { status: 'error', error: t('runner.manualCancelled') })
+      if (manualStep.taskId) updateItemTask(manualStep.itemKey, manualStep.taskId, { status: 'error', error: t('runner.manualCancelled') })
     }
     setManualStep(null)
     manualResolver?.('error')

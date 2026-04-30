@@ -12,7 +12,7 @@ export interface CardProps {
   padding?: boolean
 }
 
-export const Card: React.FC<CardProps> = ({
+export const Card: React.FC<CardProps> = React.memo(({
   children,
   title,
   subtitle,
@@ -35,4 +35,6 @@ export const Card: React.FC<CardProps> = ({
       <div className={padding ? 'p-4' : ''}>{children}</div>
     </div>
   )
-}
+})
+
+Card.displayName = 'Card'

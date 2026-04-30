@@ -317,7 +317,7 @@ export const BenchmarkRadarChart: React.FC<BenchmarkRadarChartProps> = ({ models
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-slate-700/50 text-left text-xs text-slate-500">
-                <th className="py-1.5">Model</th>
+                <th className="py-1.5">{t('radar.modelHeader')}</th>
                 {radarBenchmarks.map((benchmark) => <th key={benchmark.id} className="py-1.5">{shortLabel(benchmark.name, 14)}</th>)}
               </tr>
             </thead>

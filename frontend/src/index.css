@@ -212,3 +212,18 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* CSS containment for better rendering performance */
+#root {
+  contain: layout style;
+}
+
+/* Contain main layout sections */
+aside, header, main, section {
+  contain: layout style;
+}
+
+/* Contain scrollable areas */
+.overflow-auto, .overflow-x-auto, .overflow-y-auto {
+  contain: layout style;
+}

@@ -20,7 +20,7 @@ const ICONS: Record<string, string> = {
   default: '📭',
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
+export const EmptyState: React.FC<EmptyStateProps> = React.memo(({
   icon = 'default',
   title,
   description,
@@ -42,4 +42,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       )}
     </div>
   )
-}
+})
+
+EmptyState.displayName = 'EmptyState'
