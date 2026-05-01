@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Ní thosaíonn an cosán ag an bpointe tosaigh.",
   "maze.errorWallCollision": "Imbhualadh le balla.",
   "maze.errorGoal": "Níor shroich an cosán an sprioc.",
-  "maze.successPath": "Tá an cosán bailí."
+  "maze.successPath": "Tá an cosán bailí.",
+  "common.cost": "Costas",
+  "models.refreshPricing": "Praghsanna a athnuachan",
+  "models.pricingRefreshing": "Praghsanna á n-athnuachan...",
+  "models.pricingUpdated": "An nuashonrú is déanaí ar an bpraghsanna: {date}",
+  "models.pricingRefreshed": "Praghsáil athnuachan. Múnla(í) {matched} meaitseáilte ó iontrálacha {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Níorbh fhéidir praghsáil a athnuachan: {error}",
+  "models.inputPrice": "Praghas ionchuir ($ / 1M comharthaí)",
+  "models.outputPrice": "Praghas aschuir ($ / 1M comharthaí)",
+  "models.pricingHint": "Meastar praghsanna. Is féidir praghsáil OpenRouter a athnuachan go huathoibríoch agus is féidir leat luachanna a shárú de láimh.",
+  "models.pricingShort": "In {input}/1M · Amach {output}/1M",
+  "stats.costs": "Costais API measta",
+  "stats.costPerRun": "Costas in aghaidh an rith",
+  "models.localPricingInfo": "Am rite áitiúil - ní úsáidtear praghsáil API."
 }

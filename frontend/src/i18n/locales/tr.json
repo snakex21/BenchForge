@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Yol başlangıç ​​noktasında başlamıyor.",
   "maze.errorWallCollision": "Duvarla çarpışma.",
   "maze.errorGoal": "Yol hedefe ulaşmadı.",
-  "maze.successPath": "Yol geçerlidir."
+  "maze.successPath": "Yol geçerlidir.",
+  "common.cost": "Maliyet",
+  "models.refreshPricing": "Fiyatları yenile",
+  "models.pricingRefreshing": "Fiyatlar yenileniyor...",
+  "models.pricingUpdated": "Fiyatlandırmanın son güncellenmesi: {date}",
+  "models.pricingRefreshed": "Fiyatlandırma yenilendi. {total} OpenRouter girişlerinden eşleşen {matched} modelleri.",
+  "models.pricingRefreshFailed": "Fiyatlandırma yenilenemedi: {error}",
+  "models.inputPrice": "Giriş fiyatı ($ / 1 milyon jeton)",
+  "models.outputPrice": "Çıkış fiyatı ($ / 1 milyon jeton)",
+  "models.pricingHint": "Fiyatlar tahminidir. OpenRouter fiyatlandırması otomatik olarak yenilenebilir ve değerleri manuel olarak geçersiz kılabilirsiniz.",
+  "models.pricingShort": "Gelen {input}/1 Milyon · Çıkış {output}/1 Milyon",
+  "stats.costs": "Tahmini API maliyetleri",
+  "stats.costPerRun": "Çalıştırma başına maliyet",
+  "models.localPricingInfo": "Yerel çalışma zamanı — API fiyatlandırması kullanılmaz."
 }

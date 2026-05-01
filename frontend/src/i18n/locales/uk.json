@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Шлях не починається з початкової точки.",
   "maze.errorWallCollision": "Зіткнення зі стіною.",
   "maze.errorGoal": "Шлях не дійшов до мети.",
-  "maze.successPath": "Шлях дійсний."
+  "maze.successPath": "Шлях дійсний.",
+  "common.cost": "Вартість",
+  "models.refreshPricing": "Оновити ціни",
+  "models.pricingRefreshing": "Оновлення цін...",
+  "models.pricingUpdated": "Останнє оновлення ціни: {date}",
+  "models.pricingRefreshed": "Ціни оновлено. Відповідні моделі {matched} із записів {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Не вдалося оновити ціни: {error}",
+  "models.inputPrice": "Вхідна ціна ($ / 1 млн токенів)",
+  "models.outputPrice": "Вихідна ціна ($ / 1 млн токенів)",
+  "models.pricingHint": "Ціни орієнтовні. Ціни OpenRouter можна оновлювати автоматично, а ви можете змінювати значення вручну.",
+  "models.pricingShort": "У {input}/1M · Вихід {output}/1M",
+  "stats.costs": "Орієнтовна вартість API",
+  "stats.costPerRun": "Вартість пробігу",
+  "models.localPricingInfo": "Локальний час виконання — ціноутворення API не використовується."
 }

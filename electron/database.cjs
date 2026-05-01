@@ -22,6 +22,11 @@ function mapModelRow(row) {
     base_url: row.base_url,
     api_key: decryptSecret(row.api_key),
     model_id: row.model_id,
+    input_price_per_1m: row.input_price_per_1m ?? null,
+    output_price_per_1m: row.output_price_per_1m ?? null,
+    pricing_source: row.pricing_source ?? null,
+    pricing_model_id: row.pricing_model_id ?? null,
+    pricing_updated_at: row.pricing_updated_at ?? null,
     created_at: row.created_at,
   }
 }
@@ -79,6 +84,9 @@ function mapResultRow(row) {
     artifact_path: row.artifact_path ?? null,
     attempt_number: row.attempt_number ?? 1,
     tokens_used: row.tokens_used ?? null,
+    input_tokens: row.input_tokens ?? null,
+    output_tokens: row.output_tokens ?? null,
+    estimated_cost_usd: row.estimated_cost_usd ?? null,
     duration_ms: row.duration_ms ?? null,
     run_at: row.run_at,
   }
@@ -196,6 +204,11 @@ function createModelsTable(database) {
       base_url TEXT,
       api_key TEXT,
       model_id TEXT,
+      input_price_per_1m REAL DEFAULT NULL,
+      output_price_per_1m REAL DEFAULT NULL,
+      pricing_source TEXT DEFAULT NULL,
+      pricing_model_id TEXT DEFAULT NULL,
+      pricing_updated_at TEXT DEFAULT NULL,
       created_at TEXT DEFAULT (datetime('now'))
     );
   `)
@@ -263,9 +276,21 @@ function ensureModelsSchema(database) {
     return
   }
 
-  const columns = database.prepare(`PRAGMA table_info(models)`).all().map((column) => column.name)
+  let columns = database.prepare(`PRAGMA table_info(models)`).all().map((column) => column.name)
   const expected = ['id', 'name', 'mode', 'provider', 'base_url', 'api_key', 'model_id', 'created_at']
-  if (expected.every((column) => columns.includes(column)) && columns.length === expected.length) return
+  if (expected.every((column) => columns.includes(column))) {
+    const pricingColumns = [
+      ['input_price_per_1m', 'REAL DEFAULT NULL'],
+      ['output_price_per_1m', 'REAL DEFAULT NULL'],
+      ['pricing_source', 'TEXT DEFAULT NULL'],
+      ['pricing_model_id', 'TEXT DEFAULT NULL'],
+      ['pricing_updated_at', 'TEXT DEFAULT NULL'],
+    ]
+    for (const [column, type] of pricingColumns) {
+      if (!columns.includes(column)) database.exec(`ALTER TABLE models ADD COLUMN ${column} ${type};`)
+    }
+    return
+  }
 
   database.pragma('foreign_keys = OFF')
   const tx = database.transaction(() => {
@@ -280,6 +305,16 @@ function ensureModelsSchema(database) {
   })
   tx()
   database.pragma('foreign_keys = ON')
+  columns = database.prepare(`PRAGMA table_info(models)`).all().map((column) => column.name)
+  for (const [column, type] of [
+    ['input_price_per_1m', 'REAL DEFAULT NULL'],
+    ['output_price_per_1m', 'REAL DEFAULT NULL'],
+    ['pricing_source', 'TEXT DEFAULT NULL'],
+    ['pricing_model_id', 'TEXT DEFAULT NULL'],
+    ['pricing_updated_at', 'TEXT DEFAULT NULL'],
+  ]) {
+    if (!columns.includes(column)) database.exec(`ALTER TABLE models ADD COLUMN ${column} ${type};`)
+  }
 }
 
 function ensureBenchmarksSchema(database) {
@@ -359,6 +394,15 @@ function ensureResultsSchema(database) {
   }
   if (!columns.includes('tokens_used')) {
     database.exec(`ALTER TABLE results ADD COLUMN tokens_used INTEGER DEFAULT NULL;`)
+  }
+  if (!columns.includes('input_tokens')) {
+    database.exec(`ALTER TABLE results ADD COLUMN input_tokens INTEGER DEFAULT NULL;`)
+  }
+  if (!columns.includes('output_tokens')) {
+    database.exec(`ALTER TABLE results ADD COLUMN output_tokens INTEGER DEFAULT NULL;`)
+  }
+  if (!columns.includes('estimated_cost_usd')) {
+    database.exec(`ALTER TABLE results ADD COLUMN estimated_cost_usd REAL DEFAULT NULL;`)
   }
   if (!columns.includes('duration_ms')) {
     database.exec(`ALTER TABLE results ADD COLUMN duration_ms INTEGER DEFAULT NULL;`)
@@ -459,6 +503,9 @@ function initDb() {
       artifact_path TEXT DEFAULT NULL,
       attempt_number INTEGER DEFAULT 1,
       tokens_used INTEGER DEFAULT NULL,
+      input_tokens INTEGER DEFAULT NULL,
+      output_tokens INTEGER DEFAULT NULL,
+      estimated_cost_usd REAL DEFAULT NULL,
       duration_ms INTEGER DEFAULT NULL,
       run_at TEXT DEFAULT (datetime('now'))
     );
@@ -536,12 +583,14 @@ function saveDiscoveredModels(items) {
   return getDiscoveredModels()
 }
 
+const MODEL_SELECT = `id, name, mode, provider, base_url, api_key, model_id, input_price_per_1m, output_price_per_1m, pricing_source, pricing_model_id, pricing_updated_at, created_at`
+
 function getModels() {
-  return getDb().prepare(`SELECT id, name, mode, provider, base_url, api_key, model_id, created_at FROM models ORDER BY id DESC`).all().map(mapModelRow)
+  return getDb().prepare(`SELECT ${MODEL_SELECT} FROM models ORDER BY id DESC`).all().map(mapModelRow)
 }
 
 function getModelById(id) {
-  const row = getDb().prepare(`SELECT id, name, mode, provider, base_url, api_key, model_id, created_at FROM models WHERE id = ?`).get(id)
+  const row = getDb().prepare(`SELECT ${MODEL_SELECT} FROM models WHERE id = ?`).get(id)
   return row ? mapModelRow(row) : null
 }
 
@@ -569,13 +618,21 @@ function getTaskById(id) {
 
 function addModel(data) {
   const normalized = normalizeModelSecretData(data)
-  const result = getDb().prepare(`INSERT INTO models (name, mode, provider, base_url, api_key, model_id) VALUES (@name, @mode, @provider, @base_url, @api_key, @model_id)`).run({
+  const result = getDb().prepare(`
+    INSERT INTO models (name, mode, provider, base_url, api_key, model_id, input_price_per_1m, output_price_per_1m, pricing_source, pricing_model_id, pricing_updated_at)
+    VALUES (@name, @mode, @provider, @base_url, @api_key, @model_id, @input_price_per_1m, @output_price_per_1m, @pricing_source, @pricing_model_id, @pricing_updated_at)
+  `).run({
     name: normalized.name,
     mode: normalized.mode,
     provider: normalized.provider || null,
     base_url: normalized.base_url || null,
     api_key: normalized.api_key || null,
     model_id: normalized.model_id || null,
+    input_price_per_1m: normalized.input_price_per_1m ?? null,
+    output_price_per_1m: normalized.output_price_per_1m ?? null,
+    pricing_source: normalized.pricing_source || null,
+    pricing_model_id: normalized.pricing_model_id || null,
+    pricing_updated_at: normalized.pricing_updated_at || null,
   })
   return getModelById(result.lastInsertRowid)
 }
@@ -584,6 +641,7 @@ function updateModel(id, data) {
   const normalized = normalizeModelSecretData(data)
   const query = buildUpdateQuery('models', {
     name: 'name', mode: 'mode', provider: 'provider', base_url: 'base_url', api_key: 'api_key', model_id: 'model_id',
+    input_price_per_1m: 'input_price_per_1m', output_price_per_1m: 'output_price_per_1m', pricing_source: 'pricing_source', pricing_model_id: 'pricing_model_id', pricing_updated_at: 'pricing_updated_at',
   }, id, normalized)
   if (!query) return getModelById(id)
   getDb().prepare(query.sql).run(query.params)
@@ -718,7 +776,7 @@ function reorderTasks(benchmarkId, orderedIds) {
   return getTasks(benchmarkId)
 }
 
-const RESULT_SELECT = `id, model_id, benchmark_id, task_id, run_session_id, score, notes, thinking_notes, response_preview, artifact_path, attempt_number, tokens_used, duration_ms, run_at`
+const RESULT_SELECT = `id, model_id, benchmark_id, task_id, run_session_id, score, notes, thinking_notes, response_preview, artifact_path, attempt_number, tokens_used, input_tokens, output_tokens, estimated_cost_usd, duration_ms, run_at`
 
 function getResults() {
   return getDb().prepare(`SELECT ${RESULT_SELECT} FROM results ORDER BY datetime(run_at) DESC, id DESC`).all().map(mapResultRow)
@@ -761,11 +819,37 @@ function ensureResultArtifacts(database = getDb()) {
   return rows.length
 }
 
+function estimateResultCost(data) {
+  if (data.estimated_cost_usd !== undefined && data.estimated_cost_usd !== null && data.estimated_cost_usd !== '') return Number(data.estimated_cost_usd) || null
+  const model = getModelById(data.model_id)
+  if (!model) return null
+  const inputPrice = Number(model.input_price_per_1m)
+  const outputPrice = Number(model.output_price_per_1m)
+  if (!Number.isFinite(inputPrice) && !Number.isFinite(outputPrice)) return null
+
+  const inputTokens = Number(data.input_tokens ?? data.inputTokens ?? 0)
+  const outputTokens = Number(data.output_tokens ?? data.outputTokens ?? 0)
+  if (inputTokens > 0 || outputTokens > 0) {
+    const inputCost = inputTokens > 0 && Number.isFinite(inputPrice) ? inputTokens * inputPrice / 1_000_000 : 0
+    const outputCost = outputTokens > 0 && Number.isFinite(outputPrice) ? outputTokens * outputPrice / 1_000_000 : 0
+    const total = inputCost + outputCost
+    return total > 0 ? Number(total.toFixed(8)) : null
+  }
+
+  const totalTokens = Number(data.tokens_used ?? data.tokensUsed ?? 0)
+  if (totalTokens <= 0) return null
+  const fallbackPrice = Number.isFinite(inputPrice) && Number.isFinite(outputPrice)
+    ? (inputPrice + outputPrice) / 2
+    : Number.isFinite(inputPrice) ? inputPrice : outputPrice
+  return Number.isFinite(fallbackPrice) ? Number((totalTokens * fallbackPrice / 1_000_000).toFixed(8)) : null
+}
+
 function addResult(data) {
   const response_preview = previewText(data.notes || '') || null
+  const estimated_cost_usd = estimateResultCost(data)
   const result = getDb().prepare(`
-    INSERT INTO results (model_id, benchmark_id, task_id, run_session_id, score, notes, thinking_notes, response_preview, artifact_path, attempt_number, tokens_used, duration_ms, run_at)
-    VALUES (@model_id, @benchmark_id, @task_id, @run_session_id, @score, @notes, @thinking_notes, @response_preview, @artifact_path, COALESCE(@attempt_number, 1), @tokens_used, @duration_ms, COALESCE(@run_at, datetime('now')))
+    INSERT INTO results (model_id, benchmark_id, task_id, run_session_id, score, notes, thinking_notes, response_preview, artifact_path, attempt_number, tokens_used, input_tokens, output_tokens, estimated_cost_usd, duration_ms, run_at)
+    VALUES (@model_id, @benchmark_id, @task_id, @run_session_id, @score, @notes, @thinking_notes, @response_preview, @artifact_path, COALESCE(@attempt_number, 1), @tokens_used, @input_tokens, @output_tokens, @estimated_cost_usd, @duration_ms, COALESCE(@run_at, datetime('now')))
   `).run({
     model_id: data.model_id,
     benchmark_id: data.benchmark_id,
@@ -778,6 +862,9 @@ function addResult(data) {
     artifact_path: data.artifact_path || data.artifactPath || null,
     attempt_number: data.attempt_number || 1,
     tokens_used: data.tokens_used ?? null,
+    input_tokens: data.input_tokens ?? data.inputTokens ?? null,
+    output_tokens: data.output_tokens ?? data.outputTokens ?? null,
+    estimated_cost_usd,
     duration_ms: data.duration_ms ?? null,
     run_at: data.run_at || null,
   })
@@ -932,10 +1019,10 @@ function replaceAllData(data) {
       DELETE FROM sqlite_sequence WHERE name IN ('models', 'benchmarks', 'tasks', 'results', 'runs', 'run_sessions');
     `)
 
-    const insertModel = database.prepare(`INSERT INTO models (id, name, mode, provider, base_url, api_key, model_id, created_at) VALUES (@id, @name, @mode, @provider, @base_url, @api_key, @model_id, COALESCE(@created_at, datetime('now')))`)
+    const insertModel = database.prepare(`INSERT INTO models (id, name, mode, provider, base_url, api_key, model_id, input_price_per_1m, output_price_per_1m, pricing_source, pricing_model_id, pricing_updated_at, created_at) VALUES (@id, @name, @mode, @provider, @base_url, @api_key, @model_id, @input_price_per_1m, @output_price_per_1m, @pricing_source, @pricing_model_id, @pricing_updated_at, COALESCE(@created_at, datetime('now')))`)
     const insertBenchmark = database.prepare(`INSERT INTO benchmarks (id, name, category, description, suite_name, prompt_template, score_type, expected_answer, pass_condition, evaluation_checklist, evaluation_rubric, attempts, output_type, reference_image, created_at) VALUES (@id, @name, @category, @description, @suite_name, @prompt_template, @score_type, @expected_answer, @pass_condition, @evaluation_checklist, @evaluation_rubric, @attempts, @output_type, @reference_image, COALESCE(@created_at, datetime('now')))`)
     const insertTask = database.prepare(`INSERT INTO tasks (id, benchmark_id, name, prompt_template, score_type, expected_answer, pass_condition, evaluation_checklist, evaluation_rubric, attempts, order_index, output_type, reference_image, created_at) VALUES (@id, @benchmark_id, @name, @prompt_template, @score_type, @expected_answer, @pass_condition, @evaluation_checklist, @evaluation_rubric, @attempts, @order_index, @output_type, @reference_image, COALESCE(@created_at, datetime('now')))`)
-    const insertResult = database.prepare(`INSERT INTO results (id, model_id, benchmark_id, task_id, run_session_id, score, notes, thinking_notes, response_preview, artifact_path, attempt_number, tokens_used, duration_ms, run_at) VALUES (@id, @model_id, @benchmark_id, @task_id, @run_session_id, @score, @notes, @thinking_notes, @response_preview, @artifact_path, COALESCE(@attempt_number, 1), @tokens_used, @duration_ms, COALESCE(@run_at, datetime('now')))`)
+    const insertResult = database.prepare(`INSERT INTO results (id, model_id, benchmark_id, task_id, run_session_id, score, notes, thinking_notes, response_preview, artifact_path, attempt_number, tokens_used, input_tokens, output_tokens, estimated_cost_usd, duration_ms, run_at) VALUES (@id, @model_id, @benchmark_id, @task_id, @run_session_id, @score, @notes, @thinking_notes, @response_preview, @artifact_path, COALESCE(@attempt_number, 1), @tokens_used, @input_tokens, @output_tokens, @estimated_cost_usd, @duration_ms, COALESCE(@run_at, datetime('now')))`)
     const insertRun = database.prepare(`INSERT INTO runs (id, name, started_at, finished_at, status) VALUES (@id, @name, COALESCE(@started_at, datetime('now')), @finished_at, COALESCE(@status, 'pending'))`)
 
     for (const model of payload.models) insertModel.run({
@@ -945,6 +1032,11 @@ function replaceAllData(data) {
       base_url: model.base_url || null,
       api_key: model.api_key ? encryptSecret(model.api_key) : null,
       model_id: model.model_id || null,
+      input_price_per_1m: model.input_price_per_1m ?? null,
+      output_price_per_1m: model.output_price_per_1m ?? null,
+      pricing_source: model.pricing_source || null,
+      pricing_model_id: model.pricing_model_id || null,
+      pricing_updated_at: model.pricing_updated_at || null,
       created_at: model.created_at || null,
     })
     for (const benchmark of payload.benchmarks) insertBenchmark.run({
@@ -979,6 +1071,9 @@ function replaceAllData(data) {
       response_preview: result.response_preview || previewText(result.notes) || null,
       artifact_path: null,
       tokens_used: result.tokens_used ?? null,
+      input_tokens: result.input_tokens ?? null,
+      output_tokens: result.output_tokens ?? null,
+      estimated_cost_usd: result.estimated_cost_usd ?? null,
       duration_ms: result.duration_ms ?? null,
       run_at: result.run_at || null,
     })

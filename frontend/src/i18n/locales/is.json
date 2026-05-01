@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Leiðin byrjar ekki á upphafsstað.",
   "maze.errorWallCollision": "Árekstur við vegg.",
   "maze.errorGoal": "Leiðin náði ekki takmarkinu.",
-  "maze.successPath": "Slóð er gild."
+  "maze.successPath": "Slóð er gild.",
+  "common.cost": "Kostnaður",
+  "models.refreshPricing": "Endurnýja verð",
+  "models.pricingRefreshing": "Hressandi verð...",
+  "models.pricingUpdated": "Verð síðast uppfært: {date}",
+  "models.pricingRefreshed": "Verðlag uppfært. Passaði {matched} gerð(ir) úr {total} OpenRouter færslum.",
+  "models.pricingRefreshFailed": "Gat ekki endurnýjað verð: {error}",
+  "models.inputPrice": "Inntaksverð ($ / 1 milljón tákn)",
+  "models.outputPrice": "Úttaksverð ($ / 1 milljón tákn)",
+  "models.pricingHint": "Verð eru áætluð. OpenRouter verðlagningu er hægt að endurnýja sjálfkrafa og þú getur hnekkt gildum handvirkt.",
+  "models.pricingShort": "Inn {input}/1M · Út {output}/1M",
+  "stats.costs": "Áætlaður API kostnaður",
+  "stats.costPerRun": "Kostnaður á hverja keyrslu",
+  "models.localPricingInfo": "Staðbundinn keyrslutími - API verðlagning er ekki notuð."
 }

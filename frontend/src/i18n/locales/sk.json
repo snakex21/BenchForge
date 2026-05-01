@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Cesta nezačína v počiatočnom bode.",
   "maze.errorWallCollision": "Zrážka so stenou.",
   "maze.errorGoal": "Cesta nedošla do cieľa.",
-  "maze.successPath": "Cesta je platná."
+  "maze.successPath": "Cesta je platná.",
+  "common.cost": "náklady",
+  "models.refreshPricing": "Obnoviť ceny",
+  "models.pricingRefreshing": "Obnovujúce ceny...",
+  "models.pricingUpdated": "Posledná aktualizácia cien: {date}",
+  "models.pricingRefreshed": "Ceny boli obnovené. Zodpovedajúce modely {matched} zo záznamov {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Nepodarilo sa obnoviť ceny: {error}",
+  "models.inputPrice": "Vstupná cena ($ / 1 milión tokenov)",
+  "models.outputPrice": "Výstupná cena ($ / 1 milión tokenov)",
+  "models.pricingHint": "Ceny sú odhadované. Ceny OpenRouter sa môžu aktualizovať automaticky a hodnoty môžete prepísať manuálne.",
+  "models.pricingShort": "V cene {input}/1M · Out {output}/1M",
+  "stats.costs": "Odhadované náklady na API",
+  "stats.costPerRun": "Cena za beh",
+  "models.localPricingInfo": "Miestne runtime – cena za API sa nepoužíva."
 }

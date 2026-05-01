@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Η διαδρομή δεν ξεκινά από το σημείο εκκίνησης.",
   "maze.errorWallCollision": "Σύγκρουση με τοίχο.",
   "maze.errorGoal": "Η διαδρομή δεν έφτασε στον στόχο.",
-  "maze.successPath": "Η διαδρομή είναι έγκυρη."
+  "maze.successPath": "Η διαδρομή είναι έγκυρη.",
+  "common.cost": "Κόστος",
+  "models.refreshPricing": "Τιμές ανανέωσης",
+  "models.pricingRefreshing": "Ανανεωτικές τιμές...",
+  "models.pricingUpdated": "Τελευταία ενημέρωση τιμών: {date}",
+  "models.pricingRefreshed": "Η τιμολόγηση ανανεώθηκε. Αντιστοιχισμένο(α) μοντέλο(α) {matched} από καταχωρήσεις {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Δεν ήταν δυνατή η ανανέωση της τιμολόγησης: {error}",
+  "models.inputPrice": "Τιμή εισόδου ($ / 1 εκατομμύριο μάρκες)",
+  "models.outputPrice": "Τιμή εξόδου ($ / 1 εκατομμύριο μάρκες)",
+  "models.pricingHint": "Οι τιμές υπολογίζονται. Η τιμολόγηση του OpenRouter μπορεί να ανανεωθεί αυτόματα και μπορείτε να παρακάμψετε τις τιμές με μη αυτόματο τρόπο.",
+  "models.pricingShort": "Σε {input}/1 εκατομμύριο $ · Έξοδος {output}/1 εκατομμύριο $",
+  "stats.costs": "Εκτιμώμενο κόστος API",
+  "stats.costPerRun": "Κόστος ανά διαδρομή",
+  "models.localPricingInfo": "Τοπικός χρόνος εκτέλεσης — Η τιμολόγηση API δεν χρησιμοποιείται."
 }

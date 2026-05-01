@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Laluan tidak bermula pada titik permulaan.",
   "maze.errorWallCollision": "Perlanggaran dengan dinding.",
   "maze.errorGoal": "Jalan tidak sampai ke matlamat.",
-  "maze.successPath": "Laluan adalah sah."
+  "maze.successPath": "Laluan adalah sah.",
+  "common.cost": "kos",
+  "models.refreshPricing": "Muat semula harga",
+  "models.pricingRefreshing": "Harga menyegarkan...",
+  "models.pricingUpdated": "Harga dikemas kini terakhir: {date}",
+  "models.pricingRefreshed": "Harga disegarkan. Model {matched} dipadankan daripada masukan OpenRouter {total}.",
+  "models.pricingRefreshFailed": "Tidak dapat memuat semula harga: {error}",
+  "models.inputPrice": "Harga input ($ / 1J token)",
+  "models.outputPrice": "Harga keluaran ($ / 1J token)",
+  "models.pricingHint": "Harga dianggarkan. Harga OpenRouter boleh dimuat semula secara automatik dan anda boleh mengatasi nilai secara manual.",
+  "models.pricingShort": "Dalam {input}/1M · Keluar {output}/1M",
+  "stats.costs": "Anggaran kos API",
+  "stats.costPerRun": "Kos setiap larian",
+  "models.localPricingInfo": "Masa jalan tempatan — Harga API tidak digunakan."
 }

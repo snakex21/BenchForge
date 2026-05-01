@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "경로는 시작점에서 시작되지 않습니다.",
   "maze.errorWallCollision": "벽과의 충돌.",
   "maze.errorGoal": "길은 목표에 도달하지 못했습니다.",
-  "maze.successPath": "경로가 유효합니다."
+  "maze.successPath": "경로가 유효합니다.",
+  "common.cost": "비용",
+  "models.refreshPricing": "가격 새로 고침",
+  "models.pricingRefreshing": "상큼한 가격...",
+  "models.pricingUpdated": "가격 최종 업데이트: {date}",
+  "models.pricingRefreshed": "가격이 새로 고쳐졌습니다. {total} OpenRouter 항목과 일치하는 {matched} 모델.",
+  "models.pricingRefreshFailed": "가격을 새로 고칠 수 없습니다: {error}",
+  "models.inputPrice": "입력 가격($/1M 토큰)",
+  "models.outputPrice": "출력 가격($/1M 토큰)",
+  "models.pricingHint": "가격은 추정됩니다. OpenRouter 가격은 자동으로 새로 고쳐질 수 있으며 값을 수동으로 재정의할 수 있습니다.",
+  "models.pricingShort": "입력 {input}/1M · 출력 {output}/1M",
+  "stats.costs": "예상 API 비용",
+  "stats.costPerRun": "실행당 비용",
+  "models.localPricingInfo": "로컬 런타임 - API 가격이 사용되지 않습니다."
 }

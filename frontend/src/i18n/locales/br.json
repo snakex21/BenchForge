@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Ne grog ket an hent er poent loc'hañ.",
   "maze.errorWallCollision": "Stokadenn ouzh ur voger.",
   "maze.errorGoal": "Ne erruas ket an hent betek ar pal.",
-  "maze.successPath": "Gwir eo an hent."
+  "maze.successPath": "Gwir eo an hent.",
+  "common.cost": "Koust",
+  "models.refreshPricing": "Freskaat ar prizioù",
+  "models.pricingRefreshing": "Prizioù fresk...",
+  "models.pricingUpdated": "Prizioù hizivaet da ziwezhañ : {date}",
+  "models.pricingRefreshed": "Nevesaet eo bet ar prizioù. Ar patrom(où) {matched} heñvel diouzh enankad {total} OpenRouter.",
+  "models.pricingRefreshFailed": "N'haller ket freskaat ar prizioù : {error}",
+  "models.inputPrice": "Priz mont e-barzh ($ / 1M jedoueroù)",
+  "models.outputPrice": "Priz an disoc'h ($ / 1M jedoueroù)",
+  "models.pricingHint": "Priziet eo ar prizioù. Prizioù OpenRouter a c'hall bezañ nevesaet ent emgefre ha gallout a rit dilemel talvoudoù dre zorn.",
+  "models.pricingShort": "E {input}/1M · Er-maez {output}/1M",
+  "stats.costs": "Koustoù API priziet",
+  "stats.costPerRun": "Koust dre redadeg",
+  "models.localPricingInfo": "Amzer-redek lec'hel — N'eo ket arveret prizioù an API."
 }

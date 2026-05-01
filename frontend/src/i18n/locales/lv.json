@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Ceļš nesākas sākuma punktā.",
   "maze.errorWallCollision": "Sadursme ar sienu.",
   "maze.errorGoal": "Ceļš nesasniedza mērķi.",
-  "maze.successPath": "Ceļš ir derīgs."
+  "maze.successPath": "Ceļš ir derīgs.",
+  "common.cost": "Izmaksas",
+  "models.refreshPricing": "Refresh prices",
+  "models.pricingRefreshing": "Atsvaidzinošas cenas...",
+  "models.pricingUpdated": "Cenu pēdējo reizi atjaunināts: {date}",
+  "models.pricingRefreshed": "Cenu noteikšana ir atjaunināta. Atbilstošs(-i) {matched} modelis(-i) no {total} OpenRouter ierakstiem.",
+  "models.pricingRefreshFailed": "Nevarēja atsvaidzināt cenu: {error}",
+  "models.inputPrice": "Ievades cena ($/1 miljons marķieru)",
+  "models.outputPrice": "Izejas cena ($/1 miljons marķieru)",
+  "models.pricingHint": "Cenas ir aprēķinātas. OpenRouter cenas var atsvaidzināt automātiski, un jūs varat manuāli ignorēt vērtības.",
+  "models.pricingShort": "Maksā {input}/1M · Iziet {output}/1M",
+  "stats.costs": "Paredzamās API izmaksas",
+  "stats.costPerRun": "Maksa par skrējienu",
+  "models.localPricingInfo": "Vietējais izpildlaiks — API cenas netiek izmantotas."
 }

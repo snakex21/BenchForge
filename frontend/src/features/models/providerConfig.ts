@@ -35,6 +35,7 @@ export const PROVIDER_SCAN_OVERRIDES: Partial<Record<ApiProvider, ProviderScanOv
   moonshot: { requiresApiKey: true },
   zhipuai: { requiresApiKey: true },
   baidu: { requiresApiKey: true },
+  xiaomi: { scanUnsupported: true, requiresApiKey: true },
   yi: { requiresApiKey: true },
   perplexity: { scanUnsupported: true },
   minimax: { scanUnsupported: true },
@@ -44,7 +45,7 @@ export const PROVIDER_GROUPS: ProviderGroup[] = [
   { label: 'Lokalne', options: [
     { value: 'lmstudio', label: 'LMStudio', baseUrl: 'http://localhost:1234/v1', modelPlaceholder: 'nazwa-modelu (z listy w LMStudio)', apiKeyPlaceholder: 'Nie wymagany' },
     { value: 'ollama', label: 'Ollama', baseUrl: 'http://localhost:11434/v1', modelPlaceholder: 'llama3.3', apiKeyPlaceholder: 'Nie wymagany' },
-    { value: 'liquid-ai', label: 'Liquid AI / LFM lokalnie', baseUrl: 'http://localhost:1234/v1', modelPlaceholder: 'LiquidAI/LFM2.5-1.2B-Instruct-GGUF, LiquidAI/LFM2-2.6B-GGUF, LiquidAI/LFM2-8B-A1B-GGUF', apiKeyPlaceholder: 'Nie wymagany lokalnie' },
+    { value: 'vllm', label: 'vLLM', baseUrl: 'http://localhost:8000/v1', modelPlaceholder: 'nazwa-modelu z vLLM', apiKeyPlaceholder: 'Nie wymagany' },
   ] },
   { label: 'OpenAI', options: [{ value: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', modelPlaceholder: 'gpt-4o, gpt-4o-mini, o3, o4-mini', apiKeyPlaceholder: 'sk-...' }] },
   { label: 'Anthropic', options: [{ value: 'anthropic', label: 'Anthropic', baseUrl: 'https://api.anthropic.com/v1', modelPlaceholder: 'claude-sonnet-4-5, claude-opus-4-5', apiKeyPlaceholder: 'sk-ant-...' }] },
@@ -57,6 +58,7 @@ export const PROVIDER_GROUPS: ProviderGroup[] = [
     { value: 'moonshot', label: 'Kimi / Moonshot', baseUrl: 'https://api.moonshot.cn/v1', modelPlaceholder: 'moonshot-v1-8k, moonshot-v1-128k', apiKeyPlaceholder: 'sk-...' },
     { value: 'zhipuai', label: 'Z.ai / GLM', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', modelPlaceholder: 'glm-4-plus, glm-4-air', apiKeyPlaceholder: '...' },
     { value: 'baidu', label: 'Baidu / ERNIE', baseUrl: 'https://qianfan.baidubce.com/v2', modelPlaceholder: 'ernie-4.5-turbo-128k', apiKeyPlaceholder: '...' },
+    { value: 'xiaomi', label: 'Xiaomi / MiMo', baseUrl: 'https://openrouter.ai/api/v1', modelPlaceholder: 'xiaomi/mimo-v2.5, xiaomi/mimo-v2.5-pro', apiKeyPlaceholder: 'sk-or-... lub klucz kompatybilny' },
     { value: 'yi', label: '01.AI / Yi', baseUrl: 'https://api.lingyiwanwu.com/v1', modelPlaceholder: 'yi-large, yi-medium', apiKeyPlaceholder: '...' },
   ] },
   { label: 'Agregatorzy / Gateway', options: [
@@ -74,7 +76,7 @@ export const PROVIDER_GROUPS: ProviderGroup[] = [
 
 export const PROVIDER_OPTIONS = PROVIDER_GROUPS.flatMap((group) => group.options)
 export const PROVIDER_PICKER_GROUPS = PROVIDER_GROUPS
-  .map((group) => ({ ...group, options: group.options.filter((provider) => provider.value !== 'liquid-ai') }))
+  .map((group) => ({ ...group, options: group.options }))
   .filter((group) => group.options.length > 0)
 export const PROVIDER_LABELS = Object.fromEntries(PROVIDER_OPTIONS.map((provider) => [provider.value, provider.label])) as Record<ApiProvider, string>
 export const PROVIDER_PRESETS = Object.fromEntries(PROVIDER_OPTIONS.map((provider) => [provider.value, provider.baseUrl])) as Record<ApiProvider, string>

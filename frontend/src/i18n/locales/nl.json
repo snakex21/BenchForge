@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Het pad begint niet bij het startpunt.",
   "maze.errorWallCollision": "Botsing met een muur.",
   "maze.errorGoal": "Het pad bereikte het doel niet.",
-  "maze.successPath": "Pad is geldig."
+  "maze.successPath": "Pad is geldig.",
+  "common.cost": "Kosten",
+  "models.refreshPricing": "Prijzen vernieuwen",
+  "models.pricingRefreshing": "Verfrissende prijzen...",
+  "models.pricingUpdated": "Prijzen laatst bijgewerkt: {date}",
+  "models.pricingRefreshed": "Prijzen vernieuwd. Matched {matched}-model(len) van {total} OpenRouter-items.",
+  "models.pricingRefreshFailed": "Kan prijzen niet vernieuwen: {error}",
+  "models.inputPrice": "Invoerprijs ($ / 1 miljoen tokens)",
+  "models.outputPrice": "Afvoerprijs ($ / 1 miljoen tokens)",
+  "models.pricingHint": "Prijzen zijn geschat. OpenRouter-prijzen kunnen automatisch worden vernieuwd en u kunt waarden handmatig overschrijven.",
+  "models.pricingShort": "In {input}/1M · Uit {output}/1M",
+  "stats.costs": "Geschatte API-kosten",
+  "stats.costPerRun": "Kosten per run",
+  "models.localPricingInfo": "Lokale runtime: er worden geen API-prijzen gebruikt."
 }

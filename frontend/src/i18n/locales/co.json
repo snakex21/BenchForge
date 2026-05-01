@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "A strada ùn principia micca à u puntu di partenza.",
   "maze.errorWallCollision": "Scontru cù un muru.",
   "maze.errorGoal": "A strada ùn hà micca ghjuntu à u scopu.",
-  "maze.successPath": "A strada hè valida."
+  "maze.successPath": "A strada hè valida.",
+  "common.cost": "Costu",
+  "models.refreshPricing": "Refresh prezzi",
+  "models.pricingRefreshing": "Prezzi rinfrescante...",
+  "models.pricingUpdated": "L'ultima aghjurnazione di u prezzu: {date}",
+  "models.pricingRefreshed": "Prezzi rinfriscati. Modelli {matched} cumpatibili da e entrate {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Ùn pudia micca rinfriscà i prezzi: {error}",
+  "models.inputPrice": "Prezzu di input ($ / 1M tokens)",
+  "models.outputPrice": "Prezzu di output ($ / 1M tokens)",
+  "models.pricingHint": "I prezzi sò stimati. I prezzi OpenRouter ponu esse rinfrescati automaticamente è pudete annullà i valori manualmente.",
+  "models.pricingShort": "In {input}/1M · Fora {output}/1M",
+  "stats.costs": "Costi API stimati",
+  "stats.costPerRun": "Cost per run",
+  "models.localPricingInfo": "Runtime locale - U prezzu di l'API ùn hè micca utilizatu."
 }

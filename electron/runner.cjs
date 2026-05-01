@@ -377,7 +377,7 @@ function streamProviderPrompt(provider, model, prompt, handlers, imageBase64 = n
       model,
       prompt,
       handlers.onChunk,
-      (response, tokensUsed) => resolve({ response, tokens_used: tokensUsed }),
+      (response, tokensUsed, usageDetails = null) => resolve({ response, tokens_used: tokensUsed, input_tokens: usageDetails?.input_tokens ?? null, output_tokens: usageDetails?.output_tokens ?? null }),
       (error) => reject(new Error(typeof error === 'string' ? error : error?.message || 'Unknown streaming error.')),
       imageBase64,
       signal,
@@ -404,13 +404,13 @@ async function runBenchmark(modelId, benchmarkId) {
     const durationMs = Date.now() - start
     if (result.response === '__MANUAL__') return { results: [{ benchmark_id: benchmarkId, score: null, response: null, is_manual: true, error: null, attempt_number: attempt }], summary: { total: 1, completed: 0, avgScore: null }, error: null }
     const evaluation = await evaluateScore(benchmark, result.response, { repoSandboxRoots, useDocker: sandboxUseDocker })
-    if (evaluation.is_manual || evaluation.needs_verify) return { results: [{ benchmark_id: benchmarkId, score: null, response: result.response, tokens_used: result.tokens_used, duration_ms: durationMs, is_manual: true, needs_verify: evaluation.needs_verify, error: null, attempt_number: attempt }], summary: { total: 1, completed: 0, avgScore: null }, error: null }
+    if (evaluation.is_manual || evaluation.needs_verify) return { results: [{ benchmark_id: benchmarkId, score: null, response: result.response, tokens_used: result.tokens_used, input_tokens: result.input_tokens ?? null, output_tokens: result.output_tokens ?? null, duration_ms: durationMs, is_manual: true, needs_verify: evaluation.needs_verify, error: null, attempt_number: attempt }], summary: { total: 1, completed: 0, avgScore: null }, error: null }
     if (evaluation.error && attempt < attempts) continue
     const scoreValue = evaluation.score !== null && evaluation.score !== undefined ? evaluation.score : 0
     const score = normalizeBenchmarkScore(benchmark, scoreValue, attempt, attempts)
     const sandboxThinking = evaluation.sandbox ? `## Sandbox evaluation\n\n\`\`\`json\n${JSON.stringify(evaluation.sandbox, null, 2)}\n\`\`\`` : null
-    const created = addResult({ model_id: modelId, benchmark_id: benchmarkId, score, notes: result.response, thinking_notes: sandboxThinking, attempt_number: attempt, tokens_used: result.tokens_used, duration_ms: durationMs })
-    return { results: [{ benchmark_id: benchmarkId, result_id: created.id, score: String(score), response: result.response, tokens_used: result.tokens_used, duration_ms: durationMs, is_manual: false, error: null, attempt_number: attempt }], summary: { total: 1, completed: 1, avgScore: Number(score) || 0 }, error: null }
+    const created = addResult({ model_id: modelId, benchmark_id: benchmarkId, score, notes: result.response, thinking_notes: sandboxThinking, attempt_number: attempt, tokens_used: result.tokens_used, input_tokens: result.input_tokens ?? null, output_tokens: result.output_tokens ?? null, duration_ms: durationMs })
+    return { results: [{ benchmark_id: benchmarkId, result_id: created.id, score: String(score), response: result.response, tokens_used: result.tokens_used, input_tokens: result.input_tokens ?? null, output_tokens: result.output_tokens ?? null, estimated_cost_usd: created.estimated_cost_usd ?? null, duration_ms: durationMs, is_manual: false, error: null, attempt_number: attempt }], summary: { total: 1, completed: 1, avgScore: Number(score) || 0 }, error: null }
   }
 }
 
@@ -536,8 +536,8 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
         const scoreValue = evaluation.score !== null && evaluation.score !== undefined ? evaluation.score : 0
         const score = normalizeBenchmarkScore(task, scoreValue, attempt, attempts)
         const sandboxThinking = evaluation.sandbox ? `${taskThinking || ''}\n\n## Sandbox evaluation\n\n\`\`\`json\n${JSON.stringify(evaluation.sandbox, null, 2)}\n\`\`\`` : taskThinking
-        const createdTaskResult = addResult({ model_id: modelId, benchmark_id: benchmarkId, task_id: task.id || null, run_session_id: session.id, score, notes: result.response, thinking_notes: sandboxThinking, attempt_number: attempt, tokens_used: result.tokens_used, duration_ms: totalTaskDurationMs })
-        const completed = { benchmark_id: benchmarkId, task_id: task.id, result_id: createdTaskResult.id, score: String(score), response: result.response, thinking: sandboxThinking, tokens_used: result.tokens_used, duration_ms: totalTaskDurationMs, is_manual: false, error: evaluation.error || null, attempt_number: attempt }
+        const createdTaskResult = addResult({ model_id: modelId, benchmark_id: benchmarkId, task_id: task.id || null, run_session_id: session.id, score, notes: result.response, thinking_notes: sandboxThinking, attempt_number: attempt, tokens_used: result.tokens_used, input_tokens: result.input_tokens ?? null, output_tokens: result.output_tokens ?? null, duration_ms: totalTaskDurationMs })
+        const completed = { benchmark_id: benchmarkId, task_id: task.id, result_id: createdTaskResult.id, score: String(score), response: result.response, thinking: sandboxThinking, tokens_used: result.tokens_used, input_tokens: result.input_tokens ?? null, output_tokens: result.output_tokens ?? null, estimated_cost_usd: createdTaskResult.estimated_cost_usd ?? null, duration_ms: totalTaskDurationMs, is_manual: false, error: evaluation.error || null, attempt_number: attempt }
         allResults.push(completed)
         if (task.id && !completedIdSet.has(task.id)) {
           completedIds.push(task.id)
@@ -553,6 +553,8 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
     let aggregateResult = null
     if (aggregateScore !== null) {
       const totalTokens = completedTaskResults.reduce((sum, item) => sum + (Number(item.tokens_used) || 0), 0)
+      const totalInputTokens = completedTaskResults.reduce((sum, item) => sum + (Number(item.input_tokens) || 0), 0)
+      const totalOutputTokens = completedTaskResults.reduce((sum, item) => sum + (Number(item.output_tokens) || 0), 0)
       const totalDuration = completedTaskResults.reduce((sum, item) => sum + (Number(item.duration_ms) || 0), 0)
         aggregateResult = addResult({
         model_id: modelId,
@@ -564,6 +566,8 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
           thinking_notes: buildBenchmarkThinkingNotes(completedTaskResults, runnableTasks),
           attempt_number: 1,
         tokens_used: totalTokens || null,
+        input_tokens: totalInputTokens || null,
+        output_tokens: totalOutputTokens || null,
         duration_ms: totalDuration || null,
       })
     }
@@ -572,7 +576,7 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
     finishRunSession(session.id)
     const summary = { total: runnableTasks.length, completed: completedTaskResults.length, avgScore }
     if (aggregateResult) {
-      allResults.push({ benchmark_id: benchmarkId, task_id: null, result_id: aggregateResult.id, score: String(aggregateScore), response: aggregateResult.notes, thinking: aggregateResult.thinking_notes, tokens_used: aggregateResult.tokens_used, duration_ms: aggregateResult.duration_ms, is_manual: false, error: null, attempt_number: 1, aggregate: true })
+      allResults.push({ benchmark_id: benchmarkId, task_id: null, result_id: aggregateResult.id, score: String(aggregateScore), response: aggregateResult.notes, thinking: aggregateResult.thinking_notes, tokens_used: aggregateResult.tokens_used, input_tokens: aggregateResult.input_tokens ?? null, output_tokens: aggregateResult.output_tokens ?? null, estimated_cost_usd: aggregateResult.estimated_cost_usd ?? null, duration_ms: aggregateResult.duration_ms, is_manual: false, error: null, attempt_number: 1, aggregate: true })
     }
     sendEvent('benchmark:done', { summary, results: allResults, error: null })
     return { results: allResults, summary, error: null }

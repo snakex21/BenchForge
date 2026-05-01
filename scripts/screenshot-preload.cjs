@@ -128,7 +128,7 @@ contextBridge.exposeInMainWorld('db', {
   clearAllData: async () => true,
   importAll: async () => true,
   testConnection: async () => ({ ok: true, error: null }),
-  scanModels: async () => ({ lmstudio: ['qwen3-30b-a3b'], ollama: ['llama3.1'], errors: {} }),
+  scanModels: async () => ({ lmstudio: ['qwen3-30b-a3b'], ollama: ['llama3.1'], vllm: ['meta-llama/Llama-3.1-8B-Instruct'], errors: {} }),
   sendPrompt: async () => ({ response: 'Sample response', tokens_used: 120 }),
   runBenchmark: async () => ({ response: 'Sample response', score: '92' }),
   runBenchmarkStreaming: async () => ({ started: true }),

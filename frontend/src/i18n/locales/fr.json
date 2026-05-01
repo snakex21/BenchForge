@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Le chemin ne commence pas au point de départ.",
   "maze.errorWallCollision": "Collision avec un mur.",
   "maze.errorGoal": "Le chemin n'a pas atteint le but.",
-  "maze.successPath": "Le chemin est valide."
+  "maze.successPath": "Le chemin est valide.",
+  "common.cost": "Coût",
+  "models.refreshPricing": "Actualiser les prix",
+  "models.pricingRefreshing": "Des prix rafraîchissants...",
+  "models.pricingUpdated": "Dernier prix mis à jour : {date}",
+  "models.pricingRefreshed": "Tarification rafraîchie. Modèle(s) {matched} correspondant(s) aux entrées {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Impossible d'actualiser les prix : {error}",
+  "models.inputPrice": "Prix ​​d'entrée ($ / 1 million de jetons)",
+  "models.outputPrice": "Prix ​​de sortie ($/1 million de jetons)",
+  "models.pricingHint": "Les prix sont estimés. Les tarifs OpenRouter peuvent être actualisés automatiquement et vous pouvez remplacer les valeurs manuellement.",
+  "models.pricingShort": "Entrée {input}/1 M $ · Sortie {output} $/1 M",
+  "stats.costs": "Coûts estimés de l'API",
+  "stats.costPerRun": "Coût par exécution",
+  "models.localPricingInfo": "Exécution locale : la tarification de l'API n'est pas utilisée."
 }

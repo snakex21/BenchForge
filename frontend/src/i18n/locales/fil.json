@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Ang landas ay hindi magsisimula sa panimulang punto.",
   "maze.errorWallCollision": "Pagbangga sa isang pader.",
   "maze.errorGoal": "Ang landas ay hindi umabot sa layunin.",
-  "maze.successPath": "Ang landas ay wasto."
+  "maze.successPath": "Ang landas ay wasto.",
+  "common.cost": "Gastos",
+  "models.refreshPricing": "I-refresh ang mga presyo",
+  "models.pricingRefreshing": "Nire-refresh ang mga presyo...",
+  "models.pricingUpdated": "Huling na-update ang presyo: {date}",
+  "models.pricingRefreshed": "Na-refresh ang pagpepresyo. Katugmang {matched} (mga) modelo mula sa {total} OpenRouter entries.",
+  "models.pricingRefreshFailed": "Hindi ma-refresh ang pagpepresyo: {error}",
+  "models.inputPrice": "Presyo ng input ($ / 1M token)",
+  "models.outputPrice": "Presyo ng output ($ / 1M token)",
+  "models.pricingHint": "Tinatantya ang mga presyo. Maaaring awtomatikong i-refresh ang pagpepresyo ng OpenRouter at maaari mong manu-manong i-override ang mga halaga.",
+  "models.pricingShort": "Sa {input}/1M · Out {output}/1M",
+  "stats.costs": "Tinantyang mga gastos sa API",
+  "stats.costPerRun": "Cost per run",
+  "models.localPricingInfo": "Lokal na runtime — Hindi ginagamit ang pagpepresyo ng API."
 }

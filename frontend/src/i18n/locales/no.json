@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Stien starter ikke ved startpunktet.",
   "maze.errorWallCollision": "Kollisjon med en vegg.",
   "maze.errorGoal": "Stien nådde ikke målet.",
-  "maze.successPath": "Banen er gyldig."
+  "maze.successPath": "Banen er gyldig.",
+  "common.cost": "Koste",
+  "models.refreshPricing": "Oppdater prisene",
+  "models.pricingRefreshing": "Forfriskende priser...",
+  "models.pricingUpdated": "Priser sist oppdatert: {date}",
+  "models.pricingRefreshed": "Prisene er oppdatert. Matchet {matched}-modell(er) fra {total} OpenRouter-oppføringer.",
+  "models.pricingRefreshFailed": "Kunne ikke oppdatere priser: {error}",
+  "models.inputPrice": "Inndatapris ($ / 1 million tokens)",
+  "models.outputPrice": "Utgangspris ($ / 1 million tokens)",
+  "models.pricingHint": "Prisene er estimert. OpenRouter-priser kan oppdateres automatisk, og du kan overstyre verdier manuelt.",
+  "models.pricingShort": "Inn {input}/1M · Ut {output}/1M",
+  "stats.costs": "Anslåtte API-kostnader",
+  "stats.costPerRun": "Kostnad per kjøring",
+  "models.localPricingInfo": "Lokal kjøretid – API-priser brukes ikke."
 }

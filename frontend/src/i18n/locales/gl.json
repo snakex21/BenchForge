@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "O camiño non comeza no punto de partida.",
   "maze.errorWallCollision": "Choque cunha parede.",
   "maze.errorGoal": "O camiño non chegou á meta.",
-  "maze.successPath": "O camiño é válido."
+  "maze.successPath": "O camiño é válido.",
+  "common.cost": "Custo",
+  "models.refreshPricing": "Actualizar prezos",
+  "models.pricingRefreshing": "Precios refrescantes...",
+  "models.pricingUpdated": "Última actualización de prezos: {date}",
+  "models.pricingRefreshed": "Actualizouse o prezo. Modelos {matched} coincidentes das entradas de OpenRouter {total}.",
+  "models.pricingRefreshFailed": "Non se puido actualizar o prezo: {error}",
+  "models.inputPrice": "Prezo de entrada ($/1 millón de tokens)",
+  "models.outputPrice": "Prezo de saída ($/1 millón de fichas)",
+  "models.pricingHint": "Os prezos son estimados. Os prezos de OpenRouter pódense actualizar automaticamente e podes anular os valores manualmente.",
+  "models.pricingShort": "En {input}/1M · Saída {output}/1M",
+  "stats.costs": "Custos estimados da API",
+  "stats.costPerRun": "Custo por carreira",
+  "models.localPricingInfo": "Tempo de execución local: non se usa o prezo da API."
 }

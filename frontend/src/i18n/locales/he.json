@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "השביל לא מתחיל בנקודת ההתחלה.",
   "maze.errorWallCollision": "התנגשות בקיר.",
   "maze.errorGoal": "הדרך לא הגיעה למטרה.",
-  "maze.successPath": "הנתיב תקף."
+  "maze.successPath": "הנתיב תקף.",
+  "common.cost": "עֲלוּת",
+  "models.refreshPricing": "רענון מחירים",
+  "models.pricingRefreshing": "מחירים מרעננים...",
+  "models.pricingUpdated": "התמחור עודכן לאחרונה: {date}",
+  "models.pricingRefreshed": "התמחור רענן. תואם דגמי {matched} מתוך ערכי {total} OpenRouter.",
+  "models.pricingRefreshFailed": "לא ניתן היה לרענן את התמחור: {error}",
+  "models.inputPrice": "מחיר קלט ($ / מיליון אסימונים)",
+  "models.outputPrice": "מחיר פלט ($ / מיליון אסימונים)",
+  "models.pricingHint": "המחירים משוערים. ניתן לרענן את תמחור OpenRouter באופן אוטומטי ותוכל לעקוף ערכים באופן ידני.",
+  "models.pricingShort": "ב-{input}/1M · Out {output}/1M",
+  "stats.costs": "עלויות API משוערות",
+  "stats.costPerRun": "עלות לריצה",
+  "models.localPricingInfo": "זמן ריצה מקומי - לא נעשה שימוש בתמחור API."
 }

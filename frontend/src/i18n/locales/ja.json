@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "パスは始点から始まりません。",
   "maze.errorWallCollision": "壁に衝突。",
   "maze.errorGoal": "パスはゴールに到達しませんでした。",
-  "maze.successPath": "パスは有効です。"
+  "maze.successPath": "パスは有効です。",
+  "common.cost": "料金",
+  "models.refreshPricing": "価格を更新する",
+  "models.pricingRefreshing": "さわやかな価格...",
+  "models.pricingUpdated": "価格の最終更新日: {date}",
+  "models.pricingRefreshed": "価格を更新しました。 {total} OpenRouter エントリの {matched} モデルと一致しました。",
+  "models.pricingRefreshFailed": "価格を更新できませんでした: {error}",
+  "models.inputPrice": "入力価格 ($ / 100 万トークン)",
+  "models.outputPrice": "出力価格 ($ / 100万トークン)",
+  "models.pricingHint": "価格は推定です。 OpenRouter の価格は自動的に更新でき、値を手動で上書きできます。",
+  "models.pricingShort": "イン {input}/1M · アウト {output}/1M",
+  "stats.costs": "推定 API コスト",
+  "stats.costPerRun": "実行あたりのコスト",
+  "models.localPricingInfo": "ローカル ランタイム — API 価格設定は使用されません。"
 }
