@@ -103,23 +103,45 @@ const TOTAL_TASKS = {
   'swebench-full': 2294,
   'swebench-verified': 500,
   'swebench-multilingual': 300,
-  'swebench-multimodal': 517,
-  'swebench-pro': 20,
+  'swebench-multimodal': 510,
+  'swebench-pro': 4,
 }
 
 function enrichCatalogItem(item) {
+  const knownTotal = getKnownPackTaskCount(item.id)
+  const totalTasks = TOTAL_TASKS[item.id] || knownTotal || item.defaultLimit || item.recommendedLimit || 0
+  const defaultLimit = Math.min(item.defaultLimit || totalTasks, totalTasks)
+  const recommendedLimit = Math.min(item.recommendedLimit || defaultLimit, totalTasks)
   return {
     ...item,
-    totalTasks: TOTAL_TASKS[item.id] || item.defaultLimit || item.recommendedLimit || 0,
+    defaultLimit,
+    recommendedLimit,
+    totalTasks,
   }
+}
+
+function getKnownPackTaskCount(id) {
+  if (id === 'swebench-pro') return 4
+  if (id === 'mmlu-mini') return 6
+  if (id === 'voxelbench-mini') return 4
+  if (id === 'maze-tools-mini') return 4
+  if (id === 'mcp-filesystem-mini') return 4
+  if (id === 'mcp-sqlite-mini') return 4
+  if (id === 'mcp-browser-search-mini') return 4
+  if (id === 'mcp-git-mini') return 4
+  if (CHOICE_PACKS[id]) return CHOICE_PACKS[id].length
+  if (EXACT_PACKS[id]) return EXACT_PACKS[id].length
+  if (CODE_PACKS[id]) return CODE_PACKS[id].length
+  if (MANUAL_PACKS[id]) return MANUAL_PACKS[id].length
+  return 0
 }
 
 const HUMAN_EVAL_URL = 'https://raw.githubusercontent.com/openai/human-eval/master/data/HumanEval.jsonl.gz'
 const MBPP_URL = 'https://raw.githubusercontent.com/google-research/google-research/master/mbpp/mbpp.jsonl'
 const GSM8K_URL = 'https://raw.githubusercontent.com/openai/grade-school-math/master/grade_school_math/data/test.jsonl'
-const SWEBENCH_ROWS_URL = 'https://datasets-server.huggingface.co/rows?dataset=princeton-nlp%2FSWE-bench_Lite&config=default&split=test&offset=0&length='
 const HF_ROWS_BASE = 'https://datasets-server.huggingface.co/rows'
 const SWEBENCH_DATASETS = {
+  'swebench-lite': { dataset: 'princeton-nlp/SWE-bench_Lite', config: 'default', split: 'test', name: 'SWE-bench Lite', suiteName: 'SWE-bench Lite' },
   'swebench-full': { dataset: 'princeton-nlp/SWE-bench', config: 'default', split: 'test', name: 'SWE-bench Full', suiteName: 'SWE-bench Full' },
   'swebench-verified': { dataset: 'princeton-nlp/SWE-bench_Verified', config: 'default', split: 'test', name: 'SWE-bench Verified', suiteName: 'SWE-bench Verified' },
   'swebench-multilingual': { dataset: 'SWE-bench/SWE-bench_Multilingual', config: 'default', split: 'test', name: 'SWE-bench Multilingual', suiteName: 'SWE-bench Multilingual' },
@@ -888,12 +910,6 @@ async function downloadBenchmarkPack(id, options = {}) {
     if (id === 'gsm8k') {
       const records = parseJsonl(await fetchText(GSM8K_URL))
       return { ok: true, fromFallback: false, pack: catalogItem, benchmarks: [convertGsm8k(records, limit)] }
-    }
-    if (id === 'swebench-lite') {
-      const payload = await fetchJson(`${SWEBENCH_ROWS_URL}${encodeURIComponent(String(limit))}`)
-      const rows = Array.isArray(payload?.rows) ? payload.rows : []
-      if (rows.length === 0) throw new Error('SWE-bench rows response is empty')
-      return { ok: true, fromFallback: false, pack: catalogItem, benchmarks: [convertSwebenchRows(rows, limit)] }
     }
     if (SWEBENCH_DATASETS[id]) {
       const rows = await fetchHfRows(SWEBENCH_DATASETS[id], limit)
