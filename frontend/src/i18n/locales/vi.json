@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Con đường không bắt đầu ở điểm bắt đầu.",
   "maze.errorWallCollision": "Va chạm với một bức tường.",
   "maze.errorGoal": "Con đường không đạt được mục tiêu.",
-  "maze.successPath": "Đường dẫn là hợp lệ."
+  "maze.successPath": "Đường dẫn là hợp lệ.",
+  "common.cost": "Trị giá",
+  "models.refreshPricing": "Làm mới giá",
+  "models.pricingRefreshing": "Giá tươi mới...",
+  "models.pricingUpdated": "Giá cập nhật lần cuối: {date}",
+  "models.pricingRefreshed": "Đã làm mới giá. (Các) mô hình {matched} trùng khớp từ các mục nhập {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Không thể làm mới giá: {error}",
+  "models.inputPrice": "Giá đầu vào ($/1M token)",
+  "models.outputPrice": "Giá đầu ra ($/1M token)",
+  "models.pricingHint": "Giá được ước tính. Giá OpenRouter có thể được làm mới tự động và bạn có thể ghi đè các giá trị theo cách thủ công.",
+  "models.pricingShort": "Vào {input}/1 triệu · Ra {output}/1 triệu",
+  "stats.costs": "Chi phí API ước tính",
+  "stats.costPerRun": "Chi phí mỗi lần chạy",
+  "models.localPricingInfo": "Thời gian chạy cục bộ - Giá API không được sử dụng."
 }

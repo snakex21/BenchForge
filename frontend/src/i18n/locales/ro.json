@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Calea nu începe din punctul de plecare.",
   "maze.errorWallCollision": "Ciocnire cu un zid.",
   "maze.errorGoal": "Calea nu a atins scopul.",
-  "maze.successPath": "Calea este validă."
+  "maze.successPath": "Calea este validă.",
+  "common.cost": "Cost",
+  "models.refreshPricing": "Actualizează prețurile",
+  "models.pricingRefreshing": "Preturi racoritoare...",
+  "models.pricingUpdated": "Ultima actualizare a prețurilor: {date}",
+  "models.pricingRefreshed": "Prețul a fost actualizat. Model(e) potrivit(e) {matched} din intrările {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Nu s-a putut actualiza prețul: {error}",
+  "models.inputPrice": "Preț de intrare ($ / 1 milion de jetoane)",
+  "models.outputPrice": "Preț de ieșire ($ / 1 milion de jetoane)",
+  "models.pricingHint": "Preturile sunt estimative. Prețurile OpenRouter pot fi reîmprospătate automat și puteți modifica manual valorile.",
+  "models.pricingShort": "În {input}/1M · Ieșire {output}/1M",
+  "stats.costs": "Costuri API estimate",
+  "stats.costPerRun": "Cost pe cursă",
+  "models.localPricingInfo": "Timp de rulare local — prețul API nu este utilizat."
 }

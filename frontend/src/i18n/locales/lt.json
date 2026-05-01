@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Kelias prasideda ne nuo pradžios taško.",
   "maze.errorWallCollision": "Susidūrimas su siena.",
   "maze.errorGoal": "Kelias nepasiekė tikslo.",
-  "maze.successPath": "Kelias galioja."
+  "maze.successPath": "Kelias galioja.",
+  "common.cost": "Kaina",
+  "models.refreshPricing": "Atnaujinti kainas",
+  "models.pricingRefreshing": "Naujos kainos...",
+  "models.pricingUpdated": "Kainos paskutinį kartą atnaujintos: {date}",
+  "models.pricingRefreshed": "Kainos atnaujintos. Atitiko {matched} modelį (-ius) iš {total} OpenRouter įrašų.",
+  "models.pricingRefreshFailed": "Nepavyko atnaujinti kainos: {error}",
+  "models.inputPrice": "Įvesties kaina ($ / 1 mln. žetonų)",
+  "models.outputPrice": "Išvesties kaina ($ / 1 mln. žetonų)",
+  "models.pricingHint": "Kainos numatytos. OpenRouter kainodara gali būti atnaujinta automatiškai, o vertes galite nepaisyti rankiniu būdu.",
+  "models.pricingShort": "{input}/1M · Išeina {output}/1M",
+  "stats.costs": "Apskaičiuotos API išlaidos",
+  "stats.costPerRun": "Kaina už bėgimą",
+  "models.localPricingInfo": "Vietinis vykdymo laikas – API kainodara nenaudojama."
 }

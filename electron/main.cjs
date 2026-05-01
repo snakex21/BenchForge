@@ -53,6 +53,7 @@ const { getSecretStoreStatus } = require('./secretStore.cjs')
 const { getDataPath } = require('./paths.cjs')
 const { DEFAULT_REPO: UPDATE_REPO, downloadLatestAsset, getLatestRelease } = require('./updateChecker.cjs')
 const { applyPortableUpdate } = require('./portableUpdater.cjs')
+const { getPricingStatus, refreshOpenRouterPricing, refreshOpenRouterPricingIfStale } = require('./pricing.cjs')
 
 const rendererUrl = process.env.ELECTRON_RENDERER_URL || process.env.VITE_DEV_SERVER_URL || ''
 const isDev = Boolean(rendererUrl)
@@ -67,7 +68,7 @@ async function getHealthCheck() {
   const environment = await checkEnvironment()
   const models = getModels()
   const apiModels = models.filter((model) => model.mode === 'api')
-  const localProviders = new Set(['lmstudio', 'ollama', 'liquid-ai'])
+  const localProviders = new Set(['lmstudio', 'ollama', 'vllm'])
   const remoteApiModels = apiModels.filter((model) => model.provider && !localProviders.has(model.provider))
   const missingKeyModels = remoteApiModels.filter((model) => !String(model.api_key || '').trim())
   const mcpServers = getPreference('mcp_servers') || []
@@ -147,6 +148,7 @@ async function getHealthCheck() {
 const DEFAULT_SCAN_ENDPOINTS = [
   { key: 'lmstudio', name: 'LMStudio', url: 'http://localhost:1234/v1', type: 'openai' },
   { key: 'ollama', name: 'Ollama', url: 'http://localhost:11434', type: 'ollama' },
+  { key: 'vllm', name: 'vLLM', url: 'http://localhost:8000/v1', type: 'openai' },
 ]
 
 function normalizeScanUrl(url, suffix) {
@@ -279,6 +281,8 @@ ipcMain.handle('app:open-external', async (_, url) => {
 ipcMain.handle('updates:check', async (_, payload) => getLatestRelease({ repo: payload?.repo || UPDATE_REPO, token: getGithubTokenPreference(), currentVersion: app.getVersion() }))
 ipcMain.handle('updates:download', async (_, payload) => downloadLatestAsset({ repo: payload?.repo || UPDATE_REPO, token: getGithubTokenPreference(), currentVersion: app.getVersion(), assetName: payload?.assetName || null, kind: payload?.kind || 'zip' }))
 ipcMain.handle('updates:apply-portable', async (_, payload) => applyPortableUpdate({ repo: payload?.repo || UPDATE_REPO, token: getGithubTokenPreference(), currentVersion: app.getVersion(), assetName: payload?.assetName || null }))
+ipcMain.handle('pricing:status', () => getPricingStatus())
+ipcMain.handle('pricing:refresh-openrouter', async () => refreshOpenRouterPricing({ apply: true }))
 
 ipcMain.handle('files:save-json', async (_, payload) => {
   const { canceled, filePath } = await dialog.showSaveDialog({
@@ -442,7 +446,7 @@ ipcMain.handle('models:scan', async (_, payload) => {
     }))
     : DEFAULT_SCAN_ENDPOINTS
 
-  const result = { lmstudio: [], ollama: [], errors: {} }
+  const result = { lmstudio: [], ollama: [], vllm: [], errors: {} }
 
   await Promise.all(endpoints.map(async (endpoint) => {
     const key = endpoint.key || String(endpoint.name || '').toLowerCase()
@@ -482,6 +486,8 @@ ipcMain.handle('model:send-prompt', async (_, payload) => {
   return {
     response: result.response,
     tokens_used: result.tokens_used,
+    input_tokens: result.input_tokens ?? null,
+    output_tokens: result.output_tokens ?? null,
     is_manual: result.response === '__MANUAL__',
   }
 })
@@ -603,6 +609,7 @@ ipcMain.handle('benchmark:submit-manual-batch', async (_, payload) => submitManu
 app.whenReady().then(() => {
   initDb()
   createMainWindow()
+  void refreshOpenRouterPricingIfStale().catch((error) => console.warn('[pricing] Auto refresh failed:', error))
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

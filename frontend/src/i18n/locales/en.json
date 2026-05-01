@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "The path does not start at the start point.",
   "maze.errorWallCollision": "Collision with a wall.",
   "maze.errorGoal": "The path did not reach the goal.",
-  "maze.successPath": "Path is valid."
+  "maze.successPath": "Path is valid.",
+  "common.cost": "Cost",
+  "models.refreshPricing": "Refresh prices",
+  "models.pricingRefreshing": "Refreshing prices...",
+  "models.pricingUpdated": "Pricing last updated: {date}",
+  "models.pricingRefreshed": "Pricing refreshed. Matched {matched} model(s) from {total} OpenRouter entries.",
+  "models.pricingRefreshFailed": "Could not refresh pricing: {error}",
+  "models.inputPrice": "Input price ($ / 1M tokens)",
+  "models.outputPrice": "Output price ($ / 1M tokens)",
+  "models.pricingHint": "Prices are estimated. OpenRouter pricing can be refreshed automatically and you can override values manually.",
+  "models.pricingShort": "In {input}/1M · Out {output}/1M",
+  "stats.costs": "Estimated API costs",
+  "stats.costPerRun": "Cost per run",
+  "models.localPricingInfo": "Local runtime — API pricing is not used."
 }

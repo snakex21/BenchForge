@@ -21,6 +21,8 @@ interface BenchForgeDesktopApi {
   checkForUpdates: (payload?: { repo?: string }) => Promise<{ ok: boolean; noRelease?: boolean; message?: string; repo: string; currentVersion: string; latestVersion: string; updateAvailable: boolean; tagName: string | null; name: string | null; body: string; htmlUrl: string; publishedAt?: string | null; prerelease: boolean; draft: boolean; assets: Array<{ id: number; name: string; size: number; downloadUrl: string; contentType?: string | null }>; recommended: { zip?: { name: string; downloadUrl: string; size: number } | null; portable?: { name: string; downloadUrl: string; size: number } | null; setup?: { name: string; downloadUrl: string; size: number } | null; checksum?: { name: string; downloadUrl: string; size: number } | null } }>
   downloadUpdate: (payload?: { repo?: string; assetName?: string | null; kind?: 'zip' | 'portable' | 'setup' }) => Promise<{ canceled: boolean; filePath?: string; assetName?: string; size?: number; sha256?: string; expectedSha256?: string | null; checksumVerified?: boolean; release?: { tagName: string; latestVersion: string; htmlUrl: string } }>
   applyPortableUpdate: (payload?: { repo?: string; assetName?: string | null }) => Promise<{ ok: boolean; willQuit: boolean; appDir: string; dataDir: string; scriptPath: string; logPath: string; downloaded: { canceled: boolean; filePath?: string; assetName?: string; size?: number; sha256?: string; expectedSha256?: string | null; checksumVerified?: boolean } }>
+  getPricingStatus: () => Promise<{ source: string; modelCount: number; updatedAt: string | null; autoRefresh: boolean; intervalHours: number }>
+  refreshOpenRouterPricing: () => Promise<{ ok: boolean; source: string; updatedAt: string; modelCount: number; matched: number; totalModels: number }>
   saveJsonFile: (payload: { defaultFileName: string; content: string }) => Promise<{ canceled: boolean; filePath?: string }>
   saveTextFile: (payload: { defaultFileName?: string; extension?: string; extensionLabel?: string; content: string }) => Promise<{ canceled: boolean; filePath?: string }>
   openJsonFile: () => Promise<{ canceled: boolean; filePath?: string; content?: string }>
@@ -77,10 +79,10 @@ interface BenchForgeDbApi {
   clearAllData: () => Promise<BenchForgeExportData>
   importAll: (payload: BenchForgeExportData) => Promise<BenchForgeExportData>
   testConnection: (payload: { modelId?: number; modelConfig?: Omit<AIModel, 'id' | 'created_at'> }) => Promise<{ ok: boolean; error: string | null }>
-  scanModels: (payload?: { endpoints?: Array<{ key?: string; name: string; url: string; type?: string; apiKey?: string; scanPath?: string; authType?: string; scanUnsupported?: boolean; requiresApiKey?: boolean }> }) => Promise<{ lmstudio: string[]; ollama: string[]; errors: Record<string, string> } & Record<string, string[] | Record<string, string>>>
-  sendPrompt: (payload: { modelId: number; prompt: string }) => Promise<{ response: string; tokens_used: number | null; is_manual: boolean }>
+  scanModels: (payload?: { endpoints?: Array<{ key?: string; name: string; url: string; type?: string; apiKey?: string; scanPath?: string; authType?: string; scanUnsupported?: boolean; requiresApiKey?: boolean }> }) => Promise<{ lmstudio: string[]; ollama: string[]; vllm: string[]; errors: Record<string, string> } & Record<string, string[] | Record<string, string>>>
+  sendPrompt: (payload: { modelId: number; prompt: string }) => Promise<{ response: string; tokens_used: number | null; input_tokens?: number | null; output_tokens?: number | null; is_manual: boolean }>
   runBenchmark: (payload: { modelId: number; benchmarkId: number }) => Promise<{
-    results?: Array<{ benchmark_id: number; score: string | null; response: string | null; tokens_used: number | null; is_manual: boolean; error: string | null }>
+    results?: Array<{ benchmark_id: number; score: string | null; response: string | null; tokens_used: number | null; input_tokens?: number | null; output_tokens?: number | null; estimated_cost_usd?: number | null; is_manual: boolean; error: string | null }>
     summary?: { total: number; completed: number; avgScore: number | null }
     score?: string | number | null
     response?: string | null

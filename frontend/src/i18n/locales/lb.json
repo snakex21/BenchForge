@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "De Wee fänkt net um Startpunkt un.",
   "maze.errorWallCollision": "Kollisioun mat enger Mauer.",
   "maze.errorGoal": "De Wee huet d'Zil net erreecht.",
-  "maze.successPath": "De Wee ass valabel."
+  "maze.successPath": "De Wee ass valabel.",
+  "common.cost": "Käschten",
+  "models.refreshPricing": "Frësch Präisser",
+  "models.pricingRefreshing": "Erfrëschend Präisser ...",
+  "models.pricingUpdated": "Präis lescht aktualiséiert: {date}",
+  "models.pricingRefreshed": "Präisser erfrëscht. Passt {matched} Modell(en) vun {total} OpenRouter Entréen.",
+  "models.pricingRefreshFailed": "Konnt d'Präisser net erfrëschen: {error}",
+  "models.inputPrice": "Input Präis ($ / 1M Tokens)",
+  "models.outputPrice": "Ausgangspräis ($ / 1M Tokens)",
+  "models.pricingHint": "Präisser sinn geschat. OpenRouter Präisser kënnen automatesch erfrëscht ginn an Dir kënnt Wäerter manuell iwwerschreiden.",
+  "models.pricingShort": "An {input}/1M · Aus {output}/1M",
+  "stats.costs": "Geschätzte API Käschten",
+  "stats.costPerRun": "Käschten pro Laf",
+  "models.localPricingInfo": "Lokal Runtime - API Präisser gëtt net benotzt."
 }

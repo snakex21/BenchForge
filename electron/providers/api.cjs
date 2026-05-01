@@ -10,6 +10,18 @@ function estimateTokens(...parts) {
   return Math.max(1, Math.ceil(text.length / 4))
 }
 
+function usageFromPayload(payload) {
+  const usage = payload?.usage || {}
+  const inputTokens = usage.prompt_tokens ?? usage.input_tokens ?? null
+  const outputTokens = usage.completion_tokens ?? usage.output_tokens ?? null
+  const totalTokens = usage.total_tokens ?? (inputTokens !== null || outputTokens !== null ? (Number(inputTokens) || 0) + (Number(outputTokens) || 0) : null)
+  return {
+    tokens_used: totalTokens ?? null,
+    input_tokens: inputTokens ?? null,
+    output_tokens: outputTokens ?? null,
+  }
+}
+
 async function fetchWithTimeout(url, options, timeoutMs) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
@@ -87,9 +99,12 @@ async function sendPrompt(modelConfig, prompt, imageBase64 = null) {
   }
 
   const payload = await response.json()
+  const usage = usageFromPayload(payload)
   return {
     response: payload?.choices?.[0]?.message?.content || '',
-    tokens_used: payload?.usage?.total_tokens ?? estimateTokens(prompt, payload?.choices?.[0]?.message?.content || ''),
+    tokens_used: usage.tokens_used ?? estimateTokens(prompt, payload?.choices?.[0]?.message?.content || ''),
+    input_tokens: usage.input_tokens,
+    output_tokens: usage.output_tokens,
   }
 }
 
@@ -134,11 +149,12 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
   let fullThinkingText = ''
   let doneSent = false
   let usageTokens = null
+  let usageDetails = null
 
   const finish = (tokensUsed = null) => {
     if (doneSent) return
     doneSent = true
-    onDone(fullText, tokensUsed ?? usageTokens ?? estimateTokens(prompt, fullThinkingText, fullText))
+    onDone(fullText, tokensUsed ?? usageTokens ?? estimateTokens(prompt, fullThinkingText, fullText), usageDetails)
   }
 
   const pushThinking = (text) => {
@@ -222,6 +238,7 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
         }
         if (chunk?.usage?.total_tokens !== undefined && chunk?.usage?.total_tokens !== null) {
           usageTokens = chunk.usage.total_tokens
+          usageDetails = usageFromPayload(chunk)
         }
         const reasoningToken = chunk.choices?.[0]?.delta?.reasoning_content || chunk.choices?.[0]?.delta?.reasoning || ''
         if (reasoningToken) {
@@ -251,7 +268,10 @@ async function streamPrompt(modelConfig, prompt, onChunk, onDone, onError, image
           finish(null)
           return
         }
-        if (chunk?.usage?.total_tokens !== undefined && chunk?.usage?.total_tokens !== null) usageTokens = chunk.usage.total_tokens
+        if (chunk?.usage?.total_tokens !== undefined && chunk?.usage?.total_tokens !== null) {
+          usageTokens = chunk.usage.total_tokens
+          usageDetails = usageFromPayload(chunk)
+        }
         const reasoningToken = chunk.choices?.[0]?.delta?.reasoning_content || chunk.choices?.[0]?.delta?.reasoning || ''
         if (reasoningToken) pushThinking(reasoningToken)
         const rawToken = chunk.choices?.[0]?.delta?.content || ''

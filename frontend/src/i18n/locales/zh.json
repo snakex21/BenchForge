@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "该路径并非从起点开始。",
   "maze.errorWallCollision": "与墙壁碰撞。",
   "maze.errorGoal": "这条路没有达到目标。",
-  "maze.successPath": "路径有效。"
+  "maze.successPath": "路径有效。",
+  "common.cost": "成本",
+  "models.refreshPricing": "刷新价格",
+  "models.pricingRefreshing": "刷新价格...",
+  "models.pricingUpdated": "最新更新定价：{date}",
+  "models.pricingRefreshed": "定价已刷新。匹配 {total} OpenRouter 条目中的 {matched} 型号。",
+  "models.pricingRefreshFailed": "无法刷新定价：{error}",
+  "models.inputPrice": "输入价格（$/1M 代币）",
+  "models.outputPrice": "产出价格（$/1M 代币）",
+  "models.pricingHint": "价格为估计值。 OpenRouter 定价可以自动刷新，您也可以手动覆盖值。",
+  "models.pricingShort": "输入 {input}/1M · 输出 {output}/1M",
+  "stats.costs": "预计 API 成本",
+  "stats.costPerRun": "每次运行成本",
+  "models.localPricingInfo": "本地运行时 — 不使用 API 定价。"
 }

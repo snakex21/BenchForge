@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "It paad begjint net by it begjinpunt.",
   "maze.errorWallCollision": "Botsing mei in muorre.",
   "maze.errorGoal": "It paad berikte it doel net.",
-  "maze.successPath": "Paad is jildich."
+  "maze.successPath": "Paad is jildich.",
+  "common.cost": "Kosten",
+  "models.refreshPricing": "Ferfarskje prizen",
+  "models.pricingRefreshing": "Ferrassende prizen ...",
+  "models.pricingUpdated": "Priis lêste bywurke: {date}",
+  "models.pricingRefreshed": "Prizen fernijd. Matched {matched} model(en) fan {total} OpenRouter-yngongen.",
+  "models.pricingRefreshFailed": "Koe prizen net ferfarskje: {error}",
+  "models.inputPrice": "Ynfierpriis ($ / 1M tokens)",
+  "models.outputPrice": "Utfierpriis ($ / 1M tokens)",
+  "models.pricingHint": "Prizen wurde rûsd. OpenRouter-prizen kinne automatysk wurde ferfarske en jo kinne wearden manuell oerskriuwe.",
+  "models.pricingShort": "Yn {input}/1M · Ut {output}/1M",
+  "stats.costs": "Estimated API kosten",
+  "stats.costPerRun": "Kosten per run",
+  "models.localPricingInfo": "Lokale runtime - API-prizen wurde net brûkt."
 }

@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Stigen börjar inte vid startpunkten.",
   "maze.errorWallCollision": "Kollision med en vägg.",
   "maze.errorGoal": "Stigen nådde inte målet.",
-  "maze.successPath": "Sökvägen är giltig."
+  "maze.successPath": "Sökvägen är giltig.",
+  "common.cost": "Kosta",
+  "models.refreshPricing": "Uppdatera priserna",
+  "models.pricingRefreshing": "Uppfriskande priser...",
+  "models.pricingUpdated": "Priset uppdaterades senast: {date}",
+  "models.pricingRefreshed": "Prissättning uppdaterad. Matchade {matched}-modell(er) från {total} OpenRouter-poster.",
+  "models.pricingRefreshFailed": "Kunde inte uppdatera prissättning: {error}",
+  "models.inputPrice": "Ingångspris ($ / 1 miljon tokens)",
+  "models.outputPrice": "Utgångspris ($ / 1 miljon tokens)",
+  "models.pricingHint": "Priserna är uppskattade. OpenRouter-priserna kan uppdateras automatiskt och du kan åsidosätta värden manuellt.",
+  "models.pricingShort": "In {input}/1M · Ut {output}/1M",
+  "stats.costs": "Beräknade API-kostnader",
+  "stats.costPerRun": "Kostnad per körning",
+  "models.localPricingInfo": "Lokal körtid – API-prissättning används inte."
 }

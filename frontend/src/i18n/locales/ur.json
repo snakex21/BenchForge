@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "راستہ نقطہ آغاز سے شروع نہیں ہوتا۔",
   "maze.errorWallCollision": "دیوار سے ٹکرانا۔",
   "maze.errorGoal": "راستہ منزل تک نہیں پہنچا۔",
-  "maze.successPath": "راستہ درست ہے۔"
+  "maze.successPath": "راستہ درست ہے۔",
+  "common.cost": "لاگت",
+  "models.refreshPricing": "قیمتیں تازہ کریں۔",
+  "models.pricingRefreshing": "ریفریشنگ قیمتیں...",
+  "models.pricingUpdated": "قیمتوں کا تعین آخری بار اپ ڈیٹ کیا گیا: {date}",
+  "models.pricingRefreshed": "قیمتوں کا تعین تازہ کر دیا گیا۔ {total} OpenRouter اندراجات سے مماثل {matched} ماڈل (زبانیں)۔",
+  "models.pricingRefreshFailed": "قیمتوں کو ریفریش نہیں کیا جا سکا: {error}",
+  "models.inputPrice": "ان پٹ قیمت ($ / 1M ٹوکنز)",
+  "models.outputPrice": "آؤٹ پٹ قیمت ($ / 1M ٹوکنز)",
+  "models.pricingHint": "قیمتوں کا تخمینہ لگایا گیا ہے۔ OpenRouter کی قیمتوں کو خود بخود تازہ کیا جا سکتا ہے اور آپ اقدار کو دستی طور پر اوور رائڈ کر سکتے ہیں۔",
+  "models.pricingShort": "{input}/1M میں · {output}/1M سے باہر",
+  "stats.costs": "تخمینی API لاگت",
+  "stats.costPerRun": "فی رن لاگت",
+  "models.localPricingInfo": "مقامی رن ٹائم — API کی قیمتوں کا استعمال نہیں کیا جاتا ہے۔"
 }

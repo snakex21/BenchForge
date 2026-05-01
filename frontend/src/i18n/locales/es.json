@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "El camino no comienza en el punto de inicio.",
   "maze.errorWallCollision": "Colisión con una pared.",
   "maze.errorGoal": "El camino no llegó a la meta.",
-  "maze.successPath": "El camino es válido."
+  "maze.successPath": "El camino es válido.",
+  "common.cost": "Costo",
+  "models.refreshPricing": "Actualizar precios",
+  "models.pricingRefreshing": "Precios refrescantes...",
+  "models.pricingUpdated": "Precios actualizados por última vez: {date}",
+  "models.pricingRefreshed": "Precios actualizados. Modelos {matched} coincidentes de las entradas de {total} OpenRouter.",
+  "models.pricingRefreshFailed": "No se pudo actualizar el precio: {error}",
+  "models.inputPrice": "Precio de entrada ($ / 1 millón de tokens)",
+  "models.outputPrice": "Precio de salida ($ / 1 millón de tokens)",
+  "models.pricingHint": "Los precios son estimados. Los precios de OpenRouter se pueden actualizar automáticamente y usted puede anular los valores manualmente.",
+  "models.pricingShort": "En {input}/1M · Fuera {output}/1M",
+  "stats.costs": "Costos API estimados",
+  "stats.costPerRun": "Costo por ejecución",
+  "models.localPricingInfo": "Tiempo de ejecución local: no se utilizan precios de API."
 }

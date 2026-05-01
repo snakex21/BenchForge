@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Шлях не пачынаецца ў пачатковай кропцы.",
   "maze.errorWallCollision": "Сутыкненне са сцяной.",
   "maze.errorGoal": "Шлях не дайшоў да мэты.",
-  "maze.successPath": "Шлях сапраўдны."
+  "maze.successPath": "Шлях сапраўдны.",
+  "common.cost": "Кошт",
+  "models.refreshPricing": "Абнавіць цэны",
+  "models.pricingRefreshing": "Абнаўленне цэн...",
+  "models.pricingUpdated": "Апошняе абнаўленне цэн: {date}",
+  "models.pricingRefreshed": "Цэны абноўлены. Адпаведная мадэль(-і) {matched} з запісаў {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Не ўдалося абнавіць цану: {error}",
+  "models.inputPrice": "Кошт уводу ($ / 1 мільён токенаў)",
+  "models.outputPrice": "Кошт выхаду ($ / 1 мільён токенаў)",
+  "models.pricingHint": "Цэны арыентыровачныя. Цэны OpenRouter можна абнаўляць аўтаматычна, і вы можаце перавызначыць значэнні ўручную.",
+  "models.pricingShort": "У {input}/1M · Выхад {output}/1M",
+  "stats.costs": "Прыблізныя выдаткі на API",
+  "stats.costPerRun": "Кошт за прагон",
+  "models.localPricingInfo": "Лакальнае асяроддзе выканання — цэнаўтварэнне API не выкарыстоўваецца."
 }

@@ -13,7 +13,7 @@ export interface EvaluationRubricItem {
 }
 
 export type ModelMode = 'api' | 'manual'
-export type ApiProvider = 'lmstudio' | 'ollama' | 'openai' | 'anthropic' | 'google-gemini' | 'nvidia-nim' | 'deepseek' | 'qwen' | 'minimax' | 'moonshot' | 'zhipuai' | 'baidu' | 'yi' | 'openrouter' | 'groq' | 'together' | 'fireworks' | 'mistral' | 'cohere' | 'perplexity' | 'ai21' | 'liquid-ai' | 'openai-compatible'
+export type ApiProvider = 'lmstudio' | 'ollama' | 'vllm' | 'openai' | 'anthropic' | 'google-gemini' | 'nvidia-nim' | 'deepseek' | 'qwen' | 'minimax' | 'moonshot' | 'zhipuai' | 'baidu' | 'xiaomi' | 'yi' | 'openrouter' | 'groq' | 'together' | 'fireworks' | 'mistral' | 'cohere' | 'perplexity' | 'ai21' | 'openai-compatible'
 
 export interface Benchmark {
   id: number
@@ -59,6 +59,11 @@ export interface AIModel {
   base_url?: string | null
   api_key?: string | null
   model_id?: string | null
+  input_price_per_1m?: number | null
+  output_price_per_1m?: number | null
+  pricing_source?: 'openrouter' | 'manual' | null
+  pricing_model_id?: string | null
+  pricing_updated_at?: string | null
   created_at: string
 }
 
@@ -75,6 +80,9 @@ export interface BenchmarkResult {
   artifact_path?: string | null
   attempt_number: number
   tokens_used?: number | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  estimated_cost_usd?: number | null
   duration_ms?: number | null
   run_at: string
 }

@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "पथ प्रारंभ बिंदु पर प्रारंभ नहीं होता है.",
   "maze.errorWallCollision": "दीवार से टकराना.",
   "maze.errorGoal": "रास्ता मंजिल तक नहीं पहुंचा.",
-  "maze.successPath": "पथ मान्य है."
+  "maze.successPath": "पथ मान्य है.",
+  "common.cost": "लागत",
+  "models.refreshPricing": "कीमतें ताज़ा करें",
+  "models.pricingRefreshing": "ताज़ा कीमतें...",
+  "models.pricingUpdated": "मूल्य निर्धारण अंतिम अद्यतन: {date}",
+  "models.pricingRefreshed": "मूल्य निर्धारण ताज़ा किया गया. {total} OpenRouter प्रविष्टियों से {matched} मॉडल का मिलान किया गया।",
+  "models.pricingRefreshFailed": "मूल्य निर्धारण ताज़ा नहीं किया जा सका: {error}",
+  "models.inputPrice": "इनपुट मूल्य ($ / 1M टोकन)",
+  "models.outputPrice": "आउटपुट मूल्य ($ / 1M टोकन)",
+  "models.pricingHint": "कीमतें अनुमानित हैं. OpenRouter मूल्य निर्धारण स्वचालित रूप से ताज़ा किया जा सकता है और आप मानों को मैन्युअल रूप से ओवरराइड कर सकते हैं।",
+  "models.pricingShort": "{input}/1M में · {output}/1M से बाहर",
+  "stats.costs": "अनुमानित एपीआई लागत",
+  "stats.costPerRun": "प्रति रन लागत",
+  "models.localPricingInfo": "स्थानीय रनटाइम - एपीआई मूल्य निर्धारण का उपयोग नहीं किया जाता है।"
 }

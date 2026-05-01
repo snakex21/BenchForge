@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "مسیر از نقطه شروع شروع نمی شود.",
   "maze.errorWallCollision": "برخورد با دیوار.",
   "maze.errorGoal": "مسیر به هدف نرسید.",
-  "maze.successPath": "مسیر معتبر است"
+  "maze.successPath": "مسیر معتبر است",
+  "common.cost": "هزینه",
+  "models.refreshPricing": "قیمت ها را به روز کنید",
+  "models.pricingRefreshing": "قیمت های به روز ...",
+  "models.pricingUpdated": "آخرین به روز رسانی قیمت: {date}",
+  "models.pricingRefreshed": "قیمت به روز شد. مدل(های) {matched} از ورودی های OpenRouter {total} مطابقت دارد.",
+  "models.pricingRefreshFailed": "قیمت بازخوانی نشد: {error}",
+  "models.inputPrice": "قیمت ورودی (دلار / 1 میلیون توکن)",
+  "models.outputPrice": "قیمت خروجی (دلار / 1 میلیون توکن)",
+  "models.pricingHint": "قیمت ها برآورد شده است. قیمت OpenRouter می تواند به طور خودکار به روز شود و شما می توانید مقادیر را به صورت دستی لغو کنید.",
+  "models.pricingShort": "{input}/1 میلیون دلار · خروجی {output}/1 میلیون دلار",
+  "stats.costs": "هزینه های تخمینی API",
+  "stats.costPerRun": "هزینه در هر اجرا",
+  "models.localPricingInfo": "زمان اجرا محلی - قیمت گذاری API استفاده نمی شود."
 }

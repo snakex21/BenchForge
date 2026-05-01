@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Путања не почиње на почетној тачки.",
   "maze.errorWallCollision": "Судар са зидом.",
   "maze.errorGoal": "Пут није стигао до циља.",
-  "maze.successPath": "Пут је валидан."
+  "maze.successPath": "Пут је валидан.",
+  "common.cost": "Цост",
+  "models.refreshPricing": "Освежите цене",
+  "models.pricingRefreshing": "Освежавајуће цене...",
+  "models.pricingUpdated": "Последње ажурирање цена: {date}",
+  "models.pricingRefreshed": "Цене су освежене. Одговарајући {matched} модел(и) из {total} ОпенРоутер уноса.",
+  "models.pricingRefreshFailed": "Није могуће освежити цене: {error}",
+  "models.inputPrice": "Улазна цена ($ / 1 милион токена)",
+  "models.outputPrice": "Излазна цена ($ / 1 милион токена)",
+  "models.pricingHint": "Цене су процењене. ОпенРоутер цене се могу аутоматски освежити и можете ручно да заобиђете вредности.",
+  "models.pricingShort": "У {input}/1М · Излаз {output}/1М",
+  "stats.costs": "Процењени трошкови АПИ-ја",
+  "stats.costPerRun": "Цена по вожњи",
+  "models.localPricingInfo": "Локално време извођења — АПИ цена се не користи."
 }

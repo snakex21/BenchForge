@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Путь не начинается в начальной точке.",
   "maze.errorWallCollision": "Столкновение со стеной.",
   "maze.errorGoal": "Путь не достиг цели.",
-  "maze.successPath": "Путь действителен."
+  "maze.successPath": "Путь действителен.",
+  "common.cost": "Расходы",
+  "models.refreshPricing": "Обновить цены",
+  "models.pricingRefreshing": "Обновление цен...",
+  "models.pricingUpdated": "Последнее обновление цен: {date}.",
+  "models.pricingRefreshed": "Цены обновлены. Соответствующие модели {matched} из записей {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Не удалось обновить цены: {error}.",
+  "models.inputPrice": "Входная цена ($/1 млн токенов)",
+  "models.outputPrice": "Выходная цена ($/1 млн токенов)",
+  "models.pricingHint": "Цены ориентировочные. Цены OpenRouter могут обновляться автоматически, и вы можете переопределить значения вручную.",
+  "models.pricingShort": "Входит {input}/1M · Выходит {output}/1M",
+  "stats.costs": "Ориентировочная стоимость API",
+  "stats.costPerRun": "Стоимость за прогон",
+  "models.localPricingInfo": "Локальная среда выполнения — цены API не используются."
 }

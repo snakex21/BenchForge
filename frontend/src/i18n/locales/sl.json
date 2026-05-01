@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Pot se ne začne na izhodišču.",
   "maze.errorWallCollision": "Trčenje s steno.",
   "maze.errorGoal": "Pot ni dosegla cilja.",
-  "maze.successPath": "Pot velja."
+  "maze.successPath": "Pot velja.",
+  "common.cost": "Stroški",
+  "models.refreshPricing": "Osveži cene",
+  "models.pricingRefreshing": "Osvežimo cene ...",
+  "models.pricingUpdated": "Nazadnje posodobljena cena: {date}",
+  "models.pricingRefreshed": "Cene osvežene. Ujemajoči se modeli {matched} iz vnosov {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Cene ni bilo mogoče osvežiti: {error}",
+  "models.inputPrice": "Vhodna cena ($ / 1 milijon žetonov)",
+  "models.outputPrice": "Izhodna cena ($ / 1 milijon žetonov)",
+  "models.pricingHint": "Cene so ocenjene. Cene OpenRouter se lahko samodejno osvežijo, vrednosti pa lahko preglasite ročno.",
+  "models.pricingShort": "V {input}/1M · Izhod {output}/1M",
+  "stats.costs": "Ocenjeni stroški API-ja",
+  "stats.costPerRun": "Cena na vožnjo",
+  "models.localPricingInfo": "Lokalni čas izvajanja — API cene se ne uporabljajo."
 }

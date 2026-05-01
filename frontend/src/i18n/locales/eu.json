@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Bidea ez da hasiera puntuan hasten.",
   "maze.errorWallCollision": "Horma baten aurkako talka.",
   "maze.errorGoal": "Bidea ez zen helburura iritsi.",
-  "maze.successPath": "Bidea baliozkoa da."
+  "maze.successPath": "Bidea baliozkoa da.",
+  "common.cost": "Kostua",
+  "models.refreshPricing": "Freskatu prezioak",
+  "models.pricingRefreshing": "Prezioak freskatzen...",
+  "models.pricingUpdated": "Prezioa azken eguneratzea: {date}",
+  "models.pricingRefreshed": "Pricing refreshed. Matched {matched} model(s) from {total} OpenRouter entries.",
+  "models.pricingRefreshFailed": "Ezin izan da prezioa freskatu: {error}",
+  "models.inputPrice": "Sarrerako prezioa ($ / 1 milioi token)",
+  "models.outputPrice": "Irteerako prezioa ($ / 1M token)",
+  "models.pricingHint": "Prezioak estimatuak dira. OpenRouter prezioak automatikoki freskatu daitezke eta balioak eskuz gainidatzi ditzakezu.",
+  "models.pricingShort": "{input}/1M sarreran · {output}/1M $ atera",
+  "stats.costs": "APIaren kostu estimatuak",
+  "stats.costPerRun": "Korrika bakoitzeko kostua",
+  "models.localPricingInfo": "Exekuzio-denbora lokala — APIaren prezioa ez da erabiltzen."
 }

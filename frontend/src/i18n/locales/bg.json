@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Пътят не започва от началната точка.",
   "maze.errorWallCollision": "Сблъсък със стена.",
   "maze.errorGoal": "Пътят не стигна до целта.",
-  "maze.successPath": "Пътят е валиден."
+  "maze.successPath": "Пътят е валиден.",
+  "common.cost": "цена",
+  "models.refreshPricing": "Обновяване на цените",
+  "models.pricingRefreshing": "Refreshing prices...",
+  "models.pricingUpdated": "Последна актуализация на цената: {date}",
+  "models.pricingRefreshed": "Цените са обновени. Съвпадение на {matched} модел(и) от {total} OpenRouter записи.",
+  "models.pricingRefreshFailed": "Ценообразуването не можа да се опресни: {error}",
+  "models.inputPrice": "Входна цена ($ / 1 милион токени)",
+  "models.outputPrice": "Изходна цена ($ / 1 милион токени)",
+  "models.pricingHint": "Prices are estimated. Ценообразуването на OpenRouter може да се опреснява автоматично и можете да замените стойностите ръчно.",
+  "models.pricingShort": "В {input}/1M · Изход {output}/1M",
+  "stats.costs": "Очаквани разходи за API",
+  "stats.costPerRun": "Цена на пробег",
+  "models.localPricingInfo": "Локално време за изпълнение — ценообразуването на API не се използва."
 }

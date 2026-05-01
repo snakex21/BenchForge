@@ -74,6 +74,7 @@ export const ResultsView: React.FC = () => {
   }
   const formatDuration = (value?: number | null) => value ? `${(value / 1000).toFixed(1)}s` : '—'
   const formatTokens = (value?: number | null) => value === null || value === undefined ? '—' : String(value)
+  const formatCost = (value?: number | null) => value === null || value === undefined || Number(value) <= 0 ? '—' : `$${Number(value).toFixed(Number(value) < 0.01 ? 4 : 2)}`
   const isPassingScore = (score?: string | null) => {
     const normalized = String(score ?? '').trim().toLowerCase()
     if (!normalized) return false
@@ -161,8 +162,9 @@ export const ResultsView: React.FC = () => {
     const avgNorm = taskResults.length ? taskResults.reduce((sum, item) => sum + taskScoreNorm(item), 0) / total : resultNorm
     const duration = taskResults.length ? taskResults.reduce((sum, item) => sum + (Number(item.duration_ms) || 0), 0) : Number(result.duration_ms) || 0
     const tokens = taskResults.length ? taskResults.reduce((sum, item) => sum + (Number(item.tokens_used) || 0), 0) : Number(result.tokens_used) || 0
+    const cost = taskResults.length ? taskResults.reduce((sum, item) => sum + (Number(item.estimated_cost_usd) || 0), 0) : Number(result.estimated_cost_usd) || 0
     const thinkingCount = taskResults.length ? taskResults.filter((item) => item.thinking_notes?.trim()).length : (result.thinking_notes?.trim() ? 1 : 0)
-    return { total, completed, passed, duration, tokens, thinkingCount, avgPercent: Math.round(avgNorm * 100) }
+    return { total, completed, passed, duration, tokens, cost, thinkingCount, avgPercent: Math.round(avgNorm * 100) }
   }
   const selectedSummary = selectedResult ? getRunSummary(selectedResult) : null
 
@@ -231,7 +233,7 @@ export const ResultsView: React.FC = () => {
   }
 
   const handleExportCSV = () => {
-    const headers = ['model_id', 'model_name', 'benchmark_id', 'benchmark_name', 'score', 'tokens_used', 'duration_ms', 'run_at', 'notes']
+    const headers = ['model_id', 'model_name', 'benchmark_id', 'benchmark_name', 'score', 'tokens_used', 'input_tokens', 'output_tokens', 'estimated_cost_usd', 'duration_ms', 'run_at', 'notes']
     const header = headers.join(',')
     const rows = results.map((r) => [
       r.model_id,
@@ -240,6 +242,9 @@ export const ResultsView: React.FC = () => {
       `"${(benchmarkById.get(r.benchmark_id)?.name || '').replace(/"/g, '""')}"`,
       `"${String(r.score ?? '')}"`,
       r.tokens_used ?? '',
+      r.input_tokens ?? '',
+      r.output_tokens ?? '',
+      r.estimated_cost_usd ?? '',
       r.duration_ms ?? '',
       `"${String(r.run_at || '')}"`,
       `"${String(r.notes || '').replace(/"/g, '""').slice(0, 500)}"`,
@@ -437,7 +442,7 @@ body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#0f1117;color:#e2e8f
         <button className="ml-auto rounded px-2 py-0.5 text-red-300 hover:bg-red-500/10" type="button" onClick={(event) => { event.stopPropagation(); void handleDeleteResult(result.id) }}>{t('common.delete')}</button>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-400">
-        {(() => { const summary = getRunSummary(result); return <><Badge variant="info">{t('common.score')}: {summary.avgPercent}%</Badge><Badge variant={summary.passed === summary.total ? 'success' : 'danger'}>{t('common.passCount', { passed: summary.passed, total: summary.total })}</Badge><span>{t('common.time')}: {formatDuration(summary.duration || result.duration_ms)}</span><span>{t('common.tokens')}: {summary.tokens || formatTokens(result.tokens_used)}</span>{summary.thinkingCount > 0 && <span>{t('common.modelThinking')}: {summary.thinkingCount}/{summary.total}</span>}</> })()}
+        {(() => { const summary = getRunSummary(result); return <><Badge variant="info">{t('common.score')}: {summary.avgPercent}%</Badge><Badge variant={summary.passed === summary.total ? 'success' : 'danger'}>{t('common.passCount', { passed: summary.passed, total: summary.total })}</Badge><span>{t('common.time')}: {formatDuration(summary.duration || result.duration_ms)}</span><span>{t('common.tokens')}: {summary.tokens || formatTokens(result.tokens_used)}</span><span>{t('common.cost')}: {formatCost(summary.cost || result.estimated_cost_usd)}</span>{summary.thinkingCount > 0 && <span>{t('common.modelThinking')}: {summary.thinkingCount}/{summary.total}</span>}</> })()}
       </div>
       <details className="mt-3 rounded-lg border border-slate-700/30 bg-slate-950/60 p-2" onClick={(event) => event.stopPropagation()}>
         <summary className="cursor-pointer text-xs font-medium text-slate-300">{t('results.viewResponse')}</summary>
@@ -535,6 +540,7 @@ body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#0f1117;color:#e2e8f
                   {selectedSummary && <Badge variant={selectedSummary.passed === selectedSummary.total ? 'success' : 'danger'}>{t('common.passCount', { passed: selectedSummary.passed, total: selectedSummary.total })}</Badge>}
                   <Badge variant="neutral">{t('common.time')}: {formatDuration(selectedDisplayResult?.duration_ms)}</Badge>
                   <Badge variant="neutral">{t('common.tokens')}: {formatTokens(selectedDisplayResult?.tokens_used)}</Badge>
+                  <Badge variant="neutral">{t('common.cost')}: {formatCost(selectedDisplayResult?.estimated_cost_usd)}</Badge>
                   {selectedThinking?.trim() && <Badge variant="neutral">{t('common.thinkingSaved')}</Badge>}
                 </div>
               </div>

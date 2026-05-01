@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "المسار لا يبدأ من نقطة البداية.",
   "maze.errorWallCollision": "الاصطدام بالحائط.",
   "maze.errorGoal": "الطريق لم يصل إلى الهدف.",
-  "maze.successPath": "المسار صالح."
+  "maze.successPath": "المسار صالح.",
+  "common.cost": "يكلف",
+  "models.refreshPricing": "تحديث الأسعار",
+  "models.pricingRefreshing": "أسعار متجددة...",
+  "models.pricingUpdated": "آخر تحديث للسعر: {date}",
+  "models.pricingRefreshed": "تم تحديث التسعير. طراز (نماذج) {matched} المطابق من إدخالات {total} OpenRouter.",
+  "models.pricingRefreshFailed": "تعذر تحديث التسعير: {error}",
+  "models.inputPrice": "سعر الإدخال ($ / 1 مليون رمز)",
+  "models.outputPrice": "سعر الإخراج ($ / 1 مليون رمز)",
+  "models.pricingHint": "الأسعار تقديرية. يمكن تحديث أسعار OpenRouter تلقائيًا ويمكنك تجاوز القيم يدويًا.",
+  "models.pricingShort": "في {input}/1M · خارج {output}/1M",
+  "stats.costs": "تكاليف API المقدرة",
+  "stats.costPerRun": "التكلفة لكل تشغيل",
+  "models.localPricingInfo": "وقت التشغيل المحلي - لا يتم استخدام تسعير واجهة برمجة التطبيقات (API)."
 }

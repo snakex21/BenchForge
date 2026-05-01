@@ -20,6 +20,7 @@ const logoByName = Object.fromEntries(
 const PROVIDER_LOGOS: Record<string, string> = {
   lmstudio: 'lmstudio',
   ollama: 'ollama',
+  vllm: 'vllm',
   openai: 'openai',
   anthropic: 'anthropic',
   'google-gemini': 'google-gemini',
@@ -30,6 +31,7 @@ const PROVIDER_LOGOS: Record<string, string> = {
   moonshot: 'kimi',
   zhipuai: 'zai',
   baidu: 'baidu',
+  xiaomi: 'xiaomi',
   yi: 'yi',
   openrouter: 'openrouter',
   groq: 'groq',
@@ -39,11 +41,10 @@ const PROVIDER_LOGOS: Record<string, string> = {
   cohere: 'cohere',
   perplexity: 'perplexity',
   ai21: 'ai21-labs',
-  'liquid-ai': 'liquid-ai',
   'openai-compatible': 'openai',
 }
 
-const PROVIDER_ONLY_LOGOS = new Set(['lmstudio', 'ollama', 'openrouter', 'groq', 'together', 'fireworks', 'openai-compatible'])
+const PROVIDER_ONLY_LOGOS = new Set(['lmstudio', 'ollama', 'vllm', 'openrouter', 'groq', 'together', 'fireworks', 'openai-compatible'])
 
 const MODEL_KEYWORD_LOGOS: Array<[RegExp, string]> = [
   [/deepseek/i, 'deepseek'],
@@ -61,16 +62,19 @@ const MODEL_KEYWORD_LOGOS: Array<[RegExp, string]> = [
   [/moonshot|kimi/i, 'kimi'],
   [/zhipu|z\.ai|zai|glm|bigmodel/i, 'zai'],
   [/baidu|ernie|qianfan/i, 'baidu'],
+  [/xiaomi|mimo/i, 'xiaomi'],
   [/yi-|\byi\b|01\.ai|lingyi/i, 'yi'],
   [/minimax|abab/i, 'minimax'],
   [/ai21|jamba/i, 'ai21-labs'],
   [/liquid|lfm/i, 'liquid-ai'],
+  [/hermes|nous[-\s]?hermes/i, 'hermes'],
   [/huggingface|hugging\s*face/i, 'huggingface'],
 ]
 
 const RUNTIME_KEYWORD_LOGOS: Array<[RegExp, string]> = [
   [/\b(lm\s*studio|lmstudio)\b/i, 'lmstudio'],
   [/\bollama\b/i, 'ollama'],
+  [/\bvllm\b/i, 'vllm'],
   [/\b(openrouter)\b/i, 'openrouter'],
   [/\b(groq)\b/i, 'groq'],
   [/\b(fireworks)\b/i, 'fireworks'],

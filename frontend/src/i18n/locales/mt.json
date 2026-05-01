@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "It-triq ma tibdax fil-punt tal-bidu.",
   "maze.errorWallCollision": "Ħabta ma’ ħajt.",
   "maze.errorGoal": "It-triq ma laħqitx l-għan.",
-  "maze.successPath": "It-triq hija valida."
+  "maze.successPath": "It-triq hija valida.",
+  "common.cost": "Spiża",
+  "models.refreshPricing": "Aġġorna l-prezzijiet",
+  "models.pricingRefreshing": "Prezzijiet iġjeniċi...",
+  "models.pricingUpdated": "Prezzijiet aġġornati l-aħħar: {date}",
+  "models.pricingRefreshed": "Ipprezzar aggornat. Mudell(i) {matched} imqabbla(i) minn entrati {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Ma setax jġedded l-ipprezzar: {error}",
+  "models.inputPrice": "Prezz tad-dħul ($ / 1M tokens)",
+  "models.outputPrice": "Prezz tal-ħruġ ($ / 1M tokens)",
+  "models.pricingHint": "Il-prezzijiet huma stmati. L-ipprezzar ta' OpenRouter jista' jiġi aggornat awtomatikament u tista' tegħleb il-valuri manwalment.",
+  "models.pricingShort": "Fi {input}/1M · Barra {output}/1M",
+  "stats.costs": "Spejjeż tal-API stmati",
+  "stats.costPerRun": "Spiża għal kull ġirja",
+  "models.localPricingInfo": "Runtime lokali — l-ipprezzar tal-API ma jintużax."
 }

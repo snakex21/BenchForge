@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Polku ei ala aloituspisteestä.",
   "maze.errorWallCollision": "Törmäys seinään.",
   "maze.errorGoal": "Polku ei saavuttanut tavoitetta.",
-  "maze.successPath": "Polku on kelvollinen."
+  "maze.successPath": "Polku on kelvollinen.",
+  "common.cost": "Maksaa",
+  "models.refreshPricing": "Päivitä hinnat",
+  "models.pricingRefreshing": "Virkistäviä hintoja...",
+  "models.pricingUpdated": "Hinnoittelu päivitetty viimeksi: {date}",
+  "models.pricingRefreshed": "Hinnoittelu päivitetty. Vastaavat {matched}-mallit {total} OpenRouter-merkinnöistä.",
+  "models.pricingRefreshFailed": "Hintaa ei voitu päivittää: {error}",
+  "models.inputPrice": "Syöttöhinta ($ / 1 milj. tokeneja)",
+  "models.outputPrice": "Tuotantohinta ($ / 1 milj. rahakkeita)",
+  "models.pricingHint": "Hinnat on arvioitu. OpenRouter-hinnoittelu voidaan päivittää automaattisesti ja voit ohittaa arvot manuaalisesti.",
+  "models.pricingShort": "In {input}/1M · Out {output}/1M",
+  "stats.costs": "Arvioidut API-kustannukset",
+  "stats.costPerRun": "Hinta per juoksu",
+  "models.localPricingInfo": "Paikallinen suoritusaika — API-hinnoittelua ei käytetä."
 }

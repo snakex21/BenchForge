@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Chan eil an t-slighe a 'tòiseachadh aig an àite tòiseachaidh.",
   "maze.errorWallCollision": "Bualadh le balla.",
   "maze.errorGoal": "Cha do ràinig an t-slighe an amas.",
-  "maze.successPath": "Tha an t-slighe dligheach."
+  "maze.successPath": "Tha an t-slighe dligheach.",
+  "common.cost": "Cosgais",
+  "models.refreshPricing": "Prìsean ùrachadh",
+  "models.pricingRefreshing": "Prìsean ùrachadh...",
+  "models.pricingUpdated": "Prìs air ùrachadh mu dheireadh: {date}",
+  "models.pricingRefreshed": "Prìsean air ùrachadh. Modail (ean) {matched} co-chosmhail bho inntrigidhean {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Cha b’ urrainn dhuinn prìsean ùrachadh: {error}",
+  "models.inputPrice": "Prìs cuir a-steach (tokens $ / 1M)",
+  "models.outputPrice": "Prìs toraidh ($ / 1M comharran)",
+  "models.pricingHint": "Tha prìsean air am meas. Faodar prìsean OpenRouter ùrachadh gu fèin-ghluasadach agus faodaidh tu luachan a thoirt thairis le làimh.",
+  "models.pricingShort": "Ann an {input}/1M · A-mach {output}/1M",
+  "stats.costs": "Cosgaisean API tuairmseach",
+  "stats.costPerRun": "Cosgais gach ruith",
+  "models.localPricingInfo": "Ùine ruith ionadail - chan eilear a’ cleachdadh prìsean API."
 }

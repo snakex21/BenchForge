@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "El camí no comença al punt d'inici.",
   "maze.errorWallCollision": "Xoc amb una paret.",
   "maze.errorGoal": "El camí no arribava a la meta.",
-  "maze.successPath": "El camí és vàlid."
+  "maze.successPath": "El camí és vàlid.",
+  "common.cost": "Cost",
+  "models.refreshPricing": "Actualitzar preus",
+  "models.pricingRefreshing": "Preus refrescants...",
+  "models.pricingUpdated": "Darrera actualització de preus: {date}",
+  "models.pricingRefreshed": "S'han actualitzat els preus. Models {matched} coincidents de les entrades d'OpenRouter {total}.",
+  "models.pricingRefreshFailed": "No s'ha pogut actualitzar el preu: {error}",
+  "models.inputPrice": "Preu d'entrada ($ / 1M fitxes)",
+  "models.outputPrice": "Preu de sortida ($ / 1M fitxes)",
+  "models.pricingHint": "Els preus són estimatius. Els preus d'OpenRouter es poden actualitzar automàticament i podeu substituir els valors manualment.",
+  "models.pricingShort": "En {input}/1M · Sortida {output}/1M",
+  "stats.costs": "Costos estimats de l'API",
+  "stats.costPerRun": "Cost per tirada",
+  "models.localPricingInfo": "Temps d'execució local: no s'utilitza el preu de l'API."
 }

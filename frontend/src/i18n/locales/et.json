@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Rada ei alga alguspunktist.",
   "maze.errorWallCollision": "Kokkupõrge seinaga.",
   "maze.errorGoal": "Teekond eesmärgini ei jõudnud.",
-  "maze.successPath": "Tee on kehtiv."
+  "maze.successPath": "Tee on kehtiv.",
+  "common.cost": "Maksumus",
+  "models.refreshPricing": "Värskenda hindu",
+  "models.pricingRefreshing": "Värskendavad hinnad...",
+  "models.pricingUpdated": "Hinnakujundus viimati uuendatud: {date}",
+  "models.pricingRefreshed": "Hinnakujundus värskendatud. Sobivad {matched} mudelid {total} OpenRouteri kirjetest.",
+  "models.pricingRefreshFailed": "Hinda ei saanud värskendada: {error}",
+  "models.inputPrice": "Sisendhind ($ / 1M žetoon)",
+  "models.outputPrice": "Väljundhind ($ / 1M žetoon)",
+  "models.pricingHint": "Hinnad on hinnangulised. OpenRouteri hinnakujundust saab automaatselt värskendada ja saate väärtused käsitsi alistada.",
+  "models.pricingShort": "{input}/1M · Väljas {output}/1M",
+  "stats.costs": "Hinnangulised API-kulud",
+  "stats.costPerRun": "Kulu ühe jooksu kohta",
+  "models.localPricingInfo": "Kohalik käitusaeg – API hinnakujundust ei kasutata."
 }

@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Nid yw'r llwybr yn cychwyn yn y man cychwyn.",
   "maze.errorWallCollision": "Gwrthdrawiad gyda wal.",
   "maze.errorGoal": "Ni chyrhaeddodd y llwybr y nod.",
-  "maze.successPath": "Mae'r llwybr yn ddilys."
+  "maze.successPath": "Mae'r llwybr yn ddilys.",
+  "common.cost": "Cost",
+  "models.refreshPricing": "Prisiau adnewyddu",
+  "models.pricingRefreshing": "Prisiau adnewyddu...",
+  "models.pricingUpdated": "Prisiau wedi'u diweddaru ddiwethaf: {date}",
+  "models.pricingRefreshed": "Prisiau wedi'u hadnewyddu. Model(au) {matched} wedi'u paru o gofnodion OpenRouter {total}.",
+  "models.pricingRefreshFailed": "Methu adnewyddu prisiau: {error}",
+  "models.inputPrice": "Pris mewnbwn (tocynnau $ / 1M)",
+  "models.outputPrice": "Pris allbwn (tocynnau $ / 1M)",
+  "models.pricingHint": "Amcangyfrifir y prisiau. Gellir adnewyddu prisiau OpenRouter yn awtomatig a gallwch ddiystyru gwerthoedd â llaw.",
+  "models.pricingShort": "Mewn {input}/1M · Allan {output}/1M",
+  "stats.costs": "Amcangyfrif o gostau API",
+  "stats.costPerRun": "Cost y rhediad",
+  "models.localPricingInfo": "Amser rhedeg lleol - ni ddefnyddir pris API."
 }

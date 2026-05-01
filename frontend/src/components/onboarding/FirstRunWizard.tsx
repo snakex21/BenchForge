@@ -140,7 +140,7 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
           const savedBaseUrl = savedProviderConfigs[item.value]?.baseUrl
           const selectedBaseUrl = item.value === provider ? baseUrl.trim() : ''
           const hasBaseUrl = Boolean(item.baseUrl || savedBaseUrl || selectedBaseUrl)
-          return hasBaseUrl && (scanAll || item.value === provider || item.value === 'lmstudio' || item.value === 'ollama')
+          return hasBaseUrl && (scanAll || item.value === provider || item.value === 'lmstudio' || item.value === 'ollama' || item.value === 'vllm')
         })
         .map((item) => {
           const override = PROVIDER_SCAN_OVERRIDES[item.value] || {}

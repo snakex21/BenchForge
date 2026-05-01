@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "পথটি স্টার্ট পয়েন্টে শুরু হয় না।",
   "maze.errorWallCollision": "দেয়ালের সাথে সংঘর্ষ।",
   "maze.errorGoal": "পথও লক্ষ্যে পৌঁছায়নি।",
-  "maze.successPath": "পথ বৈধ।"
+  "maze.successPath": "পথ বৈধ।",
+  "common.cost": "খরচ",
+  "models.refreshPricing": "রিফ্রেশ দাম",
+  "models.pricingRefreshing": "রিফ্রেশ করা দাম...",
+  "models.pricingUpdated": "মূল্য সর্বশেষ আপডেট করা হয়েছে: {date}",
+  "models.pricingRefreshed": "মূল্য রিফ্রেশ করা হয়েছে. {total} OpenRouter এন্ট্রি থেকে {matched} মডেল(গুলি) মিলেছে৷",
+  "models.pricingRefreshFailed": "মূল্য রিফ্রেশ করা যায়নি: {error}",
+  "models.inputPrice": "ইনপুট মূল্য ($ / 1M টোকেন)",
+  "models.outputPrice": "আউটপুট মূল্য ($ / 1M টোকেন)",
+  "models.pricingHint": "দাম অনুমান করা হয়. OpenRouter মূল্য স্বয়ংক্রিয়ভাবে রিফ্রেশ হতে পারে এবং আপনি ম্যানুয়ালি মান ওভাররাইড করতে পারেন।",
+  "models.pricingShort": "{input}/1M এর মধ্যে · {output}/1M এর মধ্যে",
+  "stats.costs": "আনুমানিক API খরচ",
+  "stats.costPerRun": "রান প্রতি খরচ",
+  "models.localPricingInfo": "স্থানীয় রানটাইম — API মূল্য ব্যবহার করা হয় না।"
 }

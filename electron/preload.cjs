@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('benchforge', {
   checkForUpdates: (payload) => ipcRenderer.invoke('updates:check', payload),
   downloadUpdate: (payload) => ipcRenderer.invoke('updates:download', payload),
   applyPortableUpdate: (payload) => ipcRenderer.invoke('updates:apply-portable', payload),
+  getPricingStatus: () => ipcRenderer.invoke('pricing:status'),
+  refreshOpenRouterPricing: () => ipcRenderer.invoke('pricing:refresh-openrouter'),
   saveJsonFile: (payload) => ipcRenderer.invoke('files:save-json', payload),
   saveTextFile: (payload) => ipcRenderer.invoke('files:save-text', payload),
   openJsonFile: () => ipcRenderer.invoke('files:open-json'),

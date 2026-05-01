@@ -14,6 +14,8 @@ import type { AIModel, ApiProvider, ModelMode } from '@/types'
 import { useTranslation } from '@/i18n'
 import { PROVIDER_API_KEY_PLACEHOLDERS, PROVIDER_LABELS, PROVIDER_MODEL_PLACEHOLDERS, PROVIDER_OPTIONS, PROVIDER_PICKER_GROUPS, PROVIDER_PRESETS, PROVIDER_SCAN_OVERRIDES } from '@/features/models/providerConfig'
 
+const LOCAL_PROVIDERS = new Set<ApiProvider>(['lmstudio', 'ollama', 'vllm'])
+
 interface SavedProviderConfig {
   apiKey?: string
   baseUrl?: string
@@ -36,6 +38,8 @@ const defaultFormState = {
   base_url: PROVIDER_PRESETS.lmstudio,
   api_key: '',
   model_id: '',
+  input_price_per_1m: '',
+  output_price_per_1m: '',
 }
 
 const ProviderLogo: React.FC<{ provider: ApiProvider; className?: string }> = ({ provider, className = '' }) => {
@@ -49,6 +53,12 @@ const maskApiKey = (apiKey?: string | null) => {
   if (!value) return '—'
   if (value.length <= 8) return '•'.repeat(Math.max(4, value.length))
   return `${value.slice(0, 4)}${'•'.repeat(Math.min(16, value.length - 8))}${value.slice(-4)}`
+}
+
+const parsePrice = (value: string) => {
+  if (value === '') return null
+  const numeric = Number(value)
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null
 }
 
 const ChevronIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className = '', ...props }) => (
@@ -93,8 +103,11 @@ export const ModelsView: React.FC = () => {
   const [showDraftApiKey, setShowDraftApiKey] = useState(false)
   const [visibleApiKeys, setVisibleApiKeys] = useState<Record<number, boolean>>({})
   const [keyActionStatuses, setKeyActionStatuses] = useState<Record<number, string>>({})
+  const [pricingStatus, setPricingStatus] = useState<string | null>(null)
+  const [isRefreshingPricing, setIsRefreshingPricing] = useState(false)
 
   const isApiMode = form.mode === 'api'
+  const isLocalProvider = isApiMode && LOCAL_PROVIDERS.has(form.provider)
 
   const savedProviderConfigs = useMemo<Partial<Record<ApiProvider, SavedProviderConfig>>>(() => {
     const configs: Partial<Record<ApiProvider, SavedProviderConfig>> = {}
@@ -151,6 +164,12 @@ export const ModelsView: React.FC = () => {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    void window.benchforge?.getPricingStatus?.().then((status) => {
+      if (status?.updatedAt) setPricingStatus(t('models.pricingUpdated', { date: new Date(status.updatedAt).toLocaleString() }))
+    })
+  }, [t])
+
   const canSubmit = useMemo(() => {
     if (!form.name.trim()) return false
     if (form.mode === 'manual') return true
@@ -171,6 +190,8 @@ export const ModelsView: React.FC = () => {
         base_url: '',
         api_key: '',
         model_id: '',
+        input_price_per_1m: '',
+        output_price_per_1m: '',
       }))
       setShowDraftApiKey(false)
       setTestStatus(null)
@@ -239,6 +260,8 @@ export const ModelsView: React.FC = () => {
       base_url: defaults.baseUrl,
       api_key: current.provider === model.provider ? current.api_key || defaults.apiKey : defaults.apiKey,
       model_id: model.modelId,
+      input_price_per_1m: '',
+      output_price_per_1m: '',
     }))
     setShowForm(true)
     setScanModalOpen(false)
@@ -255,7 +278,7 @@ export const ModelsView: React.FC = () => {
           const savedBaseUrl = savedProviderConfigs[provider.value]?.baseUrl
           const selectedBaseUrl = provider.value === form.provider ? form.base_url.trim() : ''
           const hasBaseUrl = Boolean(provider.baseUrl || savedBaseUrl || selectedBaseUrl)
-          return hasBaseUrl && (scanAll || provider.value === form.provider || provider.value === 'lmstudio' || provider.value === 'ollama')
+          return hasBaseUrl && (scanAll || provider.value === form.provider || provider.value === 'lmstudio' || provider.value === 'ollama' || provider.value === 'vllm')
         })
         .map((provider) => {
           const override = PROVIDER_SCAN_OVERRIDES[provider.value] || {}
@@ -296,6 +319,20 @@ export const ModelsView: React.FC = () => {
     }
   }
 
+  const handleRefreshPricing = async () => {
+    setIsRefreshingPricing(true)
+    setPricingStatus(t('models.pricingRefreshing'))
+    try {
+      const result = await window.benchforge?.refreshOpenRouterPricing?.()
+      await useModelStore.getState().loadFromDb()
+      setPricingStatus(t('models.pricingRefreshed', { matched: result?.matched ?? 0, total: result?.modelCount ?? 0 }))
+    } catch (error) {
+      setPricingStatus(t('models.pricingRefreshFailed', { error: error instanceof Error ? error.message : String(error) }))
+    } finally {
+      setIsRefreshingPricing(false)
+    }
+  }
+
   const handleAddSelectedScanned = async () => {
     const selected = scannedModels.filter((model) => selectedScanned.includes(scanKey(model)))
     for (const model of selected) {
@@ -325,6 +362,11 @@ export const ModelsView: React.FC = () => {
       base_url: form.mode === 'api' ? form.base_url.trim() : null,
       api_key: form.mode === 'api' ? form.api_key.trim() || null : null,
       model_id: form.mode === 'api' ? form.model_id.trim() : null,
+      input_price_per_1m: form.mode === 'api' && !isLocalProvider ? parsePrice(form.input_price_per_1m) : null,
+      output_price_per_1m: form.mode === 'api' && !isLocalProvider ? parsePrice(form.output_price_per_1m) : null,
+      pricing_source: form.mode === 'api' && !isLocalProvider && (form.input_price_per_1m !== '' || form.output_price_per_1m !== '') ? 'manual' : null,
+      pricing_model_id: null,
+      pricing_updated_at: form.mode === 'api' && !isLocalProvider && (form.input_price_per_1m !== '' || form.output_price_per_1m !== '') ? new Date().toISOString() : null,
     }
 
     if (form.mode === 'manual') {
@@ -332,6 +374,11 @@ export const ModelsView: React.FC = () => {
       payload.base_url = null
       payload.api_key = null
       payload.model_id = null
+      payload.input_price_per_1m = null
+      payload.output_price_per_1m = null
+      payload.pricing_source = null
+      payload.pricing_model_id = null
+      payload.pricing_updated_at = null
     }
 
     await addModel(payload)
@@ -400,11 +447,17 @@ export const ModelsView: React.FC = () => {
           <h2 className="text-xl font-bold text-slate-100">{t('models.title')}</h2>
         </div>
         {models.length > 0 && (
-        <Button onClick={() => showForm ? closeModelForm() : openModelForm()}>
-            {showForm ? t('common.cancel') : t('models.addModel')}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => void handleRefreshPricing()} disabled={isRefreshingPricing}>
+              {isRefreshingPricing ? t('models.pricingRefreshing') : t('models.refreshPricing')}
+            </Button>
+            <Button onClick={() => showForm ? closeModelForm() : openModelForm()}>
+              {showForm ? t('common.cancel') : t('models.addModel')}
+            </Button>
+          </div>
         )}
       </div>
+      {pricingStatus && <div className="rounded-lg border border-slate-700/40 bg-slate-950/30 p-3 text-sm text-slate-400">{pricingStatus}</div>}
 
       {scanModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
@@ -593,6 +646,40 @@ export const ModelsView: React.FC = () => {
                   />
                 </div>
 
+                {isLocalProvider ? (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                    {t('models.localPricingInfo')}
+                  </div>
+                ) : (
+                  <div className="grid gap-3 rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-400">{t('models.inputPrice')}</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        min="0"
+                        value={form.input_price_per_1m}
+                        onChange={(event) => updateForm('input_price_per_1m', event.target.value)}
+                        placeholder="0.150000"
+                        className="h-11 w-full rounded-xl border border-slate-600/50 bg-[#0f1117] px-4 text-sm text-slate-200 placeholder:text-slate-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-400">{t('models.outputPrice')}</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        min="0"
+                        value={form.output_price_per_1m}
+                        onChange={(event) => updateForm('output_price_per_1m', event.target.value)}
+                        placeholder="0.600000"
+                        className="h-11 w-full rounded-xl border border-slate-600/50 bg-[#0f1117] px-4 text-sm text-slate-200 placeholder:text-slate-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
+                    <p className="md:col-span-2 text-xs text-slate-500">{t('models.pricingHint')}</p>
+                  </div>
+                )}
+
                 <div>
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <label className="block text-xs font-medium text-slate-400">{t('models.apiKey')}</label>
@@ -676,6 +763,12 @@ export const ModelsView: React.FC = () => {
                     </div>
                     {model.model_id && <p className="mt-2 text-xs text-slate-500">{t('models.modelIdDisplay')} {model.model_id}</p>}
                     {model.base_url && <p className="mt-1 truncate text-xs text-slate-500">{t('models.baseUrlDisplay')} {model.base_url}</p>}
+                    {(model.input_price_per_1m || model.output_price_per_1m) && (
+                      <p className="mt-1 text-xs text-emerald-300">
+                        {t('models.pricingShort', { input: model.input_price_per_1m ?? '—', output: model.output_price_per_1m ?? '—' })}
+                      </p>
+                    )}
+                    {model.pricing_source && <p className="mt-1 text-[11px] text-slate-600">{model.pricing_source}{model.pricing_model_id ? ` · ${model.pricing_model_id}` : ''}</p>}
                   </div>
                   <button
                     onClick={() => void removeModel(model.id)}

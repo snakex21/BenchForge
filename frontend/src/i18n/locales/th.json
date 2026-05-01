@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "เส้นทางไม่ได้เริ่มต้นที่จุดเริ่มต้น",
   "maze.errorWallCollision": "ชนกับกำแพง.",
   "maze.errorGoal": "เส้นทางไปไม่ถึงเป้าหมาย",
-  "maze.successPath": "เส้นทางถูกต้อง"
+  "maze.successPath": "เส้นทางถูกต้อง",
+  "common.cost": "ค่าใช้จ่าย",
+  "models.refreshPricing": "รีเฟรชราคา",
+  "models.pricingRefreshing": "ราคารีเฟรช...",
+  "models.pricingUpdated": "ราคาอัพเดทล่าสุด: {date}",
+  "models.pricingRefreshed": "ปรับราคาใหม่แล้ว จับคู่โมเดล {matched} จากรายการ {total} OpenRouter",
+  "models.pricingRefreshFailed": "ไม่สามารถรีเฟรชราคา: {error}",
+  "models.inputPrice": "ราคาอินพุต ($ / โทเค็น 1M)",
+  "models.outputPrice": "ราคาเอาท์พุต ($ / โทเค็น 1 ล้าน)",
+  "models.pricingHint": "ราคาเป็นราคาโดยประมาณ ราคา OpenRouter สามารถรีเฟรชได้โดยอัตโนมัติ และคุณสามารถแทนที่ค่าด้วยตนเองได้",
+  "models.pricingShort": "ใน {input}/1M · ออก {output}/1M",
+  "stats.costs": "ค่าใช้จ่าย API โดยประมาณ",
+  "stats.costPerRun": "ต้นทุนต่อการวิ่ง",
+  "models.localPricingInfo": "รันไทม์ในเครื่อง — ไม่ได้ใช้การกำหนดราคา API"
 }

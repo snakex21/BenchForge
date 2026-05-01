@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Az útvonal nem a kezdőponttól kezdődik.",
   "maze.errorWallCollision": "Fallal való ütközés.",
   "maze.errorGoal": "Az út nem érte el a célt.",
-  "maze.successPath": "Az útvonal érvényes."
+  "maze.successPath": "Az útvonal érvényes.",
+  "common.cost": "Költség",
+  "models.refreshPricing": "Frissítse az árakat",
+  "models.pricingRefreshing": "Frissítő árak...",
+  "models.pricingUpdated": "Utoljára frissített ár: {date}",
+  "models.pricingRefreshed": "Árazás frissítve. Egyező {matched} modell(ek) a {total} OpenRouter bejegyzésekből.",
+  "models.pricingRefreshFailed": "Nem sikerült frissíteni az árat: {error}",
+  "models.inputPrice": "Bemeneti ár ($ / 1 millió token)",
+  "models.outputPrice": "Kimeneti ár ($ / 1 millió token)",
+  "models.pricingHint": "Az árak becslések. Az OpenRouter árazása automatikusan frissíthető, és manuálisan felülbírálhatja az értékeket.",
+  "models.pricingShort": "{input}/1M dollárban · {output}/1M dollárban",
+  "stats.costs": "Becsült API-költségek",
+  "stats.costPerRun": "Futásonkénti költség",
+  "models.localPricingInfo": "Helyi futásidejű – API-árazás nincs használatban."
 }

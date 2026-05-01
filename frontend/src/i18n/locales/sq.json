@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Rruga nuk fillon në pikën e fillimit.",
   "maze.errorWallCollision": "Përplasja me një mur.",
   "maze.errorGoal": "Rruga nuk ia arriti qëllimit.",
-  "maze.successPath": "Rruga është e vlefshme."
+  "maze.successPath": "Rruga është e vlefshme.",
+  "common.cost": "Kostoja",
+  "models.refreshPricing": "Rifresko çmimet",
+  "models.pricingRefreshing": "Çmimet freskuese...",
+  "models.pricingUpdated": "Përditësimi i fundit i çmimeve: {date}",
+  "models.pricingRefreshed": "Çmimi u rifreskua. Model(et) {matched} përputhen nga hyrjet e {total} OpenRouter.",
+  "models.pricingRefreshFailed": "Çmimi nuk mund të rifreskohej: {error}",
+  "models.inputPrice": "Çmimi i hyrjes ($ / 1 milion argumente)",
+  "models.outputPrice": "Çmimi i prodhimit ($ / 1 milion argumente)",
+  "models.pricingHint": "Çmimet janë të vlerësuara. Çmimi i OpenRouter mund të rifreskohet automatikisht dhe ju mund t'i anuloni vlerat manualisht.",
+  "models.pricingShort": "Në {input}/1 milion $ · Nga {output}/1 milion $",
+  "stats.costs": "Kostot e vlerësuara të API-së",
+  "stats.costPerRun": "Kostoja për vrapim",
+  "models.localPricingInfo": "Koha e ekzekutimit lokal - çmimi i API nuk përdoret."
 }

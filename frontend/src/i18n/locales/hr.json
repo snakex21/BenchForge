@@ -772,5 +772,18 @@
   "maze.errorStartPoint": "Staza ne počinje na početnoj točki.",
   "maze.errorWallCollision": "Sudar sa zidom.",
   "maze.errorGoal": "Put nije stigao do cilja.",
-  "maze.successPath": "Put je valjan."
+  "maze.successPath": "Put je valjan.",
+  "common.cost": "trošak",
+  "models.refreshPricing": "Osvježi cijene",
+  "models.pricingRefreshing": "Osvježavanje cijena...",
+  "models.pricingUpdated": "Zadnje ažuriranje cijena: {date}",
+  "models.pricingRefreshed": "Cijene su osvježene. Podudarni {matched} model(i) iz {total} OpenRouter unosa.",
+  "models.pricingRefreshFailed": "Nije moguće osvježiti cijene: {error}",
+  "models.inputPrice": "Ulazna cijena ($ / 1M tokena)",
+  "models.outputPrice": "Izlazna cijena ($ / 1M tokena)",
+  "models.pricingHint": "Cijene su procijenjene. OpenRouter cijene mogu se automatski osvježavati, a vrijednosti možete nadjačati ručno.",
+  "models.pricingShort": "U {input}/1M · Izlaz {output}/1M",
+  "stats.costs": "Procijenjeni troškovi API-ja",
+  "stats.costPerRun": "Cijena po vožnji",
+  "models.localPricingInfo": "Lokalno vrijeme izvođenja — API cijene se ne koriste."
 }
