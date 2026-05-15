@@ -57,8 +57,8 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
   const [scannedModels, setScannedModels] = useState<ScannedModel[]>([])
   const [scanErrors, setScanErrors] = useState<Record<string, string>>({})
 
-  const savedProviderConfigs = useMemo<Partial<Record<ApiProvider, SavedProviderConfig>>>(() => {
-    const configs: Partial<Record<ApiProvider, SavedProviderConfig>> = {}
+  const savedProviderConfigs = useMemo<Partial<Record<string, SavedProviderConfig>>>(() => {
+    const configs: Partial<Record<string, SavedProviderConfig>> = {}
     const sortedModels = [...models].sort((left, right) => right.id - left.id)
     for (const model of sortedModels) {
       if (model.mode !== 'api' || !model.provider) continue
@@ -117,6 +117,7 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
     base_url: baseUrl.trim(),
     api_key: apiKey.trim() || null,
     model_id: modelId.trim() || null,
+    active: true,
   })
 
   const testModel = async () => {

@@ -1,94 +1,94 @@
 {
-  "name": "benchforge-desktop",
-  "version": "1.0.0",
-  "private": true,
-  "description": "BenchForge desktop app powered by Electron, React, TypeScript and Vite.",
-  "author": "BenchForge",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/snakex21/BenchForge.git"
-  },
-  "main": "electron/main.cjs",
-  "scripts": {
-    "postinstall": "electron-builder install-app-deps",
-    "install:frontend": "cd frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "desktop": "electron .",
-    "start": "npm run build && electron .",
-    "dist": "npm run dist:win",
-    "dist:win": "npm run build && electron-builder --win nsis portable zip --publish never",
-    "pack": "npm run build && electron-builder --dir",
-    "checksum": "node scripts/checksums.cjs release",
-    "i18n:check": "node scripts/check-i18n.cjs",
-    "screenshots": "npm run build && electron scripts/capture-screenshots.cjs",
-    "release:win": "npm run dist:win && npm run checksum"
-  },
-  "dependencies": {
-    "better-sqlite3": "^11.10.0"
-  },
-  "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "electron": "^35.1.4",
-    "electron-builder": "^25.1.8"
-  },
-  "build": {
-    "appId": "com.benchforge.desktop",
-    "productName": "BenchForge",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "electron/**/*",
-      "frontend/dist/**/*",
-      "package.json"
-    ],
-    "asar": true,
-    "win": {
-      "icon": "build/icon.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "artifactName": "BenchForge-${version}-${arch}.${ext}"
-    },
-    "nsis": {
-      "artifactName": "BenchForge-Setup-${version}-${arch}.${ext}",
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "displayLanguageSelector": true,
-      "multiLanguageInstaller": true,
-      "installerLanguages": [
-        "en_US",
-        "pl_PL",
-        "de_DE",
-        "es_ES"
-      ],
-      "include": "build/installer.nsh",
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "portable": {
-      "artifactName": "BenchForge-Portable-${version}-${arch}.${ext}"
-    }
-  }
+    "name":  "benchforge-desktop",
+    "version":  "1.0.1",
+    "private":  true,
+    "description":  "BenchForge desktop app powered by Electron, React, TypeScript and Vite.",
+    "author":  "BenchForge",
+    "license":  "MIT",
+    "repository":  {
+                       "type":  "git",
+                       "url":  "https://github.com/snakex21/BenchForge.git"
+                   },
+    "main":  "electron/main.cjs",
+    "scripts":  {
+                    "postinstall":  "electron-builder install-app-deps",
+                    "install:frontend":  "cd frontend \u0026\u0026 npm install",
+                    "build":  "cd frontend \u0026\u0026 npm run build",
+                    "desktop":  "electron .",
+                    "start":  "npm run build \u0026\u0026 electron .",
+                    "dist":  "npm run dist:win",
+                    "dist:win":  "npm run build \u0026\u0026 electron-builder --win nsis portable zip --publish never",
+                    "pack":  "npm run build \u0026\u0026 electron-builder --dir",
+                    "checksum":  "node scripts/checksums.cjs release",
+                    "i18n:check":  "node scripts/check-i18n.cjs",
+                    "screenshots":  "npm run build \u0026\u0026 electron scripts/capture-screenshots.cjs",
+                    "release:win":  "npm run dist:win \u0026\u0026 npm run checksum"
+                },
+    "dependencies":  {
+                         "better-sqlite3":  "^11.10.0"
+                     },
+    "devDependencies":  {
+                            "@types/better-sqlite3":  "^7.6.13",
+                            "electron":  "^35.1.4",
+                            "electron-builder":  "^25.1.8"
+                        },
+    "build":  {
+                  "appId":  "com.benchforge.desktop",
+                  "productName":  "BenchForge",
+                  "directories":  {
+                                      "output":  "release"
+                                  },
+                  "files":  [
+                                "electron/**/*",
+                                "frontend/dist/**/*",
+                                "package.json"
+                            ],
+                  "asar":  true,
+                  "win":  {
+                              "icon":  "build/icon.ico",
+                              "target":  [
+                                             {
+                                                 "target":  "nsis",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             },
+                                             {
+                                                 "target":  "portable",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             },
+                                             {
+                                                 "target":  "zip",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             }
+                                         ],
+                              "artifactName":  "BenchForge-${version}-${arch}.${ext}"
+                          },
+                  "nsis":  {
+                               "artifactName":  "BenchForge-Setup-${version}-${arch}.${ext}",
+                               "installerIcon":  "build/icon.ico",
+                               "uninstallerIcon":  "build/icon.ico",
+                               "oneClick":  false,
+                               "perMachine":  false,
+                               "allowToChangeInstallationDirectory":  true,
+                               "displayLanguageSelector":  true,
+                               "multiLanguageInstaller":  true,
+                               "installerLanguages":  [
+                                                          "en_US",
+                                                          "pl_PL",
+                                                          "de_DE",
+                                                          "es_ES"
+                                                      ],
+                               "include":  "build/installer.nsh",
+                               "createDesktopShortcut":  true,
+                               "createStartMenuShortcut":  true
+                           },
+                  "portable":  {
+                                   "artifactName":  "BenchForge-Portable-${version}-${arch}.${ext}"
+                               }
+              }
 }

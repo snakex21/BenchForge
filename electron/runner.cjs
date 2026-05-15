@@ -1,4 +1,4 @@
-const { getModelById, getBenchmarkById, getTasks, addResult, getLatestTaskResult, createRunSession, getRunSession, updateRunSession, finishRunSession, cancelRunSession, getPreference } = require('./database.cjs')
+const { getModelById, getEffectiveModelConfig, getBenchmarkById, getTasks, addResult, getLatestTaskResult, createRunSession, getRunSession, updateRunSession, finishRunSession, cancelRunSession, getPreference } = require('./database.cjs')
 const { getProvider } = require('./providers/index.cjs')
 const { isToolTask, runToolAgent } = require('./toolAgent.cjs')
 const { evaluateSandbox } = require('./sandboxEvaluator.cjs')
@@ -387,7 +387,7 @@ function streamProviderPrompt(provider, model, prompt, handlers, imageBase64 = n
 }
 
 async function runBenchmark(modelId, benchmarkId) {
-  const model = getModelById(modelId)
+  const model = getEffectiveModelConfig(modelId)
   if (!model) return { results: [], summary: { total: 1, completed: 0, avgScore: null }, error: 'Model was not found.' }
 
   const benchmark = getBenchmarkById(benchmarkId)
@@ -415,7 +415,7 @@ async function runBenchmark(modelId, benchmarkId) {
 }
 
 async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = null, sessionId = null, taskIds = null) {
-  const model = getModelById(modelId)
+  const model = getEffectiveModelConfig(modelId)
   const benchmark = getBenchmarkById(benchmarkId)
   if (!model || !benchmark) {
     const error = !model ? 'Model was not found.' : 'Benchmark was not found.'
@@ -586,6 +586,7 @@ async function runBenchmarkStreaming(modelId, benchmarkId, sendEvent, signal = n
       cancelRunSession(session.id)
       sendEvent('benchmark:aborted', {})
     } else {
+      cancelRunSession(session.id)
       sendEvent('task:error', { benchmarkId, error: message })
       sendEvent('benchmark:done', { summary: { total: 1, completed: 0, avgScore: null }, results: [], error: message })
     }

@@ -36,6 +36,12 @@ contextBridge.exposeInMainWorld('db', {
   updateModel: (payload) => ipcRenderer.invoke('db:models:update', payload),
   deleteModel: (payload) => ipcRenderer.invoke('db:models:delete', payload),
   getDiscoveredModels: (payload) => ipcRenderer.invoke('db:discovered-models:get', payload),
+  providerConfigs: {
+    getAll: () => ipcRenderer.invoke('db:provider-configs:get-all'),
+    get: (provider) => ipcRenderer.invoke('db:provider-configs:get', provider),
+    save: (provider, data) => ipcRenderer.invoke('db:provider-configs:save', { provider, data }),
+    delete: (provider) => ipcRenderer.invoke('db:provider-configs:delete', provider),
+  },
   getBenchmarks: () => ipcRenderer.invoke('db:benchmarks:get'),
   addBenchmark: (payload) => ipcRenderer.invoke('db:benchmarks:add', payload),
   updateBenchmark: (payload) => ipcRenderer.invoke('db:benchmarks:update', payload),

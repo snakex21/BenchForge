@@ -58,7 +58,7 @@ const defaultUIState: UIState = {
 
 const sanitizeUIState = (state: unknown): UIState => {
   const persisted = (state ?? {}) as Partial<UIState>
-  const validViews: ActiveView[] = ['arena', 'runner', 'models', 'benchmarks', 'results', 'stats', 'settings']
+  const validViews: ActiveView[] = ['arena', 'runner', 'models', 'benchmarks', 'results', 'stats', 'compare', 'settings']
 
   const sanitizeShortcuts = (shortcuts: unknown): KeyboardShortcuts => {
     if (!shortcuts || typeof shortcuts !== 'object') return defaultKeyboardShortcuts

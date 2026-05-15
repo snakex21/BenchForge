@@ -55,16 +55,27 @@ export interface AIModel {
   id: number
   name: string
   mode: ModelMode
-  provider?: ApiProvider
+  provider?: string
   base_url?: string | null
   api_key?: string | null
   model_id?: string | null
+  active: boolean
   input_price_per_1m?: number | null
   output_price_per_1m?: number | null
   pricing_source?: 'openrouter' | 'manual' | null
   pricing_model_id?: string | null
   pricing_updated_at?: string | null
   created_at: string
+}
+
+export interface ProviderConfig {
+  provider: string
+  api_key: string | null
+  base_url: string | null
+  display_name: string | null
+  icon_url: string | null
+  is_custom: boolean
+  updated_at: string
 }
 
 export interface BenchmarkResult {
@@ -128,7 +139,7 @@ export interface UIState {
   keyboardShortcuts: KeyboardShortcuts
 }
 
-export type ActiveView = 'arena' | 'runner' | 'models' | 'benchmarks' | 'results' | 'stats' | 'settings'
+export type ActiveView = 'arena' | 'runner' | 'models' | 'benchmarks' | 'results' | 'stats' | 'compare' | 'settings'
 
 export interface KeyboardShortcut {
   key: string

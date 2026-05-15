@@ -20,6 +20,7 @@ const VIEW_TITLE_KEYS: Record<ActiveView, TranslationKey> = {
   benchmarks: 'topbar.benchmarks',
   results: 'topbar.results',
   stats: 'topbar.stats',
+  compare: 'topbar.compare',
   settings: 'topbar.settings',
 }
 

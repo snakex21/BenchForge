@@ -5,6 +5,7 @@ const {
   initDb,
   getModels,
   getModelById,
+  getEffectiveModelConfig,
   getDiscoveredModels,
   saveDiscoveredModels,
   getBenchmarkById,
@@ -40,6 +41,10 @@ const {
   replaceAllData,
   savePreference,
   getPreference,
+  getAllProviderConfigs,
+  getProviderConfig,
+  saveProviderConfig,
+  deleteProviderConfig,
 } = require('./database.cjs')
 const { resolveArtifactPath, zipDirectory } = require('./artifacts.cjs')
 const { checkEnvironment } = require('./systemTools.cjs')
@@ -70,7 +75,12 @@ async function getHealthCheck() {
   const apiModels = models.filter((model) => model.mode === 'api')
   const localProviders = new Set(['lmstudio', 'ollama', 'vllm'])
   const remoteApiModels = apiModels.filter((model) => model.provider && !localProviders.has(model.provider))
-  const missingKeyModels = remoteApiModels.filter((model) => !String(model.api_key || '').trim())
+  const missingKeyModels = remoteApiModels.filter((model) => {
+    if (String(model.api_key || '').trim()) return false
+    // Check if provider config has a key
+    const providerConfig = getProviderConfig(model.provider)
+    return !providerConfig?.api_key || !String(providerConfig.api_key).trim()
+  })
   const mcpServers = getPreference('mcp_servers') || []
   const repoSandboxRoots = getPreference('repo_sandbox_roots') || []
   const judgeModelId = getPreference('judge_model_id')
@@ -369,6 +379,11 @@ ipcMain.handle('db:models:update', (_, payload) => updateModel(payload.id, paylo
 ipcMain.handle('db:models:delete', (_, payload) => deleteModel(payload.id))
 ipcMain.handle('db:discovered-models:get', (_, payload) => getDiscoveredModels(payload?.provider || null))
 
+ipcMain.handle('db:provider-configs:get-all', () => getAllProviderConfigs())
+ipcMain.handle('db:provider-configs:get', (_, provider) => getProviderConfig(provider))
+ipcMain.handle('db:provider-configs:save', (_, payload) => saveProviderConfig(payload.provider, payload.data))
+ipcMain.handle('db:provider-configs:delete', (_, provider) => deleteProviderConfig(provider))
+
 ipcMain.handle('db:benchmarks:get', () => getBenchmarks())
 ipcMain.handle('db:benchmarks:add', (_, payload) => addBenchmark(payload))
 ipcMain.handle('db:benchmarks:update', (_, payload) => updateBenchmark(payload.id, payload.data))
@@ -404,7 +419,7 @@ ipcMain.handle('db:preference:set', (_, key, value) => savePreference(key, value
 ipcMain.handle('db:preference:get', (_, key) => getPreference(key))
 
 ipcMain.handle('model:test-connection', async (_, payload) => {
-  const model = payload?.modelId ? getModelById(payload.modelId) : payload?.modelConfig
+  let model = payload?.modelId ? getEffectiveModelConfig(payload.modelId) : payload?.modelConfig
   if (!model) {
     return { ok: false, error: 'Model configuration was not found.' }
   }
@@ -415,7 +430,7 @@ ipcMain.handle('model:test-connection', async (_, payload) => {
 
 ipcMain.handle('judge:evaluate', async (_, payload) => {
   try {
-    const model = getModelById(payload?.modelId)
+    const model = getEffectiveModelConfig(payload?.modelId)
     if (!model) return { ok: false, error: 'Judge model was not found.' }
     const provider = getProvider(model.mode)
     const prompt = `Evaluate the model response as a judge. Return ONLY JSON: {"score":0-100,"passed":true/false,"reason":"..."}.\n\nBenchmark/task:\n${payload?.taskPrompt || ''}\n\nChecklist:\n${Array.isArray(payload?.checklist) ? payload.checklist.map((item) => `- ${item}`).join('\n') : ''}\n\nResponse to evaluate:\n${payload?.response || ''}`
@@ -447,6 +462,7 @@ ipcMain.handle('models:scan', async (_, payload) => {
     : DEFAULT_SCAN_ENDPOINTS
 
   const result = { lmstudio: [], ollama: [], vllm: [], errors: {} }
+  const scannedKeys = new Set(endpoints.map((e) => e.key || String(e.name || '').toLowerCase()))
 
   await Promise.all(endpoints.map(async (endpoint) => {
     const key = endpoint.key || String(endpoint.name || '').toLowerCase()
@@ -464,11 +480,14 @@ ipcMain.handle('models:scan', async (_, payload) => {
     } catch (error) {
       result[key] = result[key] || []
       result.errors[key] = error instanceof Error ? error.message : 'Unknown scan error.'
+      // Don't clear cache — keep old discovered models for display on next app load
       console.warn(`[models:scan] FAIL: ${endpoint.name || key} - ${result.errors[key]}`)
     }
   }))
 
+  // Only use cached models for providers that were NOT just scanned
   for (const item of getDiscoveredModels()) {
+    if (scannedKeys.has(item.provider)) continue
     result[item.provider] = Array.from(new Set([...(Array.isArray(result[item.provider]) ? result[item.provider] : []), item.modelId]))
   }
 
@@ -476,7 +495,7 @@ ipcMain.handle('models:scan', async (_, payload) => {
 })
 
 ipcMain.handle('model:send-prompt', async (_, payload) => {
-  const model = getModelById(payload?.modelId)
+  const model = getEffectiveModelConfig(payload?.modelId)
   if (!model) {
     throw new Error('Model was not found.')
   }
