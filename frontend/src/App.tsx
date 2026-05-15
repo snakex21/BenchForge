@@ -20,6 +20,7 @@ import { BenchmarksView } from '@/features/arena/BenchmarksView'
 import { ResultsView } from '@/features/arena/ResultsView'
 import { StatsView } from '@/features/arena/StatsView'
 import { SettingsView } from '@/features/arena/SettingsView'
+import { CompareView } from '@/features/arena/CompareView'
 import { FirstRunWizard } from '@/components/onboarding/FirstRunWizard'
 
 function App() {
@@ -49,6 +50,26 @@ function App() {
   useEffect(() => {
     const bootstrap = async () => {
       await Promise.all([loadModels(), loadBenchmarks(), loadResults()])
+
+      // Sanitize stale UI state references (models/benchmarks deleted externally or during crash)
+      const { selectedModelId, selectedBenchmarkId, rerunTarget, selectModel, selectBenchmark, setRerunTarget } = useUIStore.getState()
+      const models = useModelStore.getState().models
+      const benchmarks = useBenchmarkStore.getState().benchmarks
+
+      if (selectedModelId !== null && !models.some((model) => model.id === selectedModelId)) {
+        selectModel(null)
+      }
+      if (selectedBenchmarkId !== null && !benchmarks.some((benchmark) => benchmark.id === selectedBenchmarkId)) {
+        selectBenchmark(null)
+      }
+      if (rerunTarget) {
+        const modelExists = models.some((model) => model.id === rerunTarget.modelId)
+        const benchmarkExists = benchmarks.some((benchmark) => benchmark.id === rerunTarget.benchmarkId)
+        if (!modelExists || !benchmarkExists) {
+          setRerunTarget(null)
+        }
+      }
+
       const completed = await window.db?.getPreference?.('onboarding_completed')
       const hasExistingData = useModelStore.getState().models.length > 0 || useBenchmarkStore.getState().benchmarks.length > 0
       setShowOnboarding(completed !== true && !hasExistingData)
@@ -69,6 +90,8 @@ function App() {
         return <ResultsView />
       case 'stats':
         return <StatsView />
+      case 'compare':
+        return <CompareView />
       case 'settings':
         return <SettingsView />
       default:
@@ -76,7 +99,7 @@ function App() {
     }
   }
 
-  const detailViews = ['arena', 'models', 'benchmarks', 'results', 'stats']
+  const detailViews = ['arena', 'models', 'benchmarks', 'results', 'stats', 'compare']
   const shouldShowDetailsPanel = detailViews.includes(activeView) && (selectedModelId !== null || selectedBenchmarkId !== null)
 
   return (

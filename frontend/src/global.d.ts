@@ -49,6 +49,12 @@ interface BenchForgeDbApi {
   updateModel: (payload: { id: number; data: Partial<Omit<AIModel, 'id' | 'created_at'>> }) => Promise<AIModel | null>
   deleteModel: (payload: { id: number }) => Promise<{ changes: number }>
   getDiscoveredModels: (payload?: { provider?: string }) => Promise<Array<{ provider: string; modelId: string; baseUrl?: string | null; lastSeenAt?: string }>>
+  providerConfigs: {
+    getAll: () => Promise<Array<{ provider: string; api_key: string | null; base_url: string | null; display_name: string | null; icon_url: string | null; is_custom: boolean; updated_at: string }>>
+    get: (provider: string) => Promise<{ provider: string; api_key: string | null; base_url: string | null; display_name: string | null; icon_url: string | null; is_custom: boolean; updated_at: string } | null>
+    save: (provider: string, data: { api_key?: string | null; base_url?: string | null; display_name?: string | null; icon_url?: string | null; is_custom?: boolean }) => Promise<{ provider: string; api_key: string | null; base_url: string | null; display_name: string | null; icon_url: string | null; is_custom: boolean; updated_at: string }>
+    delete: (provider: string) => Promise<{ changes: number }>
+  }
   getBenchmarks: () => Promise<Benchmark[]>
   addBenchmark: (payload: Omit<Benchmark, 'id' | 'created_at'>) => Promise<Benchmark>
   updateBenchmark: (payload: { id: number; data: Partial<Omit<Benchmark, 'id' | 'created_at'>> }) => Promise<Benchmark>

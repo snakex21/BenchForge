@@ -131,7 +131,9 @@ const formatTaskResultLabel = (taskState: RunnerTaskState, t: (key: TranslationK
 
 export const RunnerView: React.FC = () => {
   const models = useModelStore((state) => state.models)
+  const modelsLoading = useModelStore((state) => state.isLoading)
   const benchmarks = useBenchmarkStore((state) => state.benchmarks)
+  const benchmarksLoading = useBenchmarkStore((state) => state.isLoading)
   const loadResults = useResultStore((state) => state.loadFromDb)
   const rerunTarget = useUIStore((s) => s.rerunTarget)
   const setRerunTarget = useUIStore((s) => s.setRerunTarget)
@@ -170,15 +172,42 @@ export const RunnerView: React.FC = () => {
   const userClosedRef = useRef(false)
   const userOpenedRef = useRef(false)
 
+  const activeModels = useMemo(() => models.filter((model) => model.active !== false), [models])
+  const activeModelIdSet = useMemo(() => new Set(activeModels.map((model) => model.id)), [activeModels])
+  const benchmarkIdSet = useMemo(() => new Set(benchmarks.map((benchmark) => benchmark.id)), [benchmarks])
+  const validSelectedModelIds = useMemo(() => selectedModelIds.filter((id) => activeModelIdSet.has(id)), [activeModelIdSet, selectedModelIds])
+  const validSelectedBenchmarkIds = useMemo(() => selectedBenchmarkIds.filter((id) => benchmarkIdSet.has(id)), [benchmarkIdSet, selectedBenchmarkIds])
+
+  useEffect(() => {
+    if (modelsLoading) return
+    const next = selectedModelIds.filter((id, index, self) => activeModelIdSet.has(id) && self.indexOf(id) === index)
+    if (next.length !== selectedModelIds.length || next.some((id, index) => id !== selectedModelIds[index])) {
+      setSelectedModelIds(next)
+    }
+  }, [activeModelIdSet, modelsLoading, selectedModelIds])
+
+  useEffect(() => {
+    if (benchmarksLoading) return
+    const next = selectedBenchmarkIds.filter((id, index, self) => benchmarkIdSet.has(id) && self.indexOf(id) === index)
+    if (next.length !== selectedBenchmarkIds.length || next.some((id, index) => id !== selectedBenchmarkIds[index])) {
+      setSelectedBenchmarkIds(next)
+    }
+  }, [benchmarkIdSet, benchmarksLoading, selectedBenchmarkIds])
+
   // Pre-select model + benchmark when coming from "Uruchom ponownie"
   useEffect(() => {
     if (!rerunTarget) return
+    if (modelsLoading || benchmarksLoading) return
     const { modelId, benchmarkId, taskIds } = rerunTarget
+    if (!activeModelIdSet.has(modelId) || !benchmarkIdSet.has(benchmarkId)) {
+      setRerunTarget(null)
+      return
+    }
     if (!selectedModelIds.includes(modelId)) setSelectedModelIds((prev) => [...prev, modelId])
     if (!selectedBenchmarkIds.includes(benchmarkId)) setSelectedBenchmarkIds((prev) => [...prev, benchmarkId])
     if (Array.isArray(taskIds) && taskIds.length > 0) setRerunTaskFilters((current) => ({ ...current, [`${modelId}-${benchmarkId}`]: taskIds }))
     setRerunTarget(null)
-  }, [rerunTarget]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rerunTarget, activeModelIdSet, benchmarkIdSet, modelsLoading, benchmarksLoading, selectedModelIds, selectedBenchmarkIds, setRerunTarget])
 
   // Load saved panel state from DB on mount
   useEffect(() => {
@@ -198,15 +227,15 @@ export const RunnerView: React.FC = () => {
     if (savedPanelOpen !== null) setPanelOpen(savedPanelOpen)
   }, [savedPanelOpen])
 
-  const totalPairs = selectedModelIds.length * selectedBenchmarkIds.length
+  const totalPairs = validSelectedModelIds.length * validSelectedBenchmarkIds.length
   const completedPairs = items.filter((item) => item.status === 'done' || item.status === 'error').length
   const toggleId = (current: number[], id: number) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]
 
   const filteredModels = useMemo(() => {
     const query = modelSearch.trim().toLowerCase()
-    if (!query) return models
-    return models.filter((model) => [model.name, model.mode, model.provider, model.model_id, model.base_url].some((value) => String(value || '').toLowerCase().includes(query)))
-  }, [modelSearch, models])
+    if (!query) return activeModels
+    return activeModels.filter((model) => [model.name, model.mode, model.provider, model.model_id, model.base_url].some((value) => String(value || '').toLowerCase().includes(query)))
+  }, [modelSearch, activeModels])
 
   const filteredBenchmarks = useMemo(() => {
     const query = benchmarkSearch.trim().toLowerCase()
@@ -214,7 +243,7 @@ export const RunnerView: React.FC = () => {
     return benchmarks.filter((benchmark) => [benchmark.name, benchmark.category, benchmark.suite_name, benchmark.description, benchmark.score_type].some((value) => String(value || '').toLowerCase().includes(query)))
   }, [benchmarkSearch, benchmarks])
 
-  const selectedManualModels = useMemo(() => models.filter((model) => selectedModelIds.includes(model.id) && model.mode === 'manual'), [models, selectedModelIds])
+  const selectedManualModels = useMemo(() => activeModels.filter((model) => validSelectedModelIds.includes(model.id) && model.mode === 'manual'), [activeModels, validSelectedModelIds])
   const effectiveManualBatchSize = useMemo(() => {
     const rawValue = manualBatchSizeOption === 'custom' ? manualBatchCustomSize : manualBatchSizeOption
     const numeric = Math.floor(Number(rawValue))
@@ -294,9 +323,24 @@ export const RunnerView: React.FC = () => {
   const waitForManualBatch = (step: ManualBatchStep) => new Promise<RunnerItemStatus>((resolve) => { setManualBatchStep(step); setManualBatchResolver(() => resolve) })
 
   useEffect(() => {
-    void window.db?.runSession.getActive().then((active) => { if (active) setResumeSession(active) })
-    return () => window.db?.removeStreamListeners()
-  }, [])
+    if (modelsLoading || benchmarksLoading) return
+    let cancelled = false
+    void window.db?.runSession.getActive().then(async (active) => {
+      if (cancelled || !active) return
+      const modelExists = activeModelIdSet.has(active.model_id)
+      const validBenchmarkIds = active.benchmark_ids.filter((id) => benchmarkIdSet.has(id))
+      if (!modelExists || validBenchmarkIds.length === 0) {
+        await window.db?.runSession.cancel({ id: active.id })
+        if (!cancelled) setResumeSession(null)
+        return
+      }
+      if (!cancelled) setResumeSession({ ...active, benchmark_ids: validBenchmarkIds })
+    })
+    return () => {
+      cancelled = true
+      window.db?.removeStreamListeners()
+    }
+  }, [activeModelIdSet, benchmarkIdSet, benchmarksLoading, modelsLoading])
 
   useEffect(() => {
     if (isRunning || items.length === 0) return
@@ -342,13 +386,19 @@ export const RunnerView: React.FC = () => {
   }
 
   const restoreSession = async (session: RunSession) => {
+    const model = activeModels.find((entry) => entry.id === session.model_id)
+    const validBenchmarkIds = session.benchmark_ids.filter((id) => benchmarkIdSet.has(id))
+    if (!model || validBenchmarkIds.length === 0) {
+      await discardSession(session)
+      return
+    }
     await loadResults()
     const loadedResults = useResultStore.getState().results
     setSelectedModelIds([session.model_id])
-    setSelectedBenchmarkIds(session.benchmark_ids)
+    setSelectedBenchmarkIds(validBenchmarkIds)
     setResumeSessionId(session.id)
     setResumeSession(null)
-    setItems(session.benchmark_ids.map((benchmarkId) => {
+    setItems(validBenchmarkIds.map((benchmarkId) => {
       const benchmark = benchmarks.find((entry) => entry.id === benchmarkId)
       const visibleTasks = (benchmark?.tasks || []).filter((task) => !((benchmark?.tasks?.length || 0) > 1 && benchmark && isAutoGeneratedParentTask(task, benchmark)))
       const taskStates = Object.fromEntries(visibleTasks.map((task) => {
@@ -503,9 +553,14 @@ export const RunnerView: React.FC = () => {
 
   const runAll = async () => {
     if (!window.db || runningRef.current) return
+    const runnableModelIds = selectedModelIds.filter((id) => activeModelIdSet.has(id))
+    const runnableBenchmarkIds = selectedBenchmarkIds.filter((id) => benchmarkIdSet.has(id))
+    if (runnableModelIds.length !== selectedModelIds.length) setSelectedModelIds(runnableModelIds)
+    if (runnableBenchmarkIds.length !== selectedBenchmarkIds.length) setSelectedBenchmarkIds(runnableBenchmarkIds)
+    if (runnableModelIds.length === 0 || runnableBenchmarkIds.length === 0) return
     runningRef.current = true
     const checkpointItems = new Map(items.map((item) => [item.key, item]))
-    const queue = selectedModelIds.flatMap((modelId) => selectedBenchmarkIds.map((benchmarkId) => ({
+    const queue = runnableModelIds.flatMap((modelId) => runnableBenchmarkIds.map((benchmarkId) => ({
       key: `${modelId}-${benchmarkId}`,
       modelId,
       benchmarkId,
@@ -677,7 +732,7 @@ export const RunnerView: React.FC = () => {
           }
         })
 
-        const sessionId = resumeSessionId && pair.modelId === selectedModelIds[0] && pair.benchmarkId === selectedBenchmarkIds[0] ? resumeSessionId : undefined
+        const sessionId = resumeSessionId && pair.modelId === runnableModelIds[0] && pair.benchmarkId === runnableBenchmarkIds[0] ? resumeSessionId : undefined
         window.db?.runBenchmarkStreaming({ modelId: pair.modelId, benchmarkId: pair.benchmarkId, sessionId, taskIds: pair.taskFilterIds || undefined }).then((started) => {
           if (!started.started) {
             runError = started.error || t('runner.errorStartStreaming')
@@ -926,7 +981,7 @@ export const RunnerView: React.FC = () => {
         <h2 className="text-xl font-bold text-slate-100">{t('runner.title')}</h2>
         <div className="flex flex-wrap gap-2">
           {isRunning && <Button variant="danger" onClick={() => void handleAbortBenchmark()}>{t('runner.abort')}</Button>}
-          <Button onClick={() => void runAll()} disabled={selectedModelIds.length === 0 || selectedBenchmarkIds.length === 0 || isRunning}>{t('runner.run')}</Button>
+          <Button onClick={() => void runAll()} disabled={validSelectedModelIds.length === 0 || validSelectedBenchmarkIds.length === 0 || isRunning}>{t('runner.run')}</Button>
         </div>
       </div>
 
@@ -948,8 +1003,8 @@ export const RunnerView: React.FC = () => {
       {models.length === 0 || benchmarks.length === 0 ? <EmptyState icon="plus" title={t('runner.noRunDataTitle')} description={t('runner.noRunDataDescription')} /> : (
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card title={t('runner.modelsCard')} subtitle={t('runner.modelsCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setModelPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{selectedModelIds.length ? t('runner.selectedModels', { count: selectedModelIds.length }) : t('runner.chooseModels')}</p><p className="truncate text-xs text-slate-500">{selectedModelIds.length ? models.filter((model) => selectedModelIds.includes(model.id)).map((model) => model.name).join(', ') : t('runner.openModelsPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
-            <Card title={t('runner.benchmarksCard')} subtitle={t('runner.benchmarksCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setBenchmarkPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{selectedBenchmarkIds.length ? t('runner.selectedBenchmarks', { count: selectedBenchmarkIds.length }) : t('runner.chooseBenchmarks')}</p><p className="truncate text-xs text-slate-500">{selectedBenchmarkIds.length ? benchmarks.filter((benchmark) => selectedBenchmarkIds.includes(benchmark.id)).map((benchmark) => benchmark.name).join(', ') : t('runner.openBenchmarksPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
+            <Card title={t('runner.modelsCard')} subtitle={t('runner.modelsCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setModelPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{validSelectedModelIds.length ? t('runner.selectedModels', { count: validSelectedModelIds.length }) : t('runner.chooseModels')}</p><p className="truncate text-xs text-slate-500">{validSelectedModelIds.length ? activeModels.filter((model) => validSelectedModelIds.includes(model.id)).map((model) => model.name).join(', ') : t('runner.openModelsPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
+            <Card title={t('runner.benchmarksCard')} subtitle={t('runner.benchmarksCardSubtitle')}><button type="button" className="w-full rounded-lg border border-slate-700/40 px-3 py-3 text-left hover:bg-slate-700/20" onClick={() => setBenchmarkPickerOpen(true)}><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-200">{validSelectedBenchmarkIds.length ? t('runner.selectedBenchmarks', { count: validSelectedBenchmarkIds.length }) : t('runner.chooseBenchmarks')}</p><p className="truncate text-xs text-slate-500">{validSelectedBenchmarkIds.length ? benchmarks.filter((benchmark) => validSelectedBenchmarkIds.includes(benchmark.id)).map((benchmark) => benchmark.name).join(', ') : t('runner.openBenchmarksPopup')}</p></div><span className="text-sm text-indigo-300">{t('common.open')}</span></div></button></Card>
           </div>
 
           {selectedManualModels.length > 0 && (
@@ -1181,16 +1236,16 @@ export const RunnerView: React.FC = () => {
               />
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setSelectedModelIds(models.map((model) => model.id))}>{t('common.selectAll')}</Button>
+                <Button variant="secondary" size="sm" onClick={() => setSelectedModelIds(activeModels.map((model) => model.id))}>{t('common.selectAll')}</Button>
                 <Button variant="ghost" size="sm" onClick={() => setSelectedModelIds([])}>{t('common.clearSelection')}</Button>
-                <span className="rounded-lg border border-slate-700/40 bg-slate-950/40 px-2 py-1 text-xs text-slate-500">{t('common.selected')}: {selectedModelIds.length}</span>
+                <span className="rounded-lg border border-slate-700/40 bg-slate-950/40 px-2 py-1 text-xs text-slate-500">{t('common.selected')}: {validSelectedModelIds.length}</span>
               </div>
 
               <div className="max-h-[55vh] space-y-2 overflow-auto pr-1">
                 {filteredModels.length === 0 ? (
                   <p className="rounded-lg border border-slate-700/40 bg-slate-950/30 p-4 text-sm text-slate-500">{t('runner.noMatchingModels')}</p>
                 ) : filteredModels.map((model) => {
-                  const checked = selectedModelIds.includes(model.id)
+                  const checked = validSelectedModelIds.includes(model.id)
                   return (
                     <label key={model.id} className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition ${checked ? 'border-indigo-400/60 bg-indigo-500/10' : 'border-slate-700/40 hover:bg-slate-700/20'}`}>
                       <input type="checkbox" checked={checked} onChange={() => setSelectedModelIds((current) => toggleId(current, model.id))} />

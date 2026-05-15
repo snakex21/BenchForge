@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'benchmarks', labelKey: 'nav.benchmarks', icon: '🧪' },
   { id: 'results', labelKey: 'nav.results', icon: '📋' },
   { id: 'stats', labelKey: 'nav.stats', icon: '📊' },
+  { id: 'compare', labelKey: 'nav.compare', icon: '⚖️' },
   { id: 'settings', labelKey: 'nav.settings', icon: '⚙️' },
 ]
 
