@@ -1,0 +1,22 @@
+Verification, 2026-09-30
+
+Go prototype:
+- 25 Go tests pass with race detector (one fresh final run; independent reviewer repeated the earlier slice and supplemental cases three times)
+- go vet passes; Go native Linux build passes
+- node --check web/app.js passes
+- Full built Linux binary smoke through actual loopback HTTP passes: start suite, exact/contains evaluation, 2 pass + 1 intentional fail, result GET identical to persisted report, graceful SIGINT
+- Provider adapter tested against local httptest HTTP server; cancellation, deadlines, error replies, token usage, returned model/fingerprint and endpoint provenance covered
+- Browser UI not visually/interactively tested: cloud browser returned ERR_BLOCKED_BY_CLIENT on localhost. No network-policy bypass or deployment attempted
+- No real LLM, model downloads or paid API use
+
+Existing BenchForge baseline app (untouched):
+- Installed root and frontend dependencies with npm ci --ignore-scripts; script skips avoid Electron download/native postinstall for this code-only verification
+- Frontend: 7 files / 55 tests passed
+- npm run build: TypeScript + Vite pass after both prescribed root/frontend dependency sets installed
+- i18n check: 58 locales; missing=0, placeholderIssues=0, extra=2508 warnings (44 extras each in 57 locale files)
+- Electron launch, native SQLite binary, Windows installer/updater and complete end-to-end app not tested
+- Initial frontend-only install was insufficient for @types/node; root+frontend prescribed install resolves it
+
+Do not conflate test counts, compiled Windows binaries, or HTTP/asset tests with visual browser QA or full app parity.
+
+Security review: malformed rejected URL errors are sanitized to avoid logging embedded credentials. Regression tests cover cross-origin/Host/form/preflight/GET-cancel/key-field injection, redirects, response size bounds, late success after deadline, post-result persistence failure, and full provider provenance reload.

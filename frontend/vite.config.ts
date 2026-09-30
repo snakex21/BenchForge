@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
 
   // Uzyj scieszek relatywnych — Electron ładuje pliki z dysku lokalnie
@@ -22,7 +22,9 @@ export default defineConfig({
   // Wbudowane moduły Node.js (BrowserWindow itp.) muszą być
   // traktowane jako "external" — Electron zaimportuje je natywnie
   build: {
+    ...(mode === 'readonly' ? { outDir: '../go-viewer/web', emptyOutDir: true } : {}),
     rollupOptions: {
+      ...(mode === 'readonly' ? { input: path.resolve(__dirname, 'readonly.html') } : {}),
       external: ['electron'],
     },
     // Inline assets smaller than 100KB as base64 (icons load immediately, no HTTP requests)
@@ -35,4 +37,4 @@ export default defineConfig({
     cors: true,
     strictPort: true,
   },
-})
+}))

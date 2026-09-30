@@ -1,0 +1,9 @@
+{
+  "suite": {"version":"benchforge-text-v1","id":"offline-smoke","tasks":[
+    {"id":"echo-pass","prompt":"4","mode":"exact","expected":"4"},
+    {"id":"echo-fail","prompt":"14","mode":"exact","expected":"4"},
+    {"id":"explicit-contains","prompt":"The capital is Warsaw.","mode":"contains","expected":"Warsaw"}
+  ]},
+  "models":["echo"],
+  "settings":{"timeout_ms":10000,"max_tokens":256,"temperature":0}
+}

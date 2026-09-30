@@ -1,0 +1,14 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> benchforge-frontend@1.0.1 test
+> vitest run
+
+
+ RUN  v4.1.5 /workspace/scratch/cdc79842cc4e/benchforge-go-review/frontend
+
+
+ Test Files  8 passed (8)
+      Tests  63 passed (63)
+   Start at  20:20:56
+   Duration  4.13s (transform 1.15s, setup 1.22s, import 2.35s, tests 817ms, environment 17.22s)
+
