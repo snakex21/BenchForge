@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LANGUAGE_OPTIONS, useTranslation } from '@/i18n'
 import { formatShortcut } from '@/hooks/useKeyboardShortcuts'
+import { useAppVersion } from '@/hooks/useAppVersion'
 import type { KeyboardAction, KeyboardShortcut } from '@/types'
 
 export const SettingsView: React.FC = () => {
@@ -28,6 +29,7 @@ export const SettingsView: React.FC = () => {
   const loadResults = useResultStore((state) => state.loadFromDb)
   const models = useModelStore((state) => state.models)
   const { t } = useTranslation()
+  const appVersion = useAppVersion()
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [tools, setTools] = useState<Array<{ id: string; name: string; description: string }>>([])
   const [toolStatus, setToolStatus] = useState<string | null>(null)
@@ -523,7 +525,7 @@ export const SettingsView: React.FC = () => {
           <p><strong className="text-slate-200">BenchForge</strong></p>
           <p>{t('settings.aboutDescription')}</p>
           <p>{t('settings.stack')}</p>
-          <p className="mt-2 text-xs text-slate-600">BenchForge v1.0.0</p>
+          <p className="mt-2 text-xs text-slate-600">BenchForge {appVersion ? `v${appVersion}` : ''}</p>
         </div>
       </Card>
 

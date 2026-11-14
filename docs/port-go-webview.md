@@ -33,7 +33,7 @@ Legend: ✅ ported and tested · 🟡 ported but not fully verified, or with a d
 |---|---|---|---|
 | App meta / data path | `app:get-meta`, `app:get-data-path`, `app:open-data-path` | ✅ | `platform` is always `win32` |
 | External links | `app:open-external` | ✅ | HTTPS only, no credentials in URL (tested) |
-| Updates | `updates:check`, `updates:download`, `updates:apply-portable` | ✅ 🟡 | **fixed repo + mandatory SHA256**, see below. `apply-portable` was not run end to end; there is no Go release zip yet |
+| Updates | `updates:check`, `updates:download`, `updates:apply-portable` | ✅ | **fixed repo + mandatory SHA256**, see below. The swap script was run end to end on the 2.0.0 release zip (old files replaced, `data/` kept, new exe started) |
 | Pricing | `pricing:status`, `pricing:refresh-openrouter` (+ auto refresh at start) | ✅ | verified live (OpenRouter) |
 | Files | `files:save-json`, `files:save-text`, `files:open-json`, `files:open-path`, `files:export-artifact-zip` | ✅ 🟡 | native Win32 dialogs. The ZIP uses Deflate (Electron used Store). `open-path` is limited to `data/artifacts` |
 | Benchmark library | `benchmark-library:list`, `benchmark-library:download` | ✅ | 47 packs. Golden tests compare against the outputs of the original JS (worker port) |
@@ -73,7 +73,7 @@ Legend: ✅ ported and tested · 🟡 ported but not fully verified, or with a d
 | Host execution | ✅ opt-in only | Turning the Docker toggle off opens a native warning dialog (default: No). Only "Yes" sets `sandbox_host_optin`. An Electron-era `sandbox_use_docker=false` is **not** treated as consent: code execution is refused until the user confirms |
 | No Docker | ✅ | refuses with a message and never falls back to the host (screenshot 23) |
 | Model-controlled interpreter | ✅ fixed | Electron accepted `useDocker`/`pythonPath`/`nodePath`/`pythonImage` from tool-call input. These keys are now stripped (from the model and the renderer) |
-| Repo sandbox (SWE-bench patch + test command) | 🟡 | runs model-modified code on the host, so it requires the host opt-in. Without it, it returns a refusal. No Docker variant yet |
+| Repo sandbox (SWE-bench patch + test command) | ✅ 🟡 | 2.0: the test command runs in Docker by default (`--network none`, caps dropped, no-new-privileges, 2 GB / 2 CPU / 512 pids, only the patched copy mounted at `/work/repo`). Image per repo: `dockerImage` in the repo sandbox JSON (default `python:3.12-alpine` / `node:22-alpine`, which have no project deps). Host execution still needs the opt-in. Tested with a real git repo and a mocked `docker` (hardened flags, mount, pass/fail scoring, timeout → `docker rm -f`, invalid image, Docker missing → nothing runs). **Not run against a real Docker daemon** (no Docker on the build machine). Also fixed: the extracted patch lost its last newline, so `git apply` failed with "corrupt patch" (Electron had the same bug) |
 | Node runner on host | 🟡 | uses `node` from PATH (Electron used its own binary with `ELECTRON_RUN_AS_NODE`) |
 | Tool agent | ✅ | same protocol; tools run through the sandbox runtime |
 | Process tree kill | ✅ | `taskkill /T /F` on timeout |
@@ -86,8 +86,8 @@ Legend: ✅ ported and tested · 🟡 ported but not fully verified, or with a d
 | `SHA256SUMS.txt` mandatory; missing file, missing entry or mismatch → nothing written (temp file + rename) | ✅ (tests: `TestDownloadFailsOnChecksumMismatch`, `…WithoutChecksums`, `…AssetMissingFromChecksums`) |
 | Only GitHub HTTPS hosts, also for redirects; size limit | ✅ (tests) |
 | Real download of v1.0.1 zip (121.8 MB) verified against the release's SHA256SUMS | ✅ (screenshot 26, hash `720b8816…03cd`) |
-| Portable self-update (PowerShell swap, keeps `data/`) | 🟡 ported, not executed |
-| Release asset names for the Go build / `release:win` for Go | ❌ (needs a release job that publishes `BenchForge-<ver>-x64.zip` with the Go exe and `SHA256SUMS.txt`) |
+| Portable self-update (PowerShell swap, keeps `data/`) | ✅ executed on a copy with the 2.0.0 zip |
+| Release asset names for the Go build | ✅ `BenchForge-<ver>-x64.zip`, `BenchForge-<ver>-x64.exe`, `SHA256SUMS.txt` (`go-desktop/release.ps1`, `windows-release.yml`: tags ≥ v2.0.0 only, never overwrites assets) |
 
 ### UI, i18n, settings
 
@@ -96,8 +96,27 @@ Legend: ✅ ported and tested · 🟡 ported but not fully verified, or with a d
 | Same React UI, all views (Arena, Runner, Models, Benchmarks, Results, Stats, Compare, Settings) | ✅ (clicked through; screenshots 01–30) |
 | 58 locale catalogs / RTL | 🟡 bundled unchanged (lazy chunks served by the embedded server). Only Polish was checked visually |
 | Keyboard shortcuts, themes | 🟡 bundled unchanged, not exercised |
-| Window icon | ✅ (title bar/taskbar). ❌ The exe file icon resource (.syso) is not added yet |
+| Window icon / exe resources | ✅ title bar, taskbar, exe icon and version info (`winres/versioninfo.json` → `rsrc_windows_amd64.syso`, `go generate`) |
+| Version label in the sidebar and Settings | ✅ read from `app:get-meta` (1.x had `v1.0.0` hard-coded) |
 | `frontend` tests (55 original + 8 readonly) | ✅ 63/63 still pass (`vitest run`) |
+
+## Providers: OpenAI reasoning models (2.0)
+
+Electron 1.x always sent `max_tokens`, which OpenAI reasoning models reject (`Unsupported parameter: 'max_tokens' ... Use 'max_completion_tokens'`, checked live with `gpt-6-luna`). 2.0 sends `max_completion_tokens` (8192, which includes the reasoning tokens) and `stream_options.include_usage` to `api.openai.com`. Any other server that rejects `max_tokens` with that message is retried once with `max_completion_tokens`. An optional `#effort=<none|minimal|low|medium|high|xhigh>` suffix on the model id (for example `gpt-6-luna#effort=low`) sends `reasoning_effort`. Pricing lookup ignores the suffix.
+
+## Live tests (2026-11-14)
+
+`internal/runner/live_test.go` (`TestLiveProvider`) runs only when `BF_LIVE_BASE_URL` and `BF_LIVE_MODEL` are set. It drives the real runner, DB and provider: test connection, a 3-task streaming benchmark and one non-streaming prompt.
+
+| Provider / model | Result | Tokens (in/out) | Cost |
+|---|---|---|---|
+| OpenAI `gpt-6-luna#effort=low` | 3/3, streamed, usage reported | 57 / 31 (+ about 25 for the extra prompt) | about $0.00003 |
+| LM Studio `lfm3-1.7b` (local) | 3/3, 220 thinking chunks split from the answer | not reported by LM Studio without `stream_options` | $0 |
+
+## Data migration from 1.x
+
+* Portable/zip installs: same `data/` folder, nothing to do (the 1.x updater can also install the 2.0 zip, because the asset names, the checksum format and the swap script are the same).
+* NSIS installs keep data in the install folder. When the Go build starts with an empty data folder, it looks for `%LOCALAPPDATA%\Programs\benchforge-desktop\data`, `…\Programs\BenchForge\data`, `%ProgramFiles%\BenchForge\data` and the pre-0.2 `%APPDATA%\benchforge-desktop`, and offers to copy `benchforge.db` (+ WAL/SHM) and `artifacts/` (`internal/migrate`). `-import-electron <dir>` does the same without asking, and `BENCHFORGE_NO_IMPORT=1` turns the question off. The source is never written. This was tested on this machine with a real pre-0.2 database: 1,307 files were copied, and the arena showed 4 models and 2 benchmarks.
 
 ## Tests
 
@@ -119,13 +138,13 @@ Both render with Chromium, so memory is about the same. The size gain is large. 
 
 ## What's left (precise)
 
-1. Release pipeline for the Go build: a tag job that builds the UI and the exe, zips it as `BenchForge-<ver>-x64.zip`, writes `SHA256SUMS.txt` and publishes them. The updater already expects exactly this. Add the exe icon resource (`.syso`) and version info, and optionally sign the build.
-2. Run `updates:apply-portable` end to end once a Go release exists, on a copy of a portable folder.
-3. Repo sandbox in Docker (a configurable image per repo), so SWE-bench-style benchmarks don't need host opt-in.
-4. MCP: test against a real server (e.g. `@modelcontextprotocol/server-filesystem`), including timeouts and process cleanup.
-5. Judge evaluation and maze verification (`task:needs-maze-verify` UI flow) against real models.
-6. Locale/RTL and keyboard-shortcut smoke tests in the WebView2 host. Consider a `-devtools`/CDP test harness for automated UI tests instead of screenshot clicking.
-7. Startup: make WebView2 creation asynchronous or prewarm it (see the measurements).
-8. Decide what happens to Electron: remove `electron/`, `electron-builder` and the root `package.json` dependencies once a Go release has shipped. Until then both build and run from the same DB.
-9. Keys saved by the Go build use DPAPI and cannot be read by Electron. If going back to Electron must stay possible, document it in the README.
-10. The legacy boolean/numeric scoring quirks (e.g. any "tak" in a response passes) are preserved on purpose, as `docs/migration/go-migration-plan.md` explains. Fixing them needs a versioned evaluator.
+1. Repo sandbox and code sandbox against a **real Docker daemon** (only mocked so far, because the build machine has no Docker). This also covers the default images: stock `python:3.12-alpine` has no pytest, so real repos need `dockerImage`.
+2. MCP: test against a real server (e.g. `@modelcontextprotocol/server-filesystem`), including timeouts and process cleanup.
+3. Judge evaluation and maze verification (`task:needs-maze-verify` UI flow) against real models.
+4. Locale/RTL and keyboard-shortcut smoke tests in the WebView2 host. UI Automation works on the WebView2 content (the screenshots for 2.0 were taken that way), so this can be scripted.
+5. Startup: make WebView2 creation asynchronous or prewarm it (see the measurements).
+6. Remove `electron/`, `electron-builder` and the root `package.json` dependencies in a later release.
+7. Click through the update from a real 1.x install. The swap script and the asset names were tested, but the 1.x UI flow was not.
+8. Stream usage for local servers (LM Studio supports `stream_options`), so local runs also record token counts.
+9. The legacy boolean/numeric scoring quirks (e.g. any "tak" in a response passes) are preserved on purpose, as `docs/migration/go-migration-plan.md` explains. Fixing them needs a versioned evaluator.
+10. Code signing of the exe.

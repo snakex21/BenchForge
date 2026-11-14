@@ -20,6 +20,8 @@ AI model benchmarking desktop app with custom benchmarks, sandboxed code evaluat
 |---|
 | ![BenchForge Settings](docs/screenshots/settings.png) |
 
+> **BenchForge 2.0** replaces the Electron shell with a single Go + WebView2 executable (about 17 MB instead of a 300 MB folder). The UI, the features and the database are the same. The English and Polish sections below describe 2.0. The other language sections still describe the 1.x Electron build, so their run/build steps are out of date. Details: [docs/port-go-webview.md](docs/port-go-webview.md).
+
 <a id="languages"></a>
 
 ## Languages / Języki
@@ -103,32 +105,38 @@ BenchForge is a desktop application for comparing AI models on custom and import
 
 ### Run on Windows
 
-For the quickest local start on Windows, run:
+Download `BenchForge-<version>-x64.zip` from [Releases](https://github.com/snakex21/BenchForge/releases), unpack it anywhere (a USB drive works) and run `BenchForge.exe`. It needs the Microsoft Edge WebView2 Runtime, which is part of Windows 10 and 11. There is no installer.
 
-```bat
-start-electron.bat
-```
+Code benchmarks (Python/Node sandbox, repo/patch tests) run in Docker by default, so install and start Docker Desktop if you use them. Without Docker, BenchForge refuses to run model-generated code. You can allow running it on your own machine in Settings, after a warning.
 
 ### Build release files
 
-To run tests, validate translations, build the frontend, create installers, and generate checksums, run:
+You need Go (the version in `go-desktop/go.mod`), MinGW-w64 `gcc` and Node 22:
 
 ```bat
-test-and-build.bat
+cd frontend && npm ci && cd ..
+powershell -ExecutionPolicy Bypass -File go-desktop\release.ps1 -Version 2.0.0
 ```
+
+Tests: `go vet ./...` and `go test -race ./...` in `go-desktop`, and `npx vitest run` in `frontend`. The Electron 1.x sources (`electron/`, `start-electron.bat`, `test-and-build.bat`) are still in the repository for reference.
 
 ### Release artifacts
 
-Windows release files are created in the release folder: NSIS installer, portable EXE, ZIP archive, and SHA256SUMS.txt.
+Each release has these files (they are also built by `.github/workflows/windows-release.yml`):
 
-- `BenchForge-Setup-<version>-x64.exe`
-- `BenchForge-Portable-<version>-x64.exe`
-- `BenchForge-<version>-x64.zip`
-- `SHA256SUMS.txt`
+- `BenchForge-<version>-x64.zip`: the `BenchForge` folder with `BenchForge.exe`. The in-app updater uses this file.
+- `BenchForge-<version>-x64.exe`: the same exe on its own
+- `SHA256SUMS.txt`: the updater refuses any download that does not match it
 
 ### Data and security
 
-App data is stored in the portable-first data folder. API keys and GitHub Radar tokens are encrypted locally with Electron safeStorage when available. Only enable MCP servers, tools, and sandbox directories that you trust.
+All data lives in the `data` folder next to `BenchForge.exe`: the database, artifacts, the WebView2 profile and the log. You can move it elsewhere with `BENCHFORGE_DATA_DIR`. API keys and the GitHub Radar token are encrypted with Windows DPAPI. Only enable MCP servers, tools and repo sandbox folders that you trust.
+
+### Upgrading from 1.x (Electron)
+
+- ZIP/portable folder: unpack 2.0 into the same folder, or use the update button in 1.x. The existing `data` folder is used as it is, and saved API keys stay readable.
+- Installer (NSIS) version: the first start of 2.0 finds the old data and offers to copy it. You can also run `BenchForge.exe -import-electron "<old install folder>\data"`. The 1.x data is only read, never changed.
+- Keys saved by 2.0 cannot be read by 1.x. Going back to 1.x works, but you have to enter those keys again.
 
 ### Translation note
 
@@ -160,32 +168,38 @@ BenchForge to desktopowa aplikacja do porównywania modeli AI na własnych i imp
 
 ### Uruchamianie na Windows
 
-Najprostsze uruchomienie lokalne na Windows:
+Pobierz `BenchForge-<wersja>-x64.zip` z [Releases](https://github.com/snakex21/BenchForge/releases), rozpakuj w dowolnym miejscu (może to być pendrive) i uruchom `BenchForge.exe`. Potrzebny jest Microsoft Edge WebView2 Runtime, który jest częścią Windows 10 i 11. Nie ma instalatora.
 
-```bat
-start-electron.bat
-```
+Benchmarki z kodem (sandbox Python/Node, testy repo/patch) domyślnie działają w Dockerze, więc jeśli z nich korzystasz, zainstaluj i uruchom Docker Desktop. Bez Dockera BenchForge nie uruchomi kodu wygenerowanego przez model. Uruchamianie go na własnym komputerze można włączyć w Ustawieniach, po ostrzeżeniu.
 
 ### Budowanie plików release
 
-Aby uruchomić testy, sprawdzić tłumaczenia, zbudować frontend, stworzyć instalatory i wygenerować checksumy, uruchom:
+Potrzebne są Go (wersja z `go-desktop/go.mod`), MinGW-w64 `gcc` i Node 22:
 
 ```bat
-test-and-build.bat
+cd frontend && npm ci && cd ..
+powershell -ExecutionPolicy Bypass -File go-desktop\release.ps1 -Version 2.0.0
 ```
+
+Testy: `go vet ./...` i `go test -race ./...` w `go-desktop` oraz `npx vitest run` w `frontend`. Źródła Electrona 1.x (`electron/`, `start-electron.bat`, `test-and-build.bat`) zostały w repozytorium jako punkt odniesienia.
 
 ### Artefakty release
 
-Pliki release dla Windows powstają w folderze release: instalator NSIS, portable EXE, archiwum ZIP i SHA256SUMS.txt.
+Każde wydanie ma te pliki (buduje je też `.github/workflows/windows-release.yml`):
 
-- `BenchForge-Setup-<version>-x64.exe`
-- `BenchForge-Portable-<version>-x64.exe`
-- `BenchForge-<version>-x64.zip`
-- `SHA256SUMS.txt`
+- `BenchForge-<wersja>-x64.zip`: folder `BenchForge` z `BenchForge.exe`. Z tego pliku korzysta wbudowany aktualizator.
+- `BenchForge-<wersja>-x64.exe`: sam plik exe
+- `SHA256SUMS.txt`: aktualizator odrzuca każde pobranie, które się z nim nie zgadza
 
 ### Dane i bezpieczeństwo
 
-Dane aplikacji są przechowywane portable-first w folderze data. Klucze API i token GitHub Radar są szyfrowane lokalnie przez Electron safeStorage, jeśli jest dostępny. Włączaj tylko zaufane serwery MCP, narzędzia i katalogi sandboxa.
+Wszystkie dane są w folderze `data` obok `BenchForge.exe`: baza, artefakty, profil WebView2 i log. Inne miejsce można ustawić przez `BENCHFORGE_DATA_DIR`. Klucze API i token GitHub Radar są szyfrowane przez Windows DPAPI. Włączaj tylko zaufane serwery MCP, narzędzia i foldery repo sandboxa.
+
+### Przejście z 1.x (Electron)
+
+- Wersja ZIP/portable: rozpakuj 2.0 do tego samego folderu albo użyj przycisku aktualizacji w 1.x. Istniejący folder `data` zostaje użyty bez zmian, a zapisane klucze API dalej działają.
+- Wersja z instalatorem (NSIS): przy pierwszym starcie 2.0 znajduje stare dane i proponuje ich skopiowanie. Można też uruchomić `BenchForge.exe -import-electron "<stary folder instalacji>\data"`. Dane 1.x są tylko odczytywane, nigdy zmieniane.
+- Klucze zapisane przez 2.0 nie są czytelne dla 1.x. Powrót do 1.x działa, ale te klucze trzeba wpisać ponownie.
 
 ### Uwaga o tłumaczeniach
 
