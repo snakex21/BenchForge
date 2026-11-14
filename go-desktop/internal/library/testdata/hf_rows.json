@@ -1,0 +1,6 @@
+[
+  {"row_idx": 0, "row": {"repo": "astropy/astropy", "instance_id": "astropy__astropy-12907", "base_commit": "d16bfe05a744909de4b27f5875fe0d4ed41ce607", "patch": "diff --git a/x b/x\n+fix <b>&</b>", "test_patch": "diff --git a/t b/t", "problem_statement": "Modeling's `separability_matrix` does not compute separability correctly", "version": "4.3"}, "truncated_cells": []},
+  {"row_idx": 1, "row": {"repo": "django/django", "instance_id": "django__django-11099", "problem": "Alt problem field", "language": "python", "image": ["https://example.com/a.png", "https://example.com/b.png"]}, "truncated_cells": []},
+  {"repo": "bare/row", "issue": "Row without wrapper", "repo_language": "go", "screenshot": "shot.png"},
+  {"row_idx": 3, "row": {"description": "no repo and no id"}, "truncated_cells": []}
+]

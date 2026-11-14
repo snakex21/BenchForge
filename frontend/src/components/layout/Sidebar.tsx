@@ -6,6 +6,7 @@ import React from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useTranslation, type TranslationKey } from '@/i18n'
 import type { ActiveView } from '@/types'
+import { useAppVersion } from '@/hooks/useAppVersion'
 
 interface NavItem {
   id: ActiveView
@@ -30,6 +31,7 @@ export const Sidebar: React.FC = () => {
   const setActiveView = useUIStore((s) => s.setActiveView)
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const { t } = useTranslation()
+  const appVersion = useAppVersion()
 
   return (
     <aside
@@ -88,7 +90,7 @@ export const Sidebar: React.FC = () => {
       <div className="px-3 py-2 border-t border-slate-700/40">
         {!sidebarCollapsed ? (
           <p className="hidden text-[10px] text-slate-600 leading-tight md:block">
-            BenchForge<br />v1.0.0
+            BenchForge<br />{appVersion ? `v${appVersion}` : ''}
           </p>
         ) : (
           <div className="w-2 h-2 rounded-full bg-emerald-500/40 mx-auto" />

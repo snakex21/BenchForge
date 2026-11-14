@@ -1,0 +1,69 @@
+=== RUN   TestExactDoesNotAcceptSubstringOrSelfGrading
+--- PASS: TestExactDoesNotAcceptSubstringOrSelfGrading (0.00s)
+=== RUN   TestUniformSettingsRotatingOrderAndStableHash
+--- PASS: TestUniformSettingsRotatingOrderAndStableHash (0.00s)
+=== RUN   TestCancelPreservesPartialAndDoesNotScoreSkipped
+--- PASS: TestCancelPreservesPartialAndDoesNotScoreSkipped (0.00s)
+=== RUN   TestTimeoutAndProviderErrorsAreNotComparableScores
+--- PASS: TestTimeoutAndProviderErrorsAreNotComparableScores (0.01s)
+=== RUN   TestStorageFailureStopsProviderCalls
+--- PASS: TestStorageFailureStopsProviderCalls (0.00s)
+=== RUN   TestContractValidation
+--- PASS: TestContractValidation (0.00s)
+=== RUN   TestReportJSONHasNoNaNAndExplicitVersion
+--- PASS: TestReportJSONHasNoNaNAndExplicitVersion (0.00s)
+=== RUN   TestIndependentLateSuccessIsTimeout
+--- PASS: TestIndependentLateSuccessIsTimeout (0.01s)
+=== RUN   TestIndependentCancelAfterFirstCommittedResult
+--- PASS: TestIndependentCancelAfterFirstCommittedResult (0.00s)
+=== RUN   TestIndependentPostResultStorageFailureStopsNextCall
+--- PASS: TestIndependentPostResultStorageFailureStopsNextCall (0.00s)
+=== RUN   TestIndependentFullProvenanceReload
+--- PASS: TestIndependentFullProvenanceReload (0.02s)
+=== RUN   TestIndependentRedirectNoFollow
+--- PASS: TestIndependentRedirectNoFollow (0.00s)
+=== RUN   TestIndependentForeignPageCannotMutateOrInjectKeys
+--- PASS: TestIndependentForeignPageCannotMutateOrInjectKeys (0.00s)
+=== RUN   TestIndependentNoCredentialOrRemoteEndpoints
+--- PASS: TestIndependentNoCredentialOrRemoteEndpoints (0.00s)
+=== RUN   TestIndependentMalformedURLDiagnostic
+--- PASS: TestIndependentMalformedURLDiagnostic (0.00s)
+=== RUN   TestIndependentForeignCancelCannotStopActiveRun
+--- PASS: TestIndependentForeignCancelCannotStopActiveRun (0.01s)
+=== RUN   TestManagerPersistReloadAndExclusiveRun
+--- PASS: TestManagerPersistReloadAndExclusiveRun (0.01s)
+=== RUN   TestInterruptedReportIsNotMarkedComplete
+--- PASS: TestInterruptedReportIsNotMarkedComplete (0.00s)
+=== RUN   TestAPIRejectsCrossOriginHostUnknownFieldsAndLegacy
+--- PASS: TestAPIRejectsCrossOriginHostUnknownFieldsAndLegacy (0.01s)
+=== RUN   TestAPIEndToEndEchoExport
+--- PASS: TestAPIEndToEndEchoExport (0.02s)
+=== RUN   TestLocalAPIUsesUniformSettingsAndRealHTTP
+--- PASS: TestLocalAPIUsesUniformSettingsAndRealHTTP (0.00s)
+=== RUN   TestLocalAPICancelAndBadResponses
+--- PASS: TestLocalAPICancelAndBadResponses (0.02s)
+=== RUN   TestEndpointSafety
+--- PASS: TestEndpointSafety (0.00s)
+=== RUN   TestProviderEndpointPersistsAndExports
+--- PASS: TestProviderEndpointPersistsAndExports (0.01s)
+=== RUN   TestLocalAPIBoundsOversizedResponse
+--- PASS: TestLocalAPIBoundsOversizedResponse (0.01s)
+PASS
+coverage: 72.0% of statements
+ok  	benchforge/go-prototype	1.158s	coverage: 72.0% of statements
+{
+  "state": "completed",
+  "contract": "benchforge-text-v1",
+  "summaries": [
+    {
+      "model": "echo",
+      "planned": 3,
+      "passed": 2,
+      "failed": 1,
+      "errors": 0,
+      "complete": true,
+      "score_percent": 66.66666666666667
+    }
+  ],
+  "persisted_identically": true
+}

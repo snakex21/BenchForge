@@ -1,0 +1,5 @@
+{"task_id": "HumanEval/0", "prompt": "from typing import List\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" doc <tag> & more \"\"\"\n", "entry_point": "has_close_elements", "canonical_solution": "    return any(abs(a - b) < threshold for a in numbers for b in numbers if a is not b)\n", "test": "\n\nMETADATA = {}\n\ndef check(candidate):\n    assert candidate([1.0, 2.0], 0.5) == False\n"}
+{"task_id": "HumanEval/1", "prompt": "def zażółć(x):\n    \"\"\" unicode   sep and ctrl \u0001 \"\"\"\n", "entry_point": "  zażółć  ", "canonical_solution": "", "test": ""}
+
+{"prompt": "def nameless():\n    pass\n", "entry_point": "", "test": "assert nameless() is None"}
+{"task_id": 7, "prompt": "def f(): pass", "entry_point": "f", "canonical_solution": null, "test": "assert f() is None", "extra": {"z": 1, "a": [1, 2.5, 1e21, 1e-7]}}

@@ -1,0 +1,97 @@
+{
+  "version": "benchforge-readonly-snapshot-v1",
+  "label": "Synthetic demonstration",
+  "source_kind": "synthetic",
+  "evaluator_origin": "legacy-unversioned-fixture",
+  "models": [
+    {
+      "id": 1,
+      "name": "Fixture Model A",
+      "mode": "manual",
+      "provider": "fixture",
+      "model_id": "fixture-1",
+      "active": true,
+      "created_at": "2026-09-30T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Fixture Model B",
+      "mode": "manual",
+      "provider": "fixture",
+      "model_id": "fixture-2",
+      "active": true,
+      "created_at": "2026-09-30T00:00:00Z"
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": 1,
+      "name": "Synthetic arithmetic",
+      "category": "Logika",
+      "prompt_template": "Historical fixture, no inference",
+      "score_type": "numeric",
+      "attempts": 1,
+      "output_type": "text",
+      "created_at": "2026-09-30T00:00:00Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "benchmark_id": 1,
+      "name": "Zadanie 1",
+      "prompt_template": "Historical fixture, no inference",
+      "score_type": "numeric",
+      "attempts": 1,
+      "order_index": 0,
+      "output_type": "text",
+      "created_at": "2026-09-30T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "benchmark_id": 1,
+      "name": "Actual task",
+      "prompt_template": "What is 2 + 2?",
+      "score_type": "numeric",
+      "attempts": 1,
+      "order_index": 1,
+      "output_type": "text",
+      "created_at": "2026-09-30T00:00:00Z"
+    }
+  ],
+  "results": [
+    {
+      "id": 1,
+      "model_id": 1,
+      "benchmark_id": 1,
+      "task_id": null,
+      "score": "100",
+      "notes": "Synthetic report, not a model result",
+      "attempt_number": 1,
+      "tokens_used": 20,
+      "duration_ms": 100,
+      "run_at": "2026-09-30T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "model_id": 2,
+      "benchmark_id": 1,
+      "task_id": null,
+      "score": "50",
+      "notes": "Synthetic report, not a model result",
+      "attempt_number": 1,
+      "tokens_used": 40,
+      "duration_ms": 200,
+      "run_at": "2026-09-30T00:00:00Z"
+    }
+  ],
+  "runs": [
+    {
+      "id": 1,
+      "name": "Synthetic comparison",
+      "started_at": "2026-09-30T00:00:00Z",
+      "finished_at": "2026-09-30T00:00:00Z",
+      "status": "finished"
+    }
+  ]
+}

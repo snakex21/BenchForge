@@ -1,0 +1,4 @@
+{"text": "Write a python function to remove first and last occurrence of a given character from the string.", "code": "def remove_Occ(s,ch): \r\n    return s", "task_id": 11, "test_setup_code": "", "test_list": ["assert remove_Occ(\"hello\",\"l\") == \"heo\"", "assert remove_Occ(\"abcda\",\"a\") == \"bcd\""], "challenge_test_list": []}
+{"text": "print(x) then call compute_value(3)", "code": "def compute_value(n):\n    return n", "task_id": 12, "test_setup_code": "import math", "test_list": ["assert compute_value (3) == 3"]}
+{"prompt": "Write something with len(x)", "task_id": null, "tests": ["assert len([1]) == 1", "assert my_func(2) == 2"]}
+{"text": "No function call here at all", "task_id": "abc", "test_list": [5, true]}

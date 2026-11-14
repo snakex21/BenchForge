@@ -1,0 +1,4 @@
+# Built by `npm --prefix ../../../frontend run build:go` (see build.bat); not committed.
+!dist/
+dist/*
+!dist/.gitkeep
