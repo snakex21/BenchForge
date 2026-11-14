@@ -1,10 +1,12 @@
 // Package reposandbox ports electron/repoSandbox.cjs (SWE-bench style
 // "apply the model's patch to a local repo copy and run its tests").
 //
-// The test command executes code produced by the model (the patched repo)
-// on the host, so it is only allowed when the user explicitly enabled host
-// execution (sandbox.Policy.Mode() == host); otherwise the evaluation returns
-// a refused result instead of running anything.
+// The test command executes code produced by the model (the patched repo).
+// With the default Docker policy it runs inside a hardened container
+// (no network, all capabilities dropped, resource limits) with only the
+// patched repo copy mounted. On the host it runs only after the user
+// explicitly enabled host execution. With neither available nothing runs.
+// Preparing the copy (git clone/checkout/apply) never executes repo code.
 package reposandbox
 
 import (
@@ -25,6 +27,16 @@ import (
 	"github.com/snakex21/benchforge/go-desktop/internal/proc"
 	"github.com/snakex21/benchforge/go-desktop/internal/sandbox"
 )
+
+// Exec and DockerAvailable are replaceable in tests.
+var (
+	Exec            = proc.Run
+	DockerAvailable = func(ctx context.Context) bool {
+		return proc.Run(ctx, "docker", []string{"version", "--format", "{{.Server.Version}}"}, proc.Options{Timeout: 8 * time.Second}).OK
+	}
+)
+
+var imagePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._/:@-]{0,254}$`)
 
 const (
 	defaultTimeout = 120 * time.Second
@@ -163,8 +175,22 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 	if cfg == nil || !jsv.Truthy(cfg["path"]) {
 		return nil
 	}
-	if policy.Mode() != sandbox.ModeHost {
-		return fail(spec, "Repo sandbox: running repository tests executes model-modified code on the host and needs explicit host-execution opt-in (Settings: disable Docker sandbox and confirm the warning). Nothing was run.", "host execution not enabled")
+	mode := policy.Mode()
+	switch mode {
+	case sandbox.ModeDocker:
+		if DockerAvailable != nil && !DockerAvailable(ctx) {
+			return fail(spec, "Repo sandbox: Docker is not available. Repository tests run model-modified code, so they need Docker (start Docker Desktop) or an explicit host-execution opt-in in Settings. Nothing was run.", "docker unavailable")
+		}
+	case sandbox.ModeHost:
+	default:
+		return fail(spec, "Repo sandbox: running repository tests executes model-modified code. Enable the Docker sandbox, or explicitly opt in to host execution (Settings: disable Docker sandbox and confirm the warning). Nothing was run.", "host execution not enabled")
+	}
+	image := ""
+	if mode == sandbox.ModeDocker {
+		image = jsv.Str(jsv.Or(cfg["dockerImage"], cfg["docker_image"], ""))
+		if image != "" && !imagePattern.MatchString(image) {
+			return fail(spec, "Repo sandbox: invalid dockerImage "+image, "invalid docker image")
+		}
 	}
 	source, _ := filepath.Abs(jsv.String(cfg["path"]))
 	if st, err := os.Stat(source); err != nil || !st.IsDir() {
@@ -183,7 +209,9 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 	}
 	_ = os.MkdirAll(abs, 0o755)
 	repoDir := filepath.Join(abs, "repo")
-	_ = os.WriteFile(filepath.Join(abs, "candidate.patch"), []byte(patch), 0o644)
+	// ExtractPatch trims the text; git apply reports "corrupt patch" when
+	// the last hunk line has no newline (a bug in the Electron version).
+	_ = os.WriteFile(filepath.Join(abs, "candidate.patch"), []byte(patch+"\n"), 0o644)
 	if jsv.Truthy(spec.TestPatch) {
 		_ = os.WriteFile(filepath.Join(abs, "test.patch"), []byte(jsv.String(spec.TestPatch)), 0o644)
 	}
@@ -191,7 +219,7 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 	o := proc.Options{Timeout: timeout, Env: env}
 	commands := []cmdResult{}
 
-	clone := proc.Run(ctx, "git", []string{"clone", "--no-hardlinks", source, repoDir}, o)
+	clone := Exec(ctx, "git", []string{"clone", "--no-hardlinks", source, repoDir}, o)
 	commands = append(commands, wrap("git clone --no-hardlinks "+source, clone))
 	if !clone.OK {
 		if err := copyTree(source, repoDir); err != nil {
@@ -206,18 +234,18 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 		if _, err := os.Stat(filepath.Join(repoDir, ".git")); err == nil {
 			od := o
 			od.Dir = repoDir
-			commands = append(commands, wrap("git checkout --force "+base, proc.Run(ctx, "git", []string{"checkout", "--force", base}, od)))
-			commands = append(commands, wrap("git clean -fdx", proc.Run(ctx, "git", []string{"clean", "-fdx"}, od)))
+			commands = append(commands, wrap("git checkout --force "+base, Exec(ctx, "git", []string{"checkout", "--force", base}, od)))
+			commands = append(commands, wrap("git clean -fdx", Exec(ctx, "git", []string{"clean", "-fdx"}, od)))
 		}
 	}
 	od := o
 	od.Dir = repoDir
 	apply := func(file, label string) cmdResult {
-		first := proc.Run(ctx, "git", []string{"apply", "--whitespace=nowarn", file}, od)
+		first := Exec(ctx, "git", []string{"apply", "--whitespace=nowarn", file}, od)
 		if first.OK {
 			return wrap("git apply "+label, first)
 		}
-		second := proc.Run(ctx, "git", []string{"apply", "--reject", "--whitespace=nowarn", file}, od)
+		second := Exec(ctx, "git", []string{"apply", "--reject", "--whitespace=nowarn", file}, od)
 		r := wrap("git apply --reject "+label, second)
 		r.Stdout = strings.TrimSpace(first.Stdout + "\n" + second.Stdout)
 		r.Stderr = strings.TrimSpace(first.Stderr + "\n" + second.Stderr)
@@ -232,7 +260,19 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 	testCommand := detectTestCommand(repoDir, cfg, spec)
 	var testResult *cmdResult
 	if patchResult.OK && testCommand != "" {
-		r := wrap(testCommand, proc.RunShell(ctx, testCommand, od))
+		var r cmdResult
+		if mode == sandbox.ModeDocker {
+			if image == "" {
+				image = defaultImage(testCommand)
+			}
+			name := "benchforge-repo-" + rnd() + rnd()
+			dr := Exec(ctx, "docker", DockerArgs(name, repoDir, image, testCommand), proc.Options{Timeout: timeout, OnTimeout: func() {
+				_ = Exec(context.Background(), "docker", []string{"rm", "-f", name}, proc.Options{Timeout: 15 * time.Second})
+			}})
+			r = wrap("docker ("+image+"): "+testCommand, dr)
+		} else {
+			r = wrap(testCommand, proc.RunShell(ctx, testCommand, od))
+		}
 		testResult = &r
 		commands = append(commands, r)
 	}
@@ -274,7 +314,8 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 	}
 	sb := jsv.Obj{
 		"version": 3, "type": "repo_patch", "ok": ok, "score": score, "passed": passed, "total": total, "spec": spec,
-		"config":  jsv.Obj{"repo": jsv.Or(cfg["repo"], cfg["repository"], spec.Repo), "path": source, "testCommand": tc},
+		"config":    jsv.Obj{"repo": jsv.Or(cfg["repo"], cfg["repository"], spec.Repo), "path": source, "testCommand": tc},
+		"execution": string(mode), "dockerImage": image,
 		"workdir": rel, "repoDir": rel + "/repo", "patchApplied": patchResult.OK, "testsRun": testCommand != "", "testsPassed": testsOK,
 		"commands": commands, "tests": tests, "stdout": strings.Join(outs, "\n\n"), "stderr": strings.Join(errs, "\n\n"),
 	}
@@ -295,6 +336,36 @@ func Evaluate(ctx context.Context, bench jsv.Obj, response string, roots any, po
 		errMsg = fmt.Sprintf("Repo sandbox failed: patch=%s%s", p, t)
 	}
 	return jsv.Obj{"score": score, "error": errMsg, "passed": passed, "total": total, "allow_partial": true, "sandbox": sb}
+}
+
+// defaultImage picks a stock image when the repo config has no dockerImage.
+// Stock images have no project dependencies and there is no network, so
+// real projects should set dockerImage to an image with their test deps.
+func defaultImage(testCommand string) string {
+	c := strings.ToLower(testCommand)
+	if strings.Contains(c, "npm") || strings.Contains(c, "node") || strings.Contains(c, "yarn") || strings.Contains(c, "pnpm") {
+		return sandbox.NodeImage
+	}
+	return sandbox.PythonImage
+}
+
+// DockerArgs builds the hardened `docker run` for a repo test command. Only
+// the patched copy is mounted; the network is off.
+func DockerArgs(name, repoDir, image, testCommand string) []string {
+	return []string{
+		"run", "--rm", "--name", name,
+		"--network", "none",
+		"--cap-drop", "ALL",
+		"--security-opt", "no-new-privileges",
+		"--pids-limit", "512",
+		"--memory", "2g", "--memory-swap", "2g",
+		"--cpus", "2",
+		"--tmpfs", "/tmp:rw,exec,size=512m",
+		"--user", "65534:65534",
+		"-e", "HOME=/tmp", "-e", "BENCHFORGE_REPO_SANDBOX=1",
+		"-v", paths.ToPosix(repoDir) + ":/work/repo", "-w", "/work/repo",
+		image, "sh", "-c", testCommand,
+	}
 }
 
 func errOrNil(ok bool, a, b, def string) any {

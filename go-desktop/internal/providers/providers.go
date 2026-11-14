@@ -153,6 +153,79 @@ func validateModel(model jsv.Obj) (string, error) {
 	return base, nil
 }
 
+// ReasoningLevels are the accepted values for the model_id "#effort=" suffix.
+var ReasoningLevels = map[string]bool{"none": true, "minimal": true, "low": true, "medium": true, "high": true, "xhigh": true}
+
+// SplitModelID separates an optional "#effort=<level>" suffix from model_id
+// ("gpt-6-luna#effort=low" -> "gpt-6-luna", "low"). Model ids never contain
+// '#', so ids without a valid suffix are returned unchanged.
+func SplitModelID(v any) (id, effort string) {
+	id = jsv.Str(v)
+	i := strings.LastIndex(id, "#effort=")
+	if i <= 0 {
+		return id, ""
+	}
+	if lvl := strings.ToLower(strings.TrimSpace(id[i+len("#effort="):])); ReasoningLevels[lvl] {
+		return id[:i], lvl
+	}
+	return id, ""
+}
+
+func isOpenAI(base string) bool {
+	return strings.HasPrefix(base, "https://api.openai.com/")
+}
+
+// chatBody builds the chat-completions request. OpenAI's reasoning models
+// reject max_tokens, so api.openai.com (and any server that asks for it,
+// see postChat) gets max_completion_tokens, which also covers the reasoning
+// tokens, hence the larger limit.
+func chatBody(base string, model jsv.Obj, prompt, image string, stream, completionTokens bool) map[string]any {
+	id, effort := SplitModelID(model["model_id"])
+	body := map[string]any{"model": id, "messages": buildMessages(prompt, image)}
+	if completionTokens || isOpenAI(base) {
+		body["max_completion_tokens"] = 8192
+	} else {
+		body["max_tokens"] = 2048
+	}
+	if effort != "" {
+		body["reasoning_effort"] = effort
+	}
+	if stream {
+		body["stream"] = true
+		if isOpenAI(base) {
+			body["stream_options"] = map[string]any{"include_usage": true}
+		}
+	}
+	return body
+}
+
+// postChat sends the request and retries once with max_completion_tokens
+// when the server rejects max_tokens (OpenAI-style reasoning models behind
+// a compatible proxy). On a non-2xx status it returns the parsed message.
+func (a *API) postChat(ctx, parent context.Context, base string, model jsv.Obj, prompt, image string, stream bool) (*http.Response, error) {
+	completion := false
+	for attempt := 0; ; attempt++ {
+		req, err := a.newRequest(ctx, http.MethodPost, base+"/chat/completions", chatBody(base, model, prompt, image, stream, completion), jsv.Str(model["api_key"]))
+		if err != nil {
+			return nil, err
+		}
+		resp, err := a.client().Do(req)
+		if err != nil {
+			return nil, mapCtxErr(ctx, parent, err)
+		}
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+			return resp, nil
+		}
+		msg := parseError(resp)
+		resp.Body.Close()
+		if attempt == 0 && !completion && resp.StatusCode == http.StatusBadRequest && strings.Contains(msg, "max_tokens") && strings.Contains(msg, "max_completion_tokens") {
+			completion = true
+			continue
+		}
+		return nil, errors.New(msg)
+	}
+}
+
 func (a *API) client() *http.Client {
 	if a.Client != nil {
 		return a.Client
@@ -216,20 +289,11 @@ func (a *API) SendPrompt(parent context.Context, model jsv.Obj, prompt, image st
 	}
 	ctx, cancel := context.WithTimeout(parent, requestTimeout)
 	defer cancel()
-	req, err := a.newRequest(ctx, http.MethodPost, base+"/chat/completions", map[string]any{
-		"model": model["model_id"], "messages": buildMessages(prompt, image), "max_tokens": 2048,
-	}, jsv.Str(model["api_key"]))
+	resp, err := a.postChat(ctx, parent, base, model, prompt, image, false)
 	if err != nil {
 		return Result{}, err
 	}
-	resp, err := a.client().Do(req)
-	if err != nil {
-		return Result{}, mapCtxErr(ctx, parent, err)
-	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return Result{}, errors.New(parseError(resp))
-	}
 	var payload jsv.Obj
 	if err := json.NewDecoder(io.LimitReader(resp.Body, maxResponseBytes)).Decode(&payload); err != nil {
 		return Result{}, mapCtxErr(ctx, parent, fmt.Errorf("invalid JSON from model API: %w", err))
@@ -290,20 +354,11 @@ func (a *API) StreamPrompt(parent context.Context, model jsv.Obj, prompt, image 
 	}
 	ctx, cancel := context.WithTimeout(parent, requestTimeout)
 	defer cancel()
-	req, err := a.newRequest(ctx, http.MethodPost, base+"/chat/completions", map[string]any{
-		"model": model["model_id"], "messages": buildMessages(prompt, image), "max_tokens": 2048, "stream": true,
-	}, jsv.Str(model["api_key"]))
+	resp, err := a.postChat(ctx, parent, base, model, prompt, image, true)
 	if err != nil {
 		return Result{}, err
 	}
-	resp, err := a.client().Do(req)
-	if err != nil {
-		return Result{}, mapCtxErr(ctx, parent, err)
-	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return Result{}, errors.New(parseError(resp))
-	}
 
 	var full, fullThinking strings.Builder
 	var usageTokens any

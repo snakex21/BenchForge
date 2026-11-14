@@ -40,6 +40,9 @@ var sepRe = regexp.MustCompile(`[:_\s]+`)
 // NormalizeID mirrors normalizeId.
 func NormalizeID(v any) string {
 	s := strings.ToLower(strings.TrimSpace(jsv.Str(v)))
+	if i := strings.LastIndex(s, "#effort="); i > 0 {
+		s = s[:i] // reasoning-effort suffix, see providers.SplitModelID
+	}
 	s = strings.TrimPrefix(s, "models/")
 	return sepRe.ReplaceAllString(s, "-")
 }

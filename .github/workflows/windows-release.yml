@@ -1,5 +1,17 @@
 name: Windows Release Build
 
+# Builds the Go + WebView2 app (go-desktop/) for release tags v2.0.0 and newer.
+#
+# Safety rules (old releases must never change):
+# - tags below v2.0.0 (the Electron releases v0.2.0, v1.0.0, v1.0.1) are
+#   skipped by the guard job: nothing is built or uploaded for them;
+# - assets are never overwritten: if the release for the tag already has
+#   assets (for example it was published by hand), only the workflow artifact
+#   is kept; an existing asset name is never replaced (no --clobber);
+# - a release that does not exist yet is created as a draft.
+# Note: a re-pushed old tag runs the workflow file stored in that old commit,
+# so old tags must not be pushed again.
+
 on:
   workflow_dispatch:
   push:
@@ -7,55 +19,151 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-windows:
-    name: Build Windows artifacts
-    runs-on: windows-latest
+  guard:
+    name: Version guard
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+      version: ${{ steps.check.outputs.version }}
+      publish: ${{ steps.check.outputs.publish }}
+    steps:
+      - id: check
+        shell: bash
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_TYPE" != "tag" ]; then
+            # manual run on a branch: build a test artifact, never publish
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            echo "version=0.0.0-ci" >> "$GITHUB_OUTPUT"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ ! "$REF_NAME" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Tag $REF_NAME is not vMAJOR.MINOR.PATCH, skipping."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          major="${BASH_REMATCH[1]}"
+          if [ "$major" -lt 2 ]; then
+            echo "Tag $REF_NAME is an Electron-era release (< v2.0.0); its assets must not be rebuilt. Skipping."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "build=true" >> "$GITHUB_OUTPUT"
+          echo "version=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
 
+  build-windows:
+    name: Build Go + WebView2 app
+    needs: guard
+    if: needs.guard.outputs.build == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install root dependencies
-        run: npm ci
+      - name: Build UI (embedded into the exe)
+        working-directory: frontend
+        run: |
+          npm ci
+          npx vitest run
+          npm run build:go
 
-      - name: Install frontend dependencies
-        run: npm ci --prefix frontend
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go-desktop/go.mod
+          cache-dependency-path: go-desktop/go.sum
 
-      - name: Build installer, portable and zip
-        run: npm run release:win
+      - name: Ensure gcc (MinGW-w64)
+        shell: pwsh
+        run: |
+          if (-not (Get-Command gcc -ErrorAction SilentlyContinue)) {
+            choco install mingw -y --no-progress
+            echo "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
 
-      - name: Upload build artifacts
+      - name: Test
+        working-directory: go-desktop
+        env:
+          CGO_ENABLED: "1"
+        run: |
+          go vet ./...
+          go test -count=1 ./...
+
+      - name: Build and package
+        working-directory: go-desktop
+        shell: pwsh
+        env:
+          CGO_ENABLED: "1"
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          go build -trimpath -ldflags "-H windowsgui -s -w -X main.version=$env:VERSION" -o BenchForge.exe ./cmd/benchforge
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          New-Item -ItemType Directory -Force -Path dist/BenchForge | Out-Null
+          Copy-Item BenchForge.exe dist/BenchForge/
+          Copy-Item ../LICENSE dist/BenchForge/LICENSE.txt
+          $zip = "dist/BenchForge-$env:VERSION-x64.zip"
+          Compress-Archive -Path dist/BenchForge -DestinationPath $zip -CompressionLevel Optimal
+          Copy-Item BenchForge.exe "dist/BenchForge-$env:VERSION-x64.exe"
+          Push-Location dist
+          Get-ChildItem -File BenchForge-* | Sort-Object Name | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content -Encoding ascii SHA256SUMS.txt
+          Get-Content SHA256SUMS.txt
+          Pop-Location
+
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BenchForge-Windows-${{ github.ref_name }}
+          name: BenchForge-Windows-${{ needs.guard.outputs.version }}
           path: |
-            release/*.exe
-            release/*.zip
-            release/*.yml
-            release/*.blockmap
-            release/SHA256SUMS.txt
+            go-desktop/dist/BenchForge-*.zip
+            go-desktop/dist/BenchForge-*.exe
+            go-desktop/dist/SHA256SUMS.txt
           if-no-files-found: error
 
-      - name: Draft GitHub Release for tags
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  publish:
+    name: Publish (never overwrites)
+    needs: [guard, build-windows]
+    if: needs.guard.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          draft: true
-          files: |
-            release/*.exe
-            release/*.zip
-            release/*.yml
-            release/*.blockmap
-            release/SHA256SUMS.txt
+          name: BenchForge-Windows-${{ needs.guard.outputs.version }}
+          path: dist
+
+      - name: Create draft release or add missing assets only
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          ls -la dist
+          if gh release view "$TAG" --json assets > release.json 2>/dev/null; then
+            count=$(jq '.assets | length' release.json)
+            if [ "$count" -gt 0 ]; then
+              echo "Release $TAG already has $count asset(s); leaving it untouched. The build is kept as a workflow artifact."
+              exit 0
+            fi
+            echo "Release $TAG exists without assets; uploading (no --clobber)."
+            gh release upload "$TAG" dist/*
+          else
+            gh release create "$TAG" dist/* --draft --verify-tag --title "BenchForge $TAG" --notes "Draft created by CI. Edit the notes before publishing."
+          fi

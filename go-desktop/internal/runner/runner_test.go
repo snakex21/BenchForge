@@ -12,6 +12,7 @@ import (
 	"github.com/snakex21/benchforge/go-desktop/internal/paths"
 	"github.com/snakex21/benchforge/go-desktop/internal/proc"
 	"github.com/snakex21/benchforge/go-desktop/internal/providers"
+	"github.com/snakex21/benchforge/go-desktop/internal/reposandbox"
 	"github.com/snakex21/benchforge/go-desktop/internal/sandbox"
 )
 
@@ -185,12 +186,15 @@ func TestSandboxEvaluationUsesDockerPolicy(t *testing.T) {
 func TestRepoSandboxRefusedWithoutHostOptIn(t *testing.T) {
 	paths.SetDataDirForTests(t.TempDir())
 	defer paths.SetDataDirForTests("")
+	oldAvail := reposandbox.DockerAvailable
+	reposandbox.DockerAvailable = func(context.Context) bool { return false }
+	defer func() { reposandbox.DockerAvailable = oldAvail }()
 	rt := &sandbox.Runtime{Policy: func() sandbox.Policy { return sandbox.PolicyFromPrefs(nil, nil) }}
 	r := &Runner{Runtime: rt, Policy: rt.Policy}
 	b := jsv.Obj{"pass_condition": `{"mode":"repo_patch","repo":"me/repo"}`}
 	roots := []any{map[string]any{"repo": "me/repo", "path": t.TempDir(), "testCommand": "echo pwned > C:\\pwned.txt"}}
 	ev := r.EvaluateSandbox(context.Background(), b, "diff --git a/x b/x\n--- a/x\n+++ b/x\n", evalOptions{repoRoots: roots, policy: rt.Policy()})
-	if ev == nil || jsv.Number(ev.Score) != 0 || !strings.Contains(ev.Error, "host") {
+	if ev == nil || jsv.Number(ev.Score) != 0 || !strings.Contains(ev.Error, "Docker is not available") {
 		t.Fatalf("expected refusal, got %+v", ev)
 	}
 }

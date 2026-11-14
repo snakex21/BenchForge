@@ -144,6 +144,7 @@ const (
 	MBOK           = 0x0
 	MBYesNo        = 0x4
 	MBIconWarning  = 0x30
+	MBIconQuestion = 0x20
 	MBIconError    = 0x10
 	MBDefButton2   = 0x100
 	MBSetForegound = 0x10000

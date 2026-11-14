@@ -23,12 +23,17 @@ import (
 
 	"github.com/snakex21/benchforge/go-desktop/internal/bridge"
 	"github.com/snakex21/benchforge/go-desktop/internal/db"
+	"github.com/snakex21/benchforge/go-desktop/internal/migrate"
 	"github.com/snakex21/benchforge/go-desktop/internal/paths"
 	"github.com/snakex21/benchforge/go-desktop/internal/webui"
 	"github.com/snakex21/benchforge/go-desktop/internal/winapi"
 )
 
-// version is set at build time (-X main.version=1.1.0).
+// Windows file properties and the exe icon come from rsrc_windows_amd64.syso,
+// generated from winres/versioninfo.json:
+//go:generate go run github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.1 -64 -icon=icon.ico -o rsrc_windows_amd64.syso ../../winres/versioninfo.json
+
+// version is set at build time (-X main.version=2.0.0).
 var version = "dev"
 
 const preferredPort = 47821
@@ -92,6 +97,7 @@ func main() {
 
 func run() int {
 	debug := flag.Bool("debug", false, "enable WebView2 devtools")
+	importFrom := flag.String("import-electron", "", "copy benchforge.db and artifacts from a BenchForge 1.x (Electron) data folder, then start")
 	flag.Parse()
 
 	dataDir := paths.Data()
@@ -109,6 +115,8 @@ func run() int {
 	if os.Getenv("WEBVIEW_GO_USER_DATA_FOLDER") == "" {
 		_ = os.Setenv("WEBVIEW_GO_USER_DATA_FOLDER", filepath.Join(dataDir, "webview2"))
 	}
+
+	importElectronData(dataDir, *importFrom)
 
 	store, err := db.Open(filepath.Join(dataDir, "benchforge.db"))
 	if err != nil {
@@ -174,6 +182,36 @@ func run() int {
 	w.Destroy()
 	log.Printf("BenchForge exited")
 	return 0
+}
+
+// importElectronData copies a BenchForge 1.x (Electron) database into an
+// empty data folder: explicitly with -import-electron, or after a Yes in the
+// first-start dialog when a 1.x install is found (BENCHFORGE_NO_IMPORT=1
+// skips the question). The 1.x data is only read, never changed.
+func importElectronData(dataDir, from string) {
+	if from == "" {
+		if _, err := os.Stat(filepath.Join(dataDir, migrate.DBName)); err == nil || os.Getenv("BENCHFORGE_NO_IMPORT") == "1" {
+			return
+		}
+		cands := migrate.Candidates(os.Getenv)
+		if len(cands) == 0 {
+			return
+		}
+		msg := "BenchForge 1.x data was found in:\n" + cands[0] + "\n\nCopy the benchmarks, models, results and artifacts into this BenchForge?\n" +
+			"The original folder is not changed, so the 1.x app keeps working.\n\nNew data folder:\n" + dataDir
+		if winapi.MessageBox(0, "BenchForge - import 1.x data", msg, winapi.MBYesNo|winapi.MBIconQuestion|winapi.MBSetForegound) != winapi.IDYes {
+			log.Printf("[import] 1.x data at %s not imported (declined)", cands[0])
+			return
+		}
+		from = cands[0]
+	}
+	rep, err := migrate.Import(from, dataDir)
+	if err != nil {
+		log.Printf("[import] from %s failed: %v", from, err)
+		winapi.MessageBox(0, "BenchForge", "Import of the 1.x data failed:\n"+err.Error(), winapi.MBOK|winapi.MBIconError)
+		return
+	}
+	log.Printf("[import] copied %d files (%d bytes) from %s, artifacts=%v", rep.Files, rep.Bytes, from, rep.Artifacts)
 }
 
 func waitTimeout(fn func(), d time.Duration) {
