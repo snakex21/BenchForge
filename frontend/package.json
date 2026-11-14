@@ -6,6 +6,7 @@
     "scripts":  {
                     "dev":  "vite",
                     "build":  "tsc -b \u0026\u0026 vite build",
+                    "build:go":  "tsc -b && vite build --mode go",
                     "preview":  "vite preview",
                     "test":  "vitest run",
                     "test:watch":  "vitest"

@@ -23,6 +23,8 @@ export default defineConfig(({ mode }) => ({
   // traktowane jako "external" — Electron zaimportuje je natywnie
   build: {
     ...(mode === 'readonly' ? { outDir: '../go-viewer/web', emptyOutDir: true } : {}),
+    // Go + WebView2 host: the same UI, embedded into the Go binary (go-desktop/internal/webui/dist)
+    ...(mode === 'go' ? { outDir: '../go-desktop/internal/webui/dist', emptyOutDir: true } : {}),
     rollupOptions: {
       ...(mode === 'readonly' ? { input: path.resolve(__dirname, 'readonly.html') } : {}),
       external: ['electron'],

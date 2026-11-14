@@ -1,0 +1,876 @@
+{
+ "fixtures": {
+  "https://api.github.com/repos/acme/bench": {
+   "status": 200,
+   "body": "{\"default_branch\":\"trunk\",\"full_name\":\"acme/bench\"}"
+  },
+  "https://raw.githubusercontent.com/acme/bench/trunk/benchforge.beacon": {
+   "status": 200,
+   "body": "# BenchForge beacon\n\n  packs/manifest.json  \nignored\n"
+  },
+  "https://raw.githubusercontent.com/acme/bench/trunk/packs/manifest.json": {
+   "status": 200,
+   "body": "{\"type\":\"other-pack\",\"title\":\"Acme Bench\",\"author\":7,\"license\":\"MIT\",\"homepage\":\"https://acme.example\",\"checksums\":{\"a.json\":\"SHA256:867846A1C64C1BA28A562AAF631035D166D98E01B5E08F3F00AFA66D18F4AD31\"},\"benchmarks\":[\"a.json\",{\"path\":\"sub/b.json\",\"sha256\":\"sha256=234b3d6ad2525921b494ff3996cf9c0fd55f7ab5db658c6e922dcd382a7d9f8c\"},{\"benchmark\":{\"name\":\"Embedded\",\"prompt_template\":\"E\",\"score_type\":\"boolean\"}},{\"benchmarks\":[{\"name\":\"Inline1\",\"prompt_template\":\"I1\",\"category\":\"Logika\"},\"not-an-object\"]},{\"name\":\"Direct\",\"tasks\":[]},{\"nothing\":true},42]}"
+  },
+  "https://raw.githubusercontent.com/acme/bench/trunk/packs/a.json": {
+   "status": 200,
+   "body": "{\"benchmarks\":[{\"name\":\"A1\",\"category\":\"Kod\",\"prompt_template\":\"Do A1\",\"score_type\":\"numeric\",\"output_type\":\"markdown\"},{\"name\":\"\",\"tasks\":[{\"prompt_template\":\"x\"},5,{\"name\":\"t\",\"promptTemplate\":\"y\",\"score_type\":\"bad\",\"output_type\":[\"text\"]}]}]}"
+  },
+  "https://raw.githubusercontent.com/acme/bench/trunk/packs/sub/b.json": {
+   "status": 200,
+   "body": "{\"name\":\"B\",\"tasks\":[{\"name\":\"b1\",\"prompt_template\":\"p\",\"output_type\":\"video\"}]}"
+  },
+  "https://api.github.com/repos/acme/plain": {
+   "status": 200,
+   "body": "{\"default_branch\":\"main\"}"
+  },
+  "https://raw.githubusercontent.com/acme/plain/main/benchforge.json": {
+   "status": 200,
+   "body": "[\"https://github.com/acme/plain/blob/main/data/c.json\",{\"url\":\"https://raw.githubusercontent.com/acme/plain/main/data/c.json\"}]"
+  },
+  "https://raw.githubusercontent.com/acme/plain/main/data/c.json": {
+   "status": 200,
+   "body": "[{\"name\":\"C\",\"prompt_template\":\"c\",\"category\":\"Wiedza\"}]"
+  },
+  "https://api.github.com/repos/acme/badsum": {
+   "status": 200,
+   "body": "{\"default_branch\":\"main\"}"
+  },
+  "https://raw.githubusercontent.com/acme/badsum/main/benchforge.json": {
+   "status": 200,
+   "body": "{\"name\":\"Bad\",\"version\":\"1.0.0\",\"benchmarks\":[{\"path\":\"x.json\",\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
+  },
+  "https://raw.githubusercontent.com/acme/badsum/main/x.json": {
+   "status": 200,
+   "body": "{\"name\":\"X\",\"prompt_template\":\"x\"}"
+  },
+  "https://api.github.com/repos/acme/evil": {
+   "status": 200,
+   "body": "{\"default_branch\":\"main\"}"
+  },
+  "https://raw.githubusercontent.com/acme/evil/main/.benchforge/beacon.json": {
+   "status": 200,
+   "body": "{\"manifest\":\"../../other/benchforge.json\"}"
+  },
+  "https://raw.githubusercontent.com/acme/evil/main/benchforge.json": {
+   "status": 200,
+   "body": "{\"name\":\"Evil\",\"benchmarks\":[\"https://evil.example.com/b.json\"]}"
+  },
+  "https://api.github.com/repos/acme/unsafe": {
+   "status": 200,
+   "body": "{\"default_branch\":\"main\"}"
+  },
+  "https://raw.githubusercontent.com/acme/unsafe/main/benchforge.json": {
+   "status": 200,
+   "body": "{\"name\":\"Unsafe\",\"benchmarks\":[\"../secret.json\"]}"
+  },
+  "https://api.github.com/repos/acme/empty": {
+   "status": 200,
+   "body": "{\"default_branch\":\"main\"}"
+  },
+  "https://raw.githubusercontent.com/acme/empty/main/benchforge.json": {
+   "status": 200,
+   "body": "{\"version\":\"2\"}"
+  },
+  "https://api.github.com/repos/acme/none": {
+   "status": 200,
+   "body": "{\"default_branch\":\"main\"}"
+  },
+  "https://api.github.com/repos/acme/notfound": {
+   "status": 404,
+   "body": "{\"message\":\"Not Found\"}"
+  },
+  "https://raw.githubusercontent.com/acme/top/v1/benchforge.json": {
+   "status": 200,
+   "body": "{\"name\":\"Top\",\"version\":3,\"prompt_template\":\"top\",\"tasks\":[{\"name\":\"a\",\"prompt_template\":\"b\"},{\"name\":\"c\",\"prompt_template\":\"d\"}]}"
+  },
+  "https://api.github.com/search/repositories?q=topic:benchforge-pack&sort=updated&order=desc&per_page=5": {
+   "status": 200,
+   "body": "{\"total_count\":42,\"items\":[{\"full_name\":\"acme/bench\"},{\"full_name\":\"acme/none\"},{\"name\":\"missing-full-name\"},{\"full_name\":\"acme/badsum\"}]}"
+  },
+  "https://api.github.com/search/repositories?q=topic:my%20topic&sort=updated&order=desc&per_page=12": {
+   "status": 200,
+   "body": "{\"items\":[]}"
+  }
+ },
+ "scenarios": [
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "acme/bench"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/bench#trunk:packs/manifest.json",
+    "owner": "acme",
+    "repo": "bench",
+    "ref": "trunk",
+    "name": "Acme Bench",
+    "description": "BenchForge beacon from acme/bench",
+    "version": null,
+    "author": "7",
+    "license": "MIT",
+    "source": "acme/bench",
+    "repoUrl": "https://github.com/acme/bench",
+    "homepage": "https://acme.example",
+    "manifestPath": "packs/manifest.json",
+    "beaconPath": "benchforge.beacon",
+    "benchmarks": [
+     {
+      "name": "A1",
+      "category": "Kod",
+      "prompt_template": "Do A1",
+      "score_type": "numeric",
+      "output_type": "markdown"
+     },
+     {
+      "name": "",
+      "tasks": [
+       {
+        "prompt_template": "x"
+       },
+       5,
+       {
+        "name": "t",
+        "promptTemplate": "y",
+        "score_type": "bad",
+        "output_type": [
+         "text"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "B",
+      "tasks": [
+       {
+        "name": "b1",
+        "prompt_template": "p",
+        "output_type": "video"
+       }
+      ]
+     },
+     {
+      "name": "Embedded",
+      "prompt_template": "E",
+      "score_type": "boolean"
+     },
+     {
+      "name": "Inline1",
+      "prompt_template": "I1",
+      "category": "Logika"
+     },
+     "not-an-object",
+     {
+      "name": "Direct",
+      "tasks": []
+     }
+    ],
+    "benchmarkCount": 7,
+    "taskCount": 8,
+    "validation": {
+     "ok": false,
+     "errors": [
+      "benchmark[1].name is required.",
+      "benchmark[1].tasks[1] is not an object.",
+      "benchmark[1].tasks[2].score_type must be numeric or boolean.",
+      "benchmark[2].tasks[0].output_type is invalid.",
+      "benchmark[5] is not an object.",
+      "benchmark[6] must include prompt_template or non-empty tasks."
+     ],
+     "warnings": [
+      "Manifest type is 'other-pack', expected 'benchforge-pack'.",
+      "Manifest should include version for update checks.",
+      "benchmark[1].category is missing; BenchForge will default it during import.",
+      "benchmark[1].tasks[0].name is missing; BenchForge will generate a name during import.",
+      "benchmark[2].category is missing; BenchForge will default it during import.",
+      "benchmark[3].category is missing; BenchForge will default it during import.",
+      "benchmark[6].category is missing; BenchForge will default it during import."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.304Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/bench.git"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/bench#trunk:packs/manifest.json",
+    "owner": "acme",
+    "repo": "bench",
+    "ref": "trunk",
+    "name": "Acme Bench",
+    "description": "BenchForge beacon from acme/bench",
+    "version": null,
+    "author": "7",
+    "license": "MIT",
+    "source": "acme/bench",
+    "repoUrl": "https://github.com/acme/bench",
+    "homepage": "https://acme.example",
+    "manifestPath": "packs/manifest.json",
+    "beaconPath": "benchforge.beacon",
+    "benchmarks": [
+     {
+      "name": "A1",
+      "category": "Kod",
+      "prompt_template": "Do A1",
+      "score_type": "numeric",
+      "output_type": "markdown"
+     },
+     {
+      "name": "",
+      "tasks": [
+       {
+        "prompt_template": "x"
+       },
+       5,
+       {
+        "name": "t",
+        "promptTemplate": "y",
+        "score_type": "bad",
+        "output_type": [
+         "text"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "B",
+      "tasks": [
+       {
+        "name": "b1",
+        "prompt_template": "p",
+        "output_type": "video"
+       }
+      ]
+     },
+     {
+      "name": "Embedded",
+      "prompt_template": "E",
+      "score_type": "boolean"
+     },
+     {
+      "name": "Inline1",
+      "prompt_template": "I1",
+      "category": "Logika"
+     },
+     "not-an-object",
+     {
+      "name": "Direct",
+      "tasks": []
+     }
+    ],
+    "benchmarkCount": 7,
+    "taskCount": 8,
+    "validation": {
+     "ok": false,
+     "errors": [
+      "benchmark[1].name is required.",
+      "benchmark[1].tasks[1] is not an object.",
+      "benchmark[1].tasks[2].score_type must be numeric or boolean.",
+      "benchmark[2].tasks[0].output_type is invalid.",
+      "benchmark[5] is not an object.",
+      "benchmark[6] must include prompt_template or non-empty tasks."
+     ],
+     "warnings": [
+      "Manifest type is 'other-pack', expected 'benchforge-pack'.",
+      "Manifest should include version for update checks.",
+      "benchmark[1].category is missing; BenchForge will default it during import.",
+      "benchmark[1].tasks[0].name is missing; BenchForge will generate a name during import.",
+      "benchmark[2].category is missing; BenchForge will default it during import.",
+      "benchmark[3].category is missing; BenchForge will default it during import.",
+      "benchmark[6].category is missing; BenchForge will default it during import."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.305Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://www.github.com/acme/plain"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/plain#main:benchforge.json",
+    "owner": "acme",
+    "repo": "plain",
+    "ref": "main",
+    "name": "acme/plain",
+    "description": "BenchForge beacon from acme/plain",
+    "version": null,
+    "author": null,
+    "license": null,
+    "source": "acme/plain",
+    "repoUrl": "https://github.com/acme/plain",
+    "homepage": "https://github.com/acme/plain",
+    "manifestPath": "benchforge.json",
+    "beaconPath": null,
+    "benchmarks": [
+     {
+      "name": "C",
+      "prompt_template": "c",
+      "category": "Wiedza"
+     },
+     {
+      "name": "C",
+      "prompt_template": "c",
+      "category": "Wiedza"
+     }
+    ],
+    "benchmarkCount": 2,
+    "taskCount": 2,
+    "validation": {
+     "ok": true,
+     "errors": [],
+     "warnings": [
+      "Manifest should include name/title.",
+      "Manifest should include version for update checks."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.305Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/badsum"
+   },
+   "error": "Checksum mismatch for x.json. Expected 0000000000000000000000000000000000000000000000000000000000000000, got cb89e93910598bd39dd145fc381bde2c8f1a82b3c4032536cef77b151050c29a."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/evil"
+   },
+   "error": "Manifest may download benchmarks only from GitHub/Raw GitHub."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/unsafe"
+   },
+   "error": "Unsafe path in manifest: ../secret.json"
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/empty"
+   },
+   "error": "Manifest does not contain any benchmarks to import."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "acme/none"
+   },
+   "error": "No benchforge.beacon or benchforge.json found in acme/none."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "acme/notfound"
+   },
+   "error": "404 Not Found"
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://raw.githubusercontent.com/acme/bench/trunk/packs/manifest.json"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/bench#trunk:packs/manifest.json",
+    "owner": "acme",
+    "repo": "bench",
+    "ref": "trunk",
+    "name": "Acme Bench",
+    "description": "BenchForge beacon from acme/bench",
+    "version": null,
+    "author": "7",
+    "license": "MIT",
+    "source": "acme/bench",
+    "repoUrl": "https://github.com/acme/bench",
+    "homepage": "https://acme.example",
+    "manifestPath": "packs/manifest.json",
+    "beaconPath": null,
+    "benchmarks": [
+     {
+      "name": "A1",
+      "category": "Kod",
+      "prompt_template": "Do A1",
+      "score_type": "numeric",
+      "output_type": "markdown"
+     },
+     {
+      "name": "",
+      "tasks": [
+       {
+        "prompt_template": "x"
+       },
+       5,
+       {
+        "name": "t",
+        "promptTemplate": "y",
+        "score_type": "bad",
+        "output_type": [
+         "text"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "B",
+      "tasks": [
+       {
+        "name": "b1",
+        "prompt_template": "p",
+        "output_type": "video"
+       }
+      ]
+     },
+     {
+      "name": "Embedded",
+      "prompt_template": "E",
+      "score_type": "boolean"
+     },
+     {
+      "name": "Inline1",
+      "prompt_template": "I1",
+      "category": "Logika"
+     },
+     "not-an-object",
+     {
+      "name": "Direct",
+      "tasks": []
+     }
+    ],
+    "benchmarkCount": 7,
+    "taskCount": 8,
+    "validation": {
+     "ok": false,
+     "errors": [
+      "benchmark[1].name is required.",
+      "benchmark[1].tasks[1] is not an object.",
+      "benchmark[1].tasks[2].score_type must be numeric or boolean.",
+      "benchmark[2].tasks[0].output_type is invalid.",
+      "benchmark[5] is not an object.",
+      "benchmark[6] must include prompt_template or non-empty tasks."
+     ],
+     "warnings": [
+      "Manifest type is 'other-pack', expected 'benchforge-pack'.",
+      "Manifest should include version for update checks.",
+      "benchmark[1].category is missing; BenchForge will default it during import.",
+      "benchmark[1].tasks[0].name is missing; BenchForge will generate a name during import.",
+      "benchmark[2].category is missing; BenchForge will default it during import.",
+      "benchmark[3].category is missing; BenchForge will default it during import.",
+      "benchmark[6].category is missing; BenchForge will default it during import."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.307Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/bench/blob/trunk/packs/manifest.json"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/bench#trunk:packs/manifest.json",
+    "owner": "acme",
+    "repo": "bench",
+    "ref": "trunk",
+    "name": "Acme Bench",
+    "description": "BenchForge beacon from acme/bench",
+    "version": null,
+    "author": "7",
+    "license": "MIT",
+    "source": "acme/bench",
+    "repoUrl": "https://github.com/acme/bench",
+    "homepage": "https://acme.example",
+    "manifestPath": "packs/manifest.json",
+    "beaconPath": null,
+    "benchmarks": [
+     {
+      "name": "A1",
+      "category": "Kod",
+      "prompt_template": "Do A1",
+      "score_type": "numeric",
+      "output_type": "markdown"
+     },
+     {
+      "name": "",
+      "tasks": [
+       {
+        "prompt_template": "x"
+       },
+       5,
+       {
+        "name": "t",
+        "promptTemplate": "y",
+        "score_type": "bad",
+        "output_type": [
+         "text"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "B",
+      "tasks": [
+       {
+        "name": "b1",
+        "prompt_template": "p",
+        "output_type": "video"
+       }
+      ]
+     },
+     {
+      "name": "Embedded",
+      "prompt_template": "E",
+      "score_type": "boolean"
+     },
+     {
+      "name": "Inline1",
+      "prompt_template": "I1",
+      "category": "Logika"
+     },
+     "not-an-object",
+     {
+      "name": "Direct",
+      "tasks": []
+     }
+    ],
+    "benchmarkCount": 7,
+    "taskCount": 8,
+    "validation": {
+     "ok": false,
+     "errors": [
+      "benchmark[1].name is required.",
+      "benchmark[1].tasks[1] is not an object.",
+      "benchmark[1].tasks[2].score_type must be numeric or boolean.",
+      "benchmark[2].tasks[0].output_type is invalid.",
+      "benchmark[5] is not an object.",
+      "benchmark[6] must include prompt_template or non-empty tasks."
+     ],
+     "warnings": [
+      "Manifest type is 'other-pack', expected 'benchforge-pack'.",
+      "Manifest should include version for update checks.",
+      "benchmark[1].category is missing; BenchForge will default it during import.",
+      "benchmark[1].tasks[0].name is missing; BenchForge will generate a name during import.",
+      "benchmark[2].category is missing; BenchForge will default it during import.",
+      "benchmark[3].category is missing; BenchForge will default it during import.",
+      "benchmark[6].category is missing; BenchForge will default it during import."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.307Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/bench/tree/trunk/benchforge.beacon"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/bench#trunk:packs/manifest.json",
+    "owner": "acme",
+    "repo": "bench",
+    "ref": "trunk",
+    "name": "Acme Bench",
+    "description": "BenchForge beacon from acme/bench",
+    "version": null,
+    "author": "7",
+    "license": "MIT",
+    "source": "acme/bench",
+    "repoUrl": "https://github.com/acme/bench",
+    "homepage": "https://acme.example",
+    "manifestPath": "packs/manifest.json",
+    "beaconPath": "benchforge.beacon",
+    "benchmarks": [
+     {
+      "name": "A1",
+      "category": "Kod",
+      "prompt_template": "Do A1",
+      "score_type": "numeric",
+      "output_type": "markdown"
+     },
+     {
+      "name": "",
+      "tasks": [
+       {
+        "prompt_template": "x"
+       },
+       5,
+       {
+        "name": "t",
+        "promptTemplate": "y",
+        "score_type": "bad",
+        "output_type": [
+         "text"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "B",
+      "tasks": [
+       {
+        "name": "b1",
+        "prompt_template": "p",
+        "output_type": "video"
+       }
+      ]
+     },
+     {
+      "name": "Embedded",
+      "prompt_template": "E",
+      "score_type": "boolean"
+     },
+     {
+      "name": "Inline1",
+      "prompt_template": "I1",
+      "category": "Logika"
+     },
+     "not-an-object",
+     {
+      "name": "Direct",
+      "tasks": []
+     }
+    ],
+    "benchmarkCount": 7,
+    "taskCount": 8,
+    "validation": {
+     "ok": false,
+     "errors": [
+      "benchmark[1].name is required.",
+      "benchmark[1].tasks[1] is not an object.",
+      "benchmark[1].tasks[2].score_type must be numeric or boolean.",
+      "benchmark[2].tasks[0].output_type is invalid.",
+      "benchmark[5] is not an object.",
+      "benchmark[6] must include prompt_template or non-empty tasks."
+     ],
+     "warnings": [
+      "Manifest type is 'other-pack', expected 'benchforge-pack'.",
+      "Manifest should include version for update checks.",
+      "benchmark[1].category is missing; BenchForge will default it during import.",
+      "benchmark[1].tasks[0].name is missing; BenchForge will generate a name during import.",
+      "benchmark[2].category is missing; BenchForge will default it during import.",
+      "benchmark[3].category is missing; BenchForge will default it during import.",
+      "benchmark[6].category is missing; BenchForge will default it during import."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.307Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme/top/tree/v1"
+   },
+   "result": {
+    "ok": true,
+    "id": "acme/top#v1:benchforge.json",
+    "owner": "acme",
+    "repo": "top",
+    "ref": "v1",
+    "name": "Top",
+    "description": "BenchForge beacon from acme/top",
+    "version": "3",
+    "author": null,
+    "license": null,
+    "source": "acme/top",
+    "repoUrl": "https://github.com/acme/top",
+    "homepage": "https://github.com/acme/top",
+    "manifestPath": "benchforge.json",
+    "beaconPath": null,
+    "benchmarks": [
+     {
+      "name": "Top",
+      "version": 3,
+      "prompt_template": "top",
+      "tasks": [
+       {
+        "name": "a",
+        "prompt_template": "b"
+       },
+       {
+        "name": "c",
+        "prompt_template": "d"
+       }
+      ]
+     }
+    ],
+    "benchmarkCount": 1,
+    "taskCount": 2,
+    "validation": {
+     "ok": true,
+     "errors": [],
+     "warnings": [
+      "benchmark[0].category is missing; BenchForge will default it during import."
+     ]
+    },
+    "cachedAt": "2026-11-14T13:05:27.307Z"
+   }
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://gitlab.com/acme/bench"
+   },
+   "error": "Radar currently supports only github.com."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": ""
+   },
+   "error": "Podaj URL repozytorium GitHub albo raw URL."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://raw.githubusercontent.com/acme/bench"
+   },
+   "error": "Niepoprawny raw.githubusercontent.com URL."
+  },
+  {
+   "kind": "scan",
+   "payload": {
+    "url": "https://github.com/acme"
+   },
+   "error": "Niepoprawny URL repozytorium GitHub."
+  },
+  {
+   "kind": "discover",
+   "payload": {
+    "limit": 5
+   },
+   "result": {
+    "ok": true,
+    "topic": "benchforge-pack",
+    "total": 42,
+    "packs": [
+     {
+      "ok": true,
+      "id": "acme/bench#trunk:packs/manifest.json",
+      "owner": "acme",
+      "repo": "bench",
+      "ref": "trunk",
+      "name": "Acme Bench",
+      "description": "BenchForge beacon from acme/bench",
+      "version": null,
+      "author": "7",
+      "license": "MIT",
+      "source": "acme/bench",
+      "repoUrl": "https://github.com/acme/bench",
+      "homepage": "https://acme.example",
+      "manifestPath": "packs/manifest.json",
+      "beaconPath": "benchforge.beacon",
+      "benchmarks": [
+       {
+        "name": "A1",
+        "category": "Kod",
+        "prompt_template": "Do A1",
+        "score_type": "numeric",
+        "output_type": "markdown"
+       },
+       {
+        "name": "",
+        "tasks": [
+         {
+          "prompt_template": "x"
+         },
+         5,
+         {
+          "name": "t",
+          "promptTemplate": "y",
+          "score_type": "bad",
+          "output_type": [
+           "text"
+          ]
+         }
+        ]
+       },
+       {
+        "name": "B",
+        "tasks": [
+         {
+          "name": "b1",
+          "prompt_template": "p",
+          "output_type": "video"
+         }
+        ]
+       },
+       {
+        "name": "Embedded",
+        "prompt_template": "E",
+        "score_type": "boolean"
+       },
+       {
+        "name": "Inline1",
+        "prompt_template": "I1",
+        "category": "Logika"
+       },
+       "not-an-object",
+       {
+        "name": "Direct",
+        "tasks": []
+       }
+      ],
+      "benchmarkCount": 7,
+      "taskCount": 8,
+      "validation": {
+       "ok": false,
+       "errors": [
+        "benchmark[1].name is required.",
+        "benchmark[1].tasks[1] is not an object.",
+        "benchmark[1].tasks[2].score_type must be numeric or boolean.",
+        "benchmark[2].tasks[0].output_type is invalid.",
+        "benchmark[5] is not an object.",
+        "benchmark[6] must include prompt_template or non-empty tasks."
+       ],
+       "warnings": [
+        "Manifest type is 'other-pack', expected 'benchforge-pack'.",
+        "Manifest should include version for update checks.",
+        "benchmark[1].category is missing; BenchForge will default it during import.",
+        "benchmark[1].tasks[0].name is missing; BenchForge will generate a name during import.",
+        "benchmark[2].category is missing; BenchForge will default it during import.",
+        "benchmark[3].category is missing; BenchForge will default it during import.",
+        "benchmark[6].category is missing; BenchForge will default it during import."
+       ]
+      },
+      "cachedAt": "2026-11-14T13:05:27.307Z"
+     }
+    ],
+    "errors": [
+     {
+      "repo": "acme/none",
+      "error": "No benchforge.beacon or benchforge.json found in acme/none."
+     },
+     {
+      "repo": "acme/badsum",
+      "error": "Checksum mismatch for x.json. Expected 0000000000000000000000000000000000000000000000000000000000000000, got cb89e93910598bd39dd145fc381bde2c8f1a82b3c4032536cef77b151050c29a."
+     }
+    ]
+   }
+  },
+  {
+   "kind": "discover",
+   "payload": {
+    "topic": " topic:my topic "
+   },
+   "result": {
+    "ok": true,
+    "topic": "my topic",
+    "total": 0,
+    "packs": [],
+    "errors": []
+   }
+  }
+ ]
+}
