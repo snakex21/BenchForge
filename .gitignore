@@ -28,6 +28,8 @@ data/
 
 # Local BenchForge data/exports/artifacts
 artifacts/
+# ...but not the Go source package of that name
+!go-desktop/internal/artifacts/
 *.db
 *.sqlite
 *.sqlite3
